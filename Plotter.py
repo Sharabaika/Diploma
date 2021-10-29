@@ -1,7 +1,7 @@
+import matplotlib.pyplot as plt
+import numpy as np
 
-def PlotMesh(points, triangles, segment_idex, index_nodes = False, scatted_nodes = False):
-    import matplotlib.pyplot as plt
-
+def PlotMesh(points, triangles, segment_idex, index_nodes = False, scatted_nodes = False, index_regions = False):
     x, y = points[:, 0], points[:, 1]
     plt.triplot(x, y, triangles, color='green')
 
@@ -12,26 +12,12 @@ def PlotMesh(points, triangles, segment_idex, index_nodes = False, scatted_nodes
         for point_index in range(len(x)):
             plt.text(x=x[point_index], y=y[point_index], s = point_index, color='red', fontsize=14)
 
+    if index_regions:
+        for point_index in range(len(x)):
+            plt.text(x=x[point_index], y=y[point_index], s = segment_idex[point_index], color='red', fontsize=14)
     plt.show()
 
-def PlotT(points, T):
-    import matplotlib.pyplot as plt
-    import numpy as np
-
-    x, y = points[:, 0], points[:, 1]
-
-    v = np.linspace(0, 1, 11, endpoint=True)
-    fig1, ax1 = plt.subplots()
-    ax1.set_aspect('equal')
-    tcf = ax1.tricontourf(x, y, T, v)
-    fig1.colorbar(tcf)
-
-    plt.show()
-
-def PlotFi(points, Fi):
-    import matplotlib.pyplot as plt
-    import numpy as np
-
+def PlotNodes(points, Fi):
     x, y = points[:, 0], points[:, 1]
 
     fig, ax = plt.subplots()
@@ -40,5 +26,16 @@ def PlotFi(points, Fi):
     fig.colorbar(cf, ax=ax)
     plt.show()
 
-def PlotH(triangles, H):
-    pass
+def PlotScatter(points, z):
+    x, y = points[:, 0], points[:, 1]
+
+    plt.scatter(x, y, s=100, c=z) 
+    plt.show()
+
+def PlotElements(triang, z):
+    fig1, ax1 = plt.subplots()
+    ax1.set_aspect('equal')
+    tpc = ax1.tripcolor(triang, z, shading='flat')
+    fig1.colorbar(tpc)
+    ax1.set_title('tripcolor of Delaunay triangulation, flat shading')
+    plt.show()
