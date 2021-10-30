@@ -18,7 +18,7 @@ def main():
         (outer_mesh, 6), (outer_border, 5),
         (inner_mesh, 4), (inner_border, 3),
         (central_mesh, 2), (central_border, 1))
-    # PlotMesh(points, triangles, segment_index, True, True, True)
+    PlotMesh(points, triangles, segment_index, False, False, False)
     print(neighbors)
 
     
