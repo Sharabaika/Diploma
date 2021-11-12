@@ -8,16 +8,16 @@ import matplotlib.tri as tri
 def most_common(lst):
     return max(set(lst), key=lst.count)
 
-grid = open("ez_mesh/mesh.dat", "r")
+grid = open("meshes/angles/mesh.dat", "r")
 
-central_mesh = open("ez_mesh/central_region.dat", "r")
-central_border = open("ez_mesh/central_border.dat", "r")
+central_mesh = open("meshes/angles/central_region.dat", "r")
+central_border = open("meshes/angles/central_border.dat", "r")
 
-inner_mesh = open("ez_mesh/inner_region.dat", "r")
-inner_border = open("ez_mesh/inner_border.dat", "r")
+inner_mesh = open("meshes/angles/inner_region.dat", "r")
+inner_border = open("meshes/angles/inner_border.dat", "r")
 
-outer_mesh = open("ez_mesh/outer_region.dat", "r")
-outer_border = open("ez_mesh/outer_border.dat", "r")
+outer_mesh = open("meshes/angles/outer_region.dat", "r")
+outer_border = open("meshes/angles/outer_border.dat", "r")
 
 nodes, triangles, segment_indices, neighbors = readPoints(grid,
     (outer_mesh, 6), (outer_border, 5),
@@ -36,12 +36,9 @@ N_trigs = len(triangles)
 # PARAMS #
 # ====== #
 QF = 1.6
-chi0 = 3
-H0 = 10000
-mu0 = 1000000
-
-Vc = 1           # Viscosity
-Pr = 1
+chi0 = 3.0
+H0 = 10000.0
+mu0 = 1000000.0
 
 # Arrays #
 # ====== #
@@ -49,11 +46,9 @@ H = np.zeros(N_trigs)
 Mu = np.zeros(N_trigs)
 Fi = np.zeros(N_nodes)  
 
-Psi = np.zeros(N_nodes)
-W = np.zeros(N_nodes)
 
 # Init Arrays #
-# ----------- #   
+# =========== #   
 
 # Field # 
 # ----- #
@@ -73,16 +68,13 @@ Mu_new = np.array(Mu)
 Fi_new = np.array(Fi)
 
 
-# Dynamics #
-# -------- #
-Psi_new = np.array(Psi)
-W_new = np.array(W)
-
-
 # Solve #
 # ===== #
 N_cyclies = 300
 for n_cycle in range(N_cyclies):
+    if n_cycle % 25 == 0:
+        print("cycle n{0}".format(n_cycle))
+
     for n_node in range(N_nodes):
 
         a0F = 0
@@ -92,6 +84,11 @@ for n_cycle in range(N_cyclies):
         Psi_BorderIntegral_nb = 0
 
         Psi_AreaIntegral = 0
+
+        W_BorderIntegral = 0
+        W_BorderIntegral_k0 = 0
+
+        W_AreaIntegral = 0
 
         for n_trig_neigbor in neighbors[n_node]:
             n0, n1, n2 = triangles[n_trig_neigbor]
@@ -113,67 +110,6 @@ for n_cycle in range(N_cyclies):
             a0F = a0F + Mu[n_trig_neigbor]*0.5/Delta*( y12*y12 + x21*x21 )
             anbF = anbF + Mu[n_trig_neigbor]*0.5/Delta*(Fi[n1]*(y12*y20+x21*x02)+Fi[n2]*(y12*y01+x21*x10))  
 
-            # Psi #
-            # --- #
-            Delta_PsiA = Psi[n0]*y12 + Psi[n1]*y20 + Psi[n1]*y01
-            Delta_PsiB = Psi[n0]*x21 + Psi[n1]*x02 + Psi[n1]*x10
-
-            A_Psi = Delta_PsiA / Delta
-            B_PSi = Delta_PsiB / Delta
-
-            a0      = (x21*x21+y12*y12)/Delta
-            a1_psi1 = Psi[n1] * (y20*y12+x02*x21)
-            a2_psi2 = Psi[n2] * (y01*y12+x10*x21)
-
-            Psi_BorderIntegral_a0 += a0
-            Psi_BorderIntegral_nb += (a1_psi1+a2_psi2)/2
-
-            Psi_AreaIntegral += (22.*W[n0]+7.*W[n1]+7.*W[n2])*Delta/216.0
-
-            # W #
-            # - # 
-            U_x = B_PSi
-            U_y = -A_Psi
-            U_ell = sqrt(U_x*U_x + U_y*U_y)
-
-            sina = U_y /U_ell
-            cosa = U_x / U_ell
-
-            xc = (x0+x1+x2)/3
-            yc = (y0+y1+y2)/3
-
-            def ToLocal(x, y):
-                X =  (x-xc)*cosa + (y-yc)*sina
-                Y = -(x-xc)*sina + (y-yc)*cosa
-                return X,Y
-            
-            X0, Y0 = ToLocal(x0,y0)
-            X1, Y1 = ToLocal(x1,y1)
-            X2, Y2 = ToLocal(x2,y2)
-
-            Y12 = Y1 - Y2
-            Y20 = Y2 - Y0
-            Y01 = Y0 - Y1
-            
-            X_max = max(X0, X1, X2)
-
-            EW0 = exp(U_ell*(X0-X_max)/(Pr*Vc))
-            EW1 = exp(U_ell*(X1-X_max)/(Pr*Vc))
-            EW2 = exp(U_ell*(X2-X_max)/(Pr*Vc))
-
-            Delta_W   = EW0*Y12 + EW1*Y20 + EW2*Y01
-            Delta_W_A = W[n0]*Y12 + W[n1]*Y20 + W[n2]*Y01
-            Delta_W_B = W[n0]*(EW2-EW1) + W[n1]*(EW0-EW2) + W[n2]*(EW1-EW0)
-            Delta_W_C = + W[n0]*(EW1*Y2 - EW2*Y1)  \
-                        + W[n1]*(EW2*Y0 - EW0*Y2)  \
-                        + W[n2]*(EW0*Y1 - EW1*Y0)
-            
-            A_W = Delta_W_A / Delta_W
-            B_W = Delta_W_B / Delta_W
-            C_W = Delta_W_C / Delta_W
-
-        Psi_new[n_node] = (-Psi_BorderIntegral_nb + Psi_AreaIntegral)/Psi_BorderIntegral_a0
-        
 
         segment_index = segment_indices[n_node]
         if segment_index in [1,2,3,4,6]:
@@ -185,7 +121,6 @@ for n_cycle in range(N_cyclies):
             print("keke")
 
     for n_triangle, triangle in enumerate(triangles):
-        # continue
         n0, n1, n2 = triangle
         x0, y0 = nodes[n0]
         x1, y1 = nodes[n1]
@@ -222,8 +157,11 @@ for n_cycle in range(N_cyclies):
     Mu = Mu_new
     H = H_new
     Fi = Fi_new
-                    
+
+
+
+
+
 Plotter.PlotElements(triangulation, H)
 Plotter.PlotNodes(nodes, Fi)
-# Plotter.PlotScatter(nodes, Fi)
 Plotter.PlotElements(triangulation, Mu)

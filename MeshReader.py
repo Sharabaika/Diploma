@@ -10,11 +10,24 @@ def readPoints(mesh, *segment_files):
         points[i] = x,y
 
     for bordet_segment, segment_index in segment_files:
+        is_complete = False
         border_len = int(bordet_segment.readline())
-        for _ in range(border_len):
-            x, y, z = np.asfarray(bordet_segment.readline().split(), dtype = float)
-            for point_index in [i for i in range(points_len) if points[i][0]==x and points[i][1]==y]:
-                is_border_segment[point_index] = segment_index
+
+        while not is_complete:
+            for _ in range(border_len):
+                line = np.asfarray(bordet_segment.readline().split(), dtype = float)
+                if len(line) == 3:
+                    x, y, z = line
+                    for point_index in [i for i in range(points_len) if points[i][0]==x and points[i][1]==y]:
+                        is_border_segment[point_index] = segment_index
+            
+            last_line = bordet_segment.readline()
+            if last_line:
+                border_len = int(last_line)
+            else:
+                is_complete = True
+        print(segment_index)
+            
 
     triangles = []
     triangles_len = int(mesh.readline())

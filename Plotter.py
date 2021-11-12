@@ -37,5 +37,4 @@ def PlotElements(triang, z):
     ax1.set_aspect('equal')
     tpc = ax1.tripcolor(triang, z, shading='flat')
     fig1.colorbar(tpc)
-    ax1.set_title('tripcolor of Delaunay triangulation, flat shading')
     plt.show()
