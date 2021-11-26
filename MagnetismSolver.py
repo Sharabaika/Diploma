@@ -1,7 +1,7 @@
 import matplotlib
 from matplotlib.pyplot import title
 import numpy as np
-from MeshFileHandling.MeshReader import readPoints
+from MeshFileHandling.MeshReader import ReadRaw
 import MeshHandling.Plotter as Plotter
 from math import exp, sqrt
 import matplotlib.tri as tri
@@ -20,7 +20,7 @@ inner_border = open("ez_mesh/inner_border.dat", "r")
 outer_mesh = open("ez_mesh/outer_region.dat", "r")
 outer_border = open("ez_mesh/outer_border.dat", "r")
 
-nodes, triangles, segment_indices, neighbors = readPoints(grid,
+nodes, triangles, segment_indices, trig_neighbors, node_neighbours = ReadRaw(grid,
     (outer_mesh, 6), (outer_border, 5),
     (inner_mesh, 4), (inner_border, 3),
     (central_mesh, 2), (central_border, 1))
@@ -91,7 +91,7 @@ for n_cycle in range(N_cyclies):
 
         W_AreaIntegral = 0
 
-        for n_trig_neigbor in neighbors[n_node]:
+        for n_trig_neigbor in trig_neighbors[n_node]:
             n0, n1, n2 = triangles[n_trig_neigbor]
             if n_node == n1:
                 n0, n1, n2 =  n_node, n2, n0

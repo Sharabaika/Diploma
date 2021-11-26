@@ -1,4 +1,4 @@
-def readPoints(mesh, *segment_files):
+def ReadRaw(mesh, *segment_files):
     import numpy as np
 
     points_len = int(mesh.readline())
@@ -47,3 +47,36 @@ def readPoints(mesh, *segment_files):
             node_neighbours[point_index].remove(point_index)
 
     return points, triangles, region_tags, trig_neighbours, node_neighbours
+
+
+def ReadSaved(filename):
+    import numpy as np
+    import os
+    file = open(filename, "r")
+
+    def ReadArray(dim):
+        array_header = file.readline()
+        array_len =  int(file.readline())
+        array = np.empty((array_len, dim))
+        for i in range(array_len):
+            array[i] = np.asfarray(file.readline().split(), dtype = float)
+        return array
+
+    def ReadList():
+        list_header = file.readline()
+        list_len =  int(file.readline())
+        res_list = []
+        for i in range(list_len):
+            data = list(np.asfarray(file.readline().replace(',','').strip("[]\n").split(" "), dtype = float))
+            res_list.append(data)
+        return res_list
+
+    file_header = file.readline()
+
+    nodes = ReadArray(2)
+    triangles = ReadArray(3)
+    tags = ReadList()
+    trig_neighbours = ReadList()
+    node_neighbours = ReadList()
+
+    return nodes, triangles, tags, trig_neighbours, node_neighbours
