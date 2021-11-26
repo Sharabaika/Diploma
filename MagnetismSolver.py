@@ -1,23 +1,24 @@
 import matplotlib
+from matplotlib.pyplot import title
 import numpy as np
-from MeshReader import readPoints
-import Plotter
+from MeshFileHandling.MeshReader import readPoints
+import MeshHandling.Plotter as Plotter
 from math import exp, sqrt
 import matplotlib.tri as tri
 
 def most_common(lst):
     return max(set(lst), key=lst.count)
 
-grid = open("meshes/angles/mesh.dat", "r")
+grid = open("ez_mesh/mesh.dat", "r")
 
-central_mesh = open("meshes/angles/central_region.dat", "r")
-central_border = open("meshes/angles/central_border.dat", "r")
+central_mesh = open("ez_mesh/central_region.dat", "r")
+central_border = open("ez_mesh/central_border.dat", "r")
 
-inner_mesh = open("meshes/angles/inner_region.dat", "r")
-inner_border = open("meshes/angles/inner_border.dat", "r")
+inner_mesh = open("ez_mesh/inner_region.dat", "r")
+inner_border = open("ez_mesh/inner_border.dat", "r")
 
-outer_mesh = open("meshes/angles/outer_region.dat", "r")
-outer_border = open("meshes/angles/outer_border.dat", "r")
+outer_mesh = open("ez_mesh/outer_region.dat", "r")
+outer_border = open("ez_mesh/outer_border.dat", "r")
 
 nodes, triangles, segment_indices, neighbors = readPoints(grid,
     (outer_mesh, 6), (outer_border, 5),
@@ -70,7 +71,7 @@ Fi_new = np.array(Fi)
 
 # Solve #
 # ===== #
-N_cyclies = 300
+N_cyclies = 25
 for n_cycle in range(N_cyclies):
     if n_cycle % 25 == 0:
         print("cycle n{0}".format(n_cycle))
@@ -158,10 +159,6 @@ for n_cycle in range(N_cyclies):
     H = H_new
     Fi = Fi_new
 
-
-
-
-
-Plotter.PlotElements(triangulation, H)
-Plotter.PlotNodes(nodes, Fi)
-Plotter.PlotElements(triangulation, Mu)
+Plotter.CoolPlots.PlotLevelNodes(nodes, Fi, xrange = (-1.5,1.5), yrange = (-1.5,1.5), nlevels = 30, manual = True,  title="Fi")
+# Plotter.CoolPlots.PlotLevelTriangles(nodes, triangles, H,  xrange = (-1.5,1.5), yrange = (-1.5,1.5), title="H")
+# Plotter.CoolPlots.PlotLevelTriangles(nodes, triangles, Mu,  xrange = (-1.5,1.5), yrange = (-1.5,1.5), title="Mu")

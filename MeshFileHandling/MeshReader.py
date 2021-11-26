@@ -9,8 +9,7 @@ def readPoints(mesh, *segment_files):
         x, y, z = np.asfarray(mesh.readline().split(), dtype = float)
         points[i] = x,y
 
-    for args in segment_files:
-        bordet_segment, segment_tags = args[0], args[1:]
+    for  bordet_segment, segment_tags in segment_files:
         is_complete = False
         border_len = int(bordet_segment.readline())
 
@@ -36,13 +35,15 @@ def readPoints(mesh, *segment_files):
         a, b, c, _ = mesh.readline().split()
         triangles.append([int(a)-1, int(b)-1, int(c)-1])
 
-    neighbors = [[] for _ in range(points_len)] 
+    trig_neighbours = [[] for _ in range(points_len)]
+    node_neighbours = []
     for point_index in range(points_len):
         for n_triangle, triangle in enumerate(triangles):
             if point_index in triangle:
-                neighbors[point_index].append(n_triangle)
-        # neighbors[point_index] = list(dict.fromkeys(neighbors[point_index]))
-        # if point_index in neighbors[point_index]:
-        #     neighbors[point_index].remove(point_index)
+                trig_neighbours[point_index].append(n_triangle)
 
-    return points, triangles, region_tags, neighbors
+        node_neighbours.append(list(dict.fromkeys(trig_neighbours[point_index])))
+        if point_index in node_neighbours[point_index]:
+            node_neighbours[point_index].remove(point_index)
+
+    return points, triangles, region_tags, trig_neighbours, node_neighbours
