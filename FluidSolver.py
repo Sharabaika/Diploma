@@ -15,15 +15,14 @@ grid = open("meshes/square/grid.dat", "r")
 borders = open("meshes/square/bounds.dat", "r")
 bottom = open("meshes/square/bottom_bound.dat", "r")
 
-nodes, triangles, segment_indices, trig_neighbors, node_neighbours = readPoints(grid, (borders, 1), (bottom, 2))
+nodes, triangles, segment_indices, trig_neighbors, node_neighbours = readPoints(grid, (borders, SOLID_BORDER_INDEX), (bottom, SOLID_BORDER_INDEX))
 
 N_nodes = len(nodes)
 N_trigs = len(triangles)
 
 # PARAMS #
 # ====== #
-
-N_cyclies = 1000
+N_CYCLIES_MAX = 1000
 
 Pr = 40.0
 Vc = 1           # Viscosity
@@ -56,15 +55,16 @@ Psi_new = np.array(Psi)
 W_new = np.array(W)
 
 
-for n_cycle in range(N_cyclies):
+n_cycle = 0
+while Error < Max_Delta_Error or n_cycle < N_CYCLIES_MAX:
     if n_cycle % 50 == 0:
-        print("cycle n = {n}".format(n=n_cycle))
+        print("cycle n = {n:05d}, error == {err}".format(n=n_cycle, err = Error))
     for n_node in range(N_nodes):
         segment_index = segment_indices[n_node]
         
         # USUAL MEDIUM #
         # ============ #
-        if segment_index == MEDIUM_INDEX:
+        if MEDIUM_INDEX in segment_index :
             Psi_BorderIntegral_a0 = 0
             Psi_BorderIntegral_nb = 0
             Psi_AreaIntegral = 0
@@ -173,9 +173,7 @@ for n_cycle in range(N_cyclies):
             W_new[n_node] = (W_AreaIntegral-W_BorderIntegral)/W_BorderIntegral_k0
         # SOLID BORDER #
         # ============ #
-        elif segment_index  == SOLID_BORDER_INDEX:
-            Psi_new[n_node] = 0
-            
+        elif SOLID_BORDER_INDEX in segment_index:            
             # normal #
             # ------ #
             normalX, normalY = 0, 0
@@ -265,11 +263,14 @@ for n_cycle in range(N_cyclies):
             W_new[n_node] = (W_Border_Integral + W_Source_Integral)/W_Source_Area_Integral
     # ERRORS # 
     # ------ #
-    Delta_Psi_Error_Squared = sum(Psi - Psi_new)**2
-    Delta_Ws_Error_Squared = sum(W - W_new)**2
+    Delta_Psi_Error_Squared = sum((Psi - Psi_new)**2)
+    Delta_Ws_Error_Squared = sum((W - W_new)**2)
 
     Error = sqrt(Delta_Psi_Error_Squared + Delta_Ws_Error_Squared)
 
+
+    # NEXT STEP #
+    # --------- #
     Psi = Psi_new
     W = W_new
 
