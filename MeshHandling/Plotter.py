@@ -6,7 +6,7 @@ def PlotMesh(points, triangles, segment_idex, index_nodes = False, scatted_nodes
     plt.triplot(x, y, triangles, color='green')
 
     if scatted_nodes:
-        plt.scatter(x, y, s=100, c=segment_idex)    
+        plt.scatter(x, y, s=100, c=[arr[0] for arr in segment_idex])    
 
     if index_nodes:
         for point_index in range(len(x)):

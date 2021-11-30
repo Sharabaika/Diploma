@@ -1,28 +1,24 @@
 from types import MemberDescriptorType
 import matplotlib
 import numpy as np
-from MeshReader import readPoints
-import Plotter
+from MeshFileHandling.MeshReader import ReadRaw, ReadSaved
 from math import exp, sqrt
 import matplotlib.tri as tri
+from MeshHandling.Plotter import PlotMesh 
+
 
 # Regions
 SOLID_BORDER_INDEX = 1000
 MEDIUM_INDEX = 2000
 
-grid = open("meshes/square/grid.dat", "r")
-
-borders = open("meshes/square/bounds.dat", "r")
-bottom = open("meshes/square/bottom_bound.dat", "r")
-
-nodes, triangles, segment_indices, trig_neighbors, node_neighbours = readPoints(grid, (borders, SOLID_BORDER_INDEX), (bottom, SOLID_BORDER_INDEX))
+nodes, triangles, segment_indices, trig_neighbors, node_neighbours = ReadSaved("SavedMeshes/square_saved.dat")
 
 N_nodes = len(nodes)
 N_trigs = len(triangles)
 
 # PARAMS #
 # ====== #
-N_CYCLIES_MAX = 1000
+N_CYCLIES_MAX = 2
 
 Pr = 40.0
 Vc = 1           # Viscosity
@@ -54,7 +50,7 @@ for n_node in range(N_nodes):
 Psi_new = np.array(Psi)
 W_new = np.array(W)
 
-
+Error = 2*Max_Delta_Error
 n_cycle = 0
 while Error < Max_Delta_Error or n_cycle < N_CYCLIES_MAX:
     if n_cycle % 50 == 0:
@@ -97,15 +93,13 @@ while Error < Max_Delta_Error or n_cycle < N_CYCLIES_MAX:
                 B_PSi = Delta_PsiB / Delta
 
                 a0      = (x21*x21+y12*y12)/Delta
-                a1_psi1 = Psi[n1] * (y20*y12+x02*x21)
-                a2_psi2 = Psi[n2] * (y01*y12+x10*x21)
+                a1_psi1 = Psi[n1] * (y20*y12+x02*x21) / Delta
+                a2_psi2 = Psi[n2] * (y01*y12+x10*x21) / Delta
 
                 Psi_BorderIntegral_a0 += a0
-
-                # /2 ?
                 Psi_BorderIntegral_nb += (a1_psi1+a2_psi2)
 
-                Psi_AreaIntegral += (22.*W[n0]+7.*W[n1]+7.*W[n2])*Delta/216.0
+                Psi_AreaIntegral += (22.0*W[n0]+7.0*W[n1]+7.0*W[n2])*Delta/216.0
 
                 # W #
                 # - # 
@@ -177,20 +171,22 @@ while Error < Max_Delta_Error or n_cycle < N_CYCLIES_MAX:
             # normal #
             # ------ #
             normalX, normalY = 0, 0
-            neighbours = node_neighbours[n_node]
-            border_neighbours = filter(lambda node : segment_indices[node] == SOLID_BORDER_INDEX, neighbours)
-            if len(border_neighbours) == 2:
-                # E3 HACK
-                a_border, b_border = nodes[border_neighbours[0]] , nodes[border_neighbours[1]]
-                d = b_border - a_border
-                normalX, normalY = d[1], -d[0]
+            if 10 in segment_index:
+                # left 
+                normalX, normalY = 1, 0
+            elif 11 in segment_index:
+                # right
+                normalX, normalY = -1, 0
+            elif 12 in segment_index:
+                # bottom
+                normalX, normalY = 0, 1
+            elif 13 in segment_index:
+                # upper
+                normalX, normalY = 0, -1
 
-                normal_len = sqrt(normalX**2+normalY**2)
-                sina = normalX / normal_len
-                cosa = normalY / normal_len
-
-            else:
-                raise Exception("aboba")
+            normal_len = sqrt(normalX**2+normalY**2)
+            sina = normalX / normal_len
+            cosa = normalY / normal_len
 
 
             # LOCAL COORDS #
@@ -274,6 +270,8 @@ while Error < Max_Delta_Error or n_cycle < N_CYCLIES_MAX:
     Psi = Psi_new
     W = W_new
 
+    n_cycle += 1
 
-Plotter.PlotNodes(nodes, Psi)
-Plotter.PlotNodes(nodes, W)
+from MeshHandling.Plotter import PlotNodes
+PlotNodes(nodes, Psi)
+PlotNodes(nodes, W)

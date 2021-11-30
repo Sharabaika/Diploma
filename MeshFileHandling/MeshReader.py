@@ -1,9 +1,9 @@
-def ReadRaw(mesh, *segment_files):
+def ReadRaw(mesh, default_tags, *segment_files):
     import numpy as np
 
     points_len = int(mesh.readline())
     points = np.empty((points_len, 2))
-    region_tags = np.zeros(points_len)
+    region_tags = [default_tags for _ in range(points_len)]
 
     for i in range(points_len):
         x, y, z = np.asfarray(mesh.readline().split(), dtype = float)
@@ -26,7 +26,6 @@ def ReadRaw(mesh, *segment_files):
                 border_len = int(last_line)
             else:
                 is_complete = True
-        print(segment_tags)
             
 
     triangles = []
@@ -62,21 +61,21 @@ def ReadSaved(filename):
             array[i] = np.asfarray(file.readline().split(), dtype = float)
         return array
 
-    def ReadList():
+    def ReadList(data_type = float):
         list_header = file.readline()
         list_len =  int(file.readline())
         res_list = []
         for i in range(list_len):
-            data = list(np.asfarray(file.readline().replace(',','').strip("[]\n").split(" "), dtype = float))
+            data = list(data_type(string) for string in file.readline().replace(',','').strip("[]\n").split(" "))
             res_list.append(data)
         return res_list
 
     file_header = file.readline()
 
     nodes = ReadArray(2)
-    triangles = ReadArray(3)
-    tags = ReadList()
-    trig_neighbours = ReadList()
-    node_neighbours = ReadList()
+    triangles = ReadList(int)
+    tags = ReadList(int)
+    trig_neighbours = ReadList(int)
+    node_neighbours = ReadList(int)
 
     return nodes, triangles, tags, trig_neighbours, node_neighbours

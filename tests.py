@@ -6,28 +6,23 @@ import sys
 sys.path.insert(0, '/home/amninder/Desktop/Folder_2')
 
 def main():
-    # grid = open("ez_mesh/mesh.dat", "r")
+    grid = open("meshes/square/grid.dat", "r")
+    left = open("meshes/square/left_bound.dat", "r")
+    right = open("meshes/square/right_bound.dat", "r")
+    upper = open("meshes/square/upper_bound.dat", "r")
+    bottom = open("meshes/square/bottom_bound.dat", "r")
 
-    # central_mesh = open("ez_mesh/central_region.dat", "r")
-    # central_border = open("ez_mesh/central_border.dat", "r")
 
-    # inner_mesh = open("ez_mesh/inner_region.dat", "r")
-    # inner_border = open("ez_mesh/inner_border.dat", "r")
+    nodes, triangles, segment_indices, trig_neighbors, node_neighbours = ReadRaw(grid, [2000], 
+        (left, [10, 1000]), (right, [11, 1000]),
+         (bottom, [12, 1000]), (upper, [13, 1000]))
 
-    # outer_mesh = open("ez_mesh/outer_region.dat", "r")
-    # outer_border = open("ez_mesh/outer_border.dat", "r")
-
-    # nodes, triangles, segment_indices, trig_neighbors, node_neighbours = ReadRaw(grid,
-    #     (outer_mesh, 6), (outer_border, 5),
-    #     (inner_mesh, 4), (inner_border, 3),
-    #     (central_mesh, 2), (central_border, 1))
-
-    # SaveMesh("SavedMeshes", "ez_mesh_saved", nodes, triangles, segment_indices, trig_neighbors, node_neighbours)
+    SaveMesh("SavedMeshes", "square_saved", nodes, triangles, segment_indices, trig_neighbors, node_neighbours)
     
-    nodes, triangles, segment_indices, trig_neighbors, node_neighbours = ReadSaved("SavedMeshes/ez_mesh_saved.dat")
+    nodes, triangles, segment_indices, trig_neighbors, node_neighbours = ReadSaved("SavedMeshes/square_saved.dat")
 
     from MeshHandling.Plotter import PlotMesh 
-    PlotMesh(nodes, triangles, segment_indices)
+    PlotMesh(nodes, triangles, segment_indices, False, True, True)
 
 
 if __name__ == "__main__":
