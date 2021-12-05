@@ -10,11 +10,11 @@ def PlotMesh(points, triangles, segment_idex, index_nodes = False, scatted_nodes
 
     if index_nodes:
         for point_index in range(len(x)):
-            plt.text(x=x[point_index], y=y[point_index], s = point_index, color='red', fontsize=14)
+            plt.text(x=x[point_index], y=y[point_index], s = point_index, color='red', fontsize=10)
 
     if index_regions:
         for point_index in range(len(x)):
-            plt.text(x=x[point_index], y=y[point_index], s = segment_idex[point_index], color='red', fontsize=14)
+            plt.text(x=x[point_index], y=y[point_index], s = segment_idex[point_index], color='red', fontsize=8)
     plt.show()
 
 def PlotNodes(points, Fi):
@@ -29,7 +29,8 @@ def PlotNodes(points, Fi):
 def PlotScatter(points, z):
     x, y = points[:, 0], points[:, 1]
 
-    plt.scatter(x, y, s=100, c=z) 
+    sc = plt.scatter(x, y, s=100, c=z) 
+    plt.colorbar(sc)
     plt.show()
 
 def PlotElements(triang, z):

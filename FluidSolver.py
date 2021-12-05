@@ -4,22 +4,20 @@ import numpy as np
 from MeshFileHandling.MeshReader import ReadRaw, ReadSaved
 from math import exp, sqrt
 import matplotlib.tri as tri
-from MeshHandling.Plotter import PlotMesh 
+from MeshHandling.Plotter import PlotMesh, PlotScatter 
 
 
 # Regions
 SOLID_BORDER_INDEX = 1000
 MEDIUM_INDEX = 2000
 
-nodes, triangles, segment_indices, trig_neighbors, node_neighbours = ReadSaved("SavedMeshes/square_saved.dat")
+nodes, triangles, segment_indices, trig_neighbors, node_neighbours = ReadSaved("SavedMeshes/circle_saved.dat")
 
 N_nodes = len(nodes)
 N_trigs = len(triangles)
 
 # PARAMS #
 # ====== #
-N_CYCLIES_MAX = 2
-
 Pr = 40.0
 Vc = 1           # Viscosity
 Max_Delta_Error = 1e-5
@@ -43,18 +41,20 @@ W = np.zeros(N_nodes)
 # Dynamics #
 # -------- #
 for n_node in range(N_nodes):
-    Psi[n_node] = np.random.rand(1)*0.001
+    is_border = 10 in segment_indices[n_node] or 11 in segment_indices[n_node]
+    Psi[n_node] = 0 if is_border else np.random.rand(1)*0.001  
     W[n_node] = np.random.rand(1)*0.001
 
 
 Psi_new = np.array(Psi)
 W_new = np.array(W)
 
+N_CYCLIES_MAX = 1
 Error = 2*Max_Delta_Error
 n_cycle = 0
-while Error < Max_Delta_Error or n_cycle < N_CYCLIES_MAX:
-    if n_cycle % 50 == 0:
-        print("cycle n = {n:05d}, error == {err}".format(n=n_cycle, err = Error))
+while n_cycle < N_CYCLIES_MAX:
+    if n_cycle % 1 == 0 or True:
+        print("cycle n = {n}, error == {err}".format(n=n_cycle, err = Error))
     for n_node in range(N_nodes):
         segment_index = segment_indices[n_node]
         
@@ -164,26 +164,23 @@ while Error < Max_Delta_Error or n_cycle < N_CYCLIES_MAX:
 
 
             Psi_new[n_node] = (-Psi_BorderIntegral_nb + Psi_AreaIntegral)/Psi_BorderIntegral_a0
-            W_new[n_node] = (W_AreaIntegral-W_BorderIntegral)/W_BorderIntegral_k0
+            W_new[n_node] = (-W_BorderIntegral + W_AreaIntegral)/W_BorderIntegral_k0
         # SOLID BORDER #
         # ============ #
         elif SOLID_BORDER_INDEX in segment_index:            
             # normal #
             # ------ #
+            node = nodes[n_node]
+            r_vector = node / np.linalg.norm(node)
+
             normalX, normalY = 0, 0
             if 10 in segment_index:
-                # left 
-                normalX, normalY = 1, 0
+                # inner 
+                normalX, normalY = r_vector
             elif 11 in segment_index:
-                # right
-                normalX, normalY = -1, 0
-            elif 12 in segment_index:
-                # bottom
-                normalX, normalY = 0, 1
-            elif 13 in segment_index:
-                # upper
-                normalX, normalY = 0, -1
-
+                # outer
+                normalX, normalY = -r_vector
+ 
             normal_len = sqrt(normalX**2+normalY**2)
             sina = normalX / normal_len
             cosa = normalY / normal_len
@@ -215,19 +212,18 @@ while Error < Max_Delta_Error or n_cycle < N_CYCLIES_MAX:
                 n0 = n_node
                 n1, n2 = list(filter(lambda n: n!=n0, triangle))
 
-                X0, Y0 = 0, 0
+                X0, Y0 = ToLocal(*nodes[n0])
                 X1, Y1 = ToLocal(*nodes[n1])
                 X2, Y2 = ToLocal(*nodes[n2])
 
-                Psi0 = 0
-                Psi1, Psi2 = Psi[n1], Psi[n2]
+                Psi0, Psi1, Psi2 = Psi[n0], Psi[n1], Psi[n2]
 
 
                 # Interpolation # 
                 # ------------- #
                 delta = 0.5*Y1*Y2*(X1*Y2 - X2*Y1)
-                delta_a = 0.5*((Psi1-Psi0)*Y2**2 - (Psi2-Psi0)*Y1**2)
-                delta_b = (Psi2-Psi1)*X1*Y1- (Psi1-Psi0)*X2*Y2
+                delta_a = 0.5*((Psi1-Psi0)*(Y2**2) - (Psi2-Psi0)*(Y1**2))
+                delta_b = (Psi2-Psi0)*X1*Y1- (Psi1-Psi0)*X2*Y2
 
                 a = 0
                 b = 0
@@ -237,23 +233,32 @@ while Error < Max_Delta_Error or n_cycle < N_CYCLIES_MAX:
                 else:
                     if Y1 == 0:
                         Psi1 = Psi0
-                        b = 2*(Psi2-Psi0)/Y2**2
+                        b = 2*(Psi2-Psi0)/(Y2**2)
                     elif Y2 == 0:
                         Psi2 = Psi0
-                        b = 2*(Psi1-Psi0)/Y1**2
+                        b = 2*(Psi1-Psi0)/(Y1**2)
 
                 xa, ya = X1*0.5, Y1*0.5
                 xb, yb = X2*0.5, Y2*0.5
                 xc, yc = (X1+X2)/3.0, (Y1+Y2)/3.0 
                 
-                W_Border_Integral += 0.5*a*(yb**2-ya**2) - 0.5*a*(xb**2-xa**2) - \
-                                  - b*(0.5*(ya+yc)*(xc-xa)+ 0.5*(yb+yc)*(xb-xc))
+                border_part = 0.5*a*(yb**2-ya**2) - 0.5*a*(xb**2-xa**2) - \
+                                   b*(0.5*(ya+yc)*(xc-xa) + 0.5*(yb+yc)*(xb-xc))
+                W_Border_Integral += border_part
 
-                # seems legit?
-                triangle_delta = X1*Y2 - (-X2)*(-Y1)
+                # TODO abs???
+                x0, y0 = nodes[n0]
+                x1, y1 = nodes[n1]
+                x2, y2 = nodes[n2]
+                triangle_delta = abs((x1-x0)*(y2-y0) - (x0-x2)*(y0-y1))
 
                 W_Source_Area_Integral += 11.0*triangle_delta/216.0
-                W_Source_Integral += (7*W[n1]+ 7*W[n2])*triangle_delta/216.0
+                W_Source_Integral += (7.0*W[n1]+ 7.0*W[n2])*triangle_delta/216.0
+
+                if n_node == 36 and False:
+                    s = "triangle = {0}, Border_Integral = {1}, d = {2}, s={3}"
+                    formated = s.format(triangle, border_part, triangle_delta, (7.0*W[n1]+ 7.0*W[n2])*triangle_delta/216.0)
+                    print(formated)
             
             Psi_new[n_node] = 0
             W_new[n_node] = (W_Border_Integral + W_Source_Integral)/W_Source_Area_Integral
@@ -275,3 +280,10 @@ while Error < Max_Delta_Error or n_cycle < N_CYCLIES_MAX:
 from MeshHandling.Plotter import PlotNodes
 PlotNodes(nodes, Psi)
 PlotNodes(nodes, W)
+PlotScatter(nodes, W)
+
+minW = min(abs(W))
+maxW = max(abs(W))
+avg = np.average(abs(W))
+
+print(minW, maxW, avg)
