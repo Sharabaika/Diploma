@@ -3,33 +3,37 @@ import numpy as np
 
 def PlotMesh(points, triangles, segment_idex, index_nodes = False, scatted_nodes = False, index_regions = False):
     x, y = points[:, 0], points[:, 1]
-    plt.triplot(x, y, triangles, color='green')
 
+    fig, ax = plt.subplots()
+    
+    ax.triplot(x, y, triangles, color='green')
+    ax.set_aspect('equal')
+    
     if scatted_nodes:
-        plt.scatter(x, y, s=100, c=[arr[0] for arr in segment_idex])    
+        ax.scatter(x, y, s=100, c=[arr[0] for arr in segment_idex])    
 
     if index_nodes:
         for point_index in range(len(x)):
-            plt.text(x=x[point_index], y=y[point_index], s = point_index, color='red', fontsize=10)
+            ax.text(x=x[point_index], y=y[point_index], s = point_index, color='red', fontsize=10)
 
     if index_regions:
         for point_index in range(len(x)):
-            plt.text(x=x[point_index], y=y[point_index], s = segment_idex[point_index], color='red', fontsize=8)
+            ax.text(x=x[point_index], y=y[point_index], s = segment_idex[point_index], color='red', fontsize=8)
     plt.show()
 
-def PlotNodes(points, Fi):
-    x, y = points[:, 0], points[:, 1]
-
+def PlotNodes(triangulation, Fi):
     fig, ax = plt.subplots()
     ax.set_aspect('equal')
-    cf = ax.tricontourf(x,y,Fi)
+    cf = ax.tricontourf(triangulation, Fi)
     fig.colorbar(cf, ax=ax)
     plt.show()
 
 def PlotScatter(points, z):
     x, y = points[:, 0], points[:, 1]
 
-    sc = plt.scatter(x, y, s=100, c=z) 
+    fig, ax = plt.subplots()
+    ax.set_aspect('equal')
+    sc = ax.scatter(x, y, s=100, c=z) 
     plt.colorbar(sc)
     plt.show()
 

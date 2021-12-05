@@ -19,7 +19,7 @@ N_trigs = len(triangles)
 # PARAMS #
 # ====== #
 Pr = 40.0
-Vc = 1           # Viscosity
+Vc = 10         # Viscosity
 Max_Delta_Error = 1e-5
 
 
@@ -42,18 +42,18 @@ W = np.zeros(N_nodes)
 # -------- #
 for n_node in range(N_nodes):
     is_border = 10 in segment_indices[n_node] or 11 in segment_indices[n_node]
-    Psi[n_node] = 0 if is_border else np.random.rand(1)*0.001  
-    W[n_node] = np.random.rand(1)*0.001
+    Psi[n_node] = 0 if is_border else np.random.rand(1)*0.0001
+    W[n_node] = np.random.rand(1)*0.000001+0.000001  
 
 
 Psi_new = np.array(Psi)
 W_new = np.array(W)
 
-N_CYCLIES_MAX = 1
+N_CYCLIES_MAX = 10
 Error = 2*Max_Delta_Error
 n_cycle = 0
 while n_cycle < N_CYCLIES_MAX:
-    if n_cycle % 1 == 0 or True:
+    if n_cycle % 5 == 0 or True:
         print("cycle n = {n}, error == {err}".format(n=n_cycle, err = Error))
     for n_node in range(N_nodes):
         segment_index = segment_indices[n_node]
@@ -177,20 +177,27 @@ while n_cycle < N_CYCLIES_MAX:
             if 10 in segment_index:
                 # inner 
                 normalX, normalY = r_vector
-            elif 11 in segment_index:
+            if 11 in segment_index:
                 # outer
                 normalX, normalY = -r_vector
  
+            # rotate y to normal
             normal_len = sqrt(normalX**2+normalY**2)
             sina = normalX / normal_len
             cosa = normalY / normal_len
 
+            alpha = np.pi*0.5 - np.angle(normalX + normalY*1.0j)
+            cosa1 = np.cos(alpha)
+            sina1 = np.sin(alpha)
+
 
             # LOCAL COORDS #
             # ------------ #
+
+            # TODO kek
             x_center, y_center = nodes[n_node]
-            def ToLocal(x, y):
-                X =  (x-x_center)*cosa + (y-y_center)*sina
+            def ToLocal_Border(x, y):
+                X = (x-x_center)*cosa + (y-y_center)*sina
                 Y = -(x-x_center)*sina + (y-y_center)*cosa
                 return X,Y
 
@@ -212,9 +219,9 @@ while n_cycle < N_CYCLIES_MAX:
                 n0 = n_node
                 n1, n2 = list(filter(lambda n: n!=n0, triangle))
 
-                X0, Y0 = ToLocal(*nodes[n0])
-                X1, Y1 = ToLocal(*nodes[n1])
-                X2, Y2 = ToLocal(*nodes[n2])
+                X0, Y0 = ToLocal_Border(*nodes[n0])
+                X1, Y1 = ToLocal_Border(*nodes[n1])
+                X2, Y2 = ToLocal_Border(*nodes[n2])
 
                 Psi0, Psi1, Psi2 = Psi[n0], Psi[n1], Psi[n2]
 
@@ -255,7 +262,7 @@ while n_cycle < N_CYCLIES_MAX:
                 W_Source_Area_Integral += 11.0*triangle_delta/216.0
                 W_Source_Integral += (7.0*W[n1]+ 7.0*W[n2])*triangle_delta/216.0
 
-                if n_node == 36 and False:
+                if n_node == 107 and False:
                     s = "triangle = {0}, Border_Integral = {1}, d = {2}, s={3}"
                     formated = s.format(triangle, border_part, triangle_delta, (7.0*W[n1]+ 7.0*W[n2])*triangle_delta/216.0)
                     print(formated)
@@ -272,18 +279,17 @@ while n_cycle < N_CYCLIES_MAX:
 
     # NEXT STEP #
     # --------- #
-    Psi = Psi_new
-    W = W_new
+    Psi = np.copy(Psi_new)
+    W = np.copy(W_new)
 
     n_cycle += 1
 
+import matplotlib as matplot
+
+x, y = nodes[:,0], nodes[:,1]
+triangulation = matplot.tri.Triangulation(x,y,triangles)
+
 from MeshHandling.Plotter import PlotNodes
-PlotNodes(nodes, Psi)
-PlotNodes(nodes, W)
+PlotNodes(triangulation, Psi)
+PlotNodes(triangulation, W)
 PlotScatter(nodes, W)
-
-minW = min(abs(W))
-maxW = max(abs(W))
-avg = np.average(abs(W))
-
-print(minW, maxW, avg)

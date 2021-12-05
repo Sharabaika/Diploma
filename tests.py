@@ -19,7 +19,7 @@ def main():
     nodes, triangles, segment_indices, trig_neighbors, node_neighbours = ReadSaved("SavedMeshes/circle_saved.dat")
 
     from MeshHandling.Plotter import PlotMesh 
-    PlotMesh(nodes, triangles, segment_indices, False, False, True)
+    PlotMesh(nodes, triangles, segment_indices, True, False, False)
 
 
 if __name__ == "__main__":
