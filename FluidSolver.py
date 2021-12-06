@@ -86,8 +86,8 @@ while n_cycle < N_CYCLIES_MAX:
 
                 # Psi #
                 # --- #
-                Delta_PsiA = Psi[n0]*y12 + Psi[n1]*y20 + Psi[n1]*y01
-                Delta_PsiB = Psi[n0]*x21 + Psi[n1]*x02 + Psi[n1]*x10
+                Delta_PsiA = Psi[n0]*y12 + Psi[n1]*y20 + Psi[n2]*y01
+                Delta_PsiB = Psi[n0]*x21 + Psi[n1]*x02 + Psi[n2]*x10
 
                 A_Psi = Delta_PsiA / Delta
                 B_PSi = Delta_PsiB / Delta
@@ -131,8 +131,8 @@ while n_cycle < N_CYCLIES_MAX:
                 X01, Y01 = X0 - X1, Y0 - Y1
 
 
-                Ya, Yb = (Y1 - Y0)/2, (Y2 - Y0)/2
-                Xa, Xb = (X1 - X0)/2, (X2 - X0)/2
+                Ya, Yb = (Y1 + Y0)/2, (Y2 + Y0)/2
+                Xa, Xb = (X1 + X0)/2, (X2 + X0)/2
 
                 
                 X_max = max(X0, X1, X2)
@@ -197,8 +197,8 @@ while n_cycle < N_CYCLIES_MAX:
             # TODO kek
             x_center, y_center = nodes[n_node]
             def ToLocal_Border(x, y):
-                X = (x-x_center)*cosa + (y-y_center)*sina
-                Y = -(x-x_center)*sina + (y-y_center)*cosa
+                X = (x-x_center)*cosa + -(y-y_center)*sina
+                Y = (x-x_center)*sina + (y-y_center)*cosa
                 return X,Y
 
 
@@ -259,7 +259,7 @@ while n_cycle < N_CYCLIES_MAX:
                 x2, y2 = nodes[n2]
                 triangle_delta = abs((x1-x0)*(y2-y0) - (x0-x2)*(y0-y1))
 
-                W_Source_Area_Integral += 11.0*triangle_delta/216.0
+                W_Source_Area_Integral += 11.0*triangle_delta/108.0
                 W_Source_Integral += (7.0*W[n1]+ 7.0*W[n2])*triangle_delta/216.0
 
                 if n_node == 107 and False:
