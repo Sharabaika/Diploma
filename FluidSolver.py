@@ -11,17 +11,22 @@ from MeshHandling.Plotter import PlotMesh, PlotScatter
 SOLID_BORDER_INDEX = 1000
 MEDIUM_INDEX = 2000
 
-nodes, triangles, segment_indices, trig_neighbors, node_neighbours = ReadSaved("SavedMeshes/circle_saved.dat")
+nodes, triangles, segment_indices, trig_neighbors, node_neighbours = ReadSaved("SavedMeshes/square_saved.dat")
 
 N_nodes = len(nodes)
 N_trigs = len(triangles)
 
 # PARAMS #
 # ====== #
-Pr = 40.0
-Vc = 10         # Viscosity
+Re = 300
+Pr = 1/Re
+Vc = 1 
 Max_Delta_Error = 1e-5
 
+Vx = 1
+
+QPsi = 1.5
+QW = 0.5
 
 # Init variables #
 # -------------- #
@@ -41,15 +46,17 @@ W = np.zeros(N_nodes)
 # Dynamics #
 # -------- #
 for n_node in range(N_nodes):
-    is_border = 10 in segment_indices[n_node] or 11 in segment_indices[n_node]
-    Psi[n_node] = 0 if is_border else np.random.rand(1)*0.0001
-    W[n_node] = np.random.rand(1)*0.000001+0.000001  
-
+    tags = segment_indices[n_node]
+    is_wall = SOLID_BORDER_INDEX in tags
+    x, y = nodes[n_node]
+    # W[n_node] = np.random.rand(1)*0.001+0.001 
+    Psi[n_node] = 0 if is_wall else 0.0001*np.sin(x*np.pi)*np.sin(y*np.pi)
+ 
 
 Psi_new = np.array(Psi)
 W_new = np.array(W)
 
-N_CYCLIES_MAX = 10
+N_CYCLIES_MAX = 1000
 Error = 2*Max_Delta_Error
 n_cycle = 0
 while n_cycle < N_CYCLIES_MAX:
@@ -131,10 +138,9 @@ while n_cycle < N_CYCLIES_MAX:
                 X01, Y01 = X0 - X1, Y0 - Y1
 
 
-                Ya, Yb = (Y1 + Y0)/2, (Y2 + Y0)/2
-                Xa, Xb = (X1 + X0)/2, (X2 + X0)/2
+                Ya, Yb = (Y1 + Y0)*0.5, (Y2 + Y0)*0.5
+                Xa, Xb = (X1 + X0)*0.5, (X2 + X0)*0.5
 
-                
                 X_max = max(X0, X1, X2)
 
                 EW0 = exp(U_ell*(X0-X_max)/(Pr*Vc))
@@ -148,6 +154,7 @@ while n_cycle < N_CYCLIES_MAX:
                             + W[n1]*(EW2*Y0 - EW0*Y2)  \
                             + W[n2]*(EW0*Y1 - EW1*Y0)
 
+
                 A_W = Delta_W_A / Delta_W
                 B_W = Delta_W_B / Delta_W
                 C_W = Delta_W_C / Delta_W
@@ -155,7 +162,7 @@ while n_cycle < N_CYCLIES_MAX:
                 W0, W1, W2 = W[n0], W[n1], W[n2]
 
                 aBw = U_ell*Y12*Y0/ 8.0 / Pr + Vc*X12/2
-                aCw = (U_ell*Y12)/(2*Pr)
+                aCw = (U_ell*Y12)/(2.0*Pr)
                 
                 W_BorderIntegral += W1*(aBw*(EW0-EW2)+ aCw*(EW2*Y0-EW0*Y2)) \
                                  +  W2*(aBw*(EW1-EW0)+ aCw*(EW0*Y1-EW1*Y0))
@@ -165,40 +172,36 @@ while n_cycle < N_CYCLIES_MAX:
 
             Psi_new[n_node] = (-Psi_BorderIntegral_nb + Psi_AreaIntegral)/Psi_BorderIntegral_a0
             W_new[n_node] = (-W_BorderIntegral + W_AreaIntegral)/W_BorderIntegral_k0
+
         # SOLID BORDER #
         # ============ #
         elif SOLID_BORDER_INDEX in segment_index:            
             # normal #
             # ------ #
             node = nodes[n_node]
-            r_vector = node / np.linalg.norm(node)
+            sina, cosa = 0, 0
 
             normalX, normalY = 0, 0
             if 10 in segment_index:
-                # inner 
-                normalX, normalY = r_vector
+                # left  
+                sina, cosa = -1, 0
             if 11 in segment_index:
-                # outer
-                normalX, normalY = -r_vector
- 
-            # rotate y to normal
-            normal_len = sqrt(normalX**2+normalY**2)
-            sina = normalX / normal_len
-            cosa = normalY / normal_len
-
-            alpha = np.pi*0.5 - np.angle(normalX + normalY*1.0j)
-            cosa1 = np.cos(alpha)
-            sina1 = np.sin(alpha)
-
+                # right
+                sina, cosa = 1, 0
+            if 12 in segment_index:
+                # bottom  
+                sina, cosa = 0, 1
+            if 13 in segment_index:
+                # upp  
+                sina, cosa = 0, -1
 
             # LOCAL COORDS #
             # ------------ #
 
-            # TODO kek
             x_center, y_center = nodes[n_node]
             def ToLocal_Border(x, y):
-                X = (x-x_center)*cosa + -(y-y_center)*sina
-                Y = (x-x_center)*sina + (y-y_center)*cosa
+                X = (x-x_center)*cosa + (y-y_center)*sina
+                Y = -(x-x_center)*sina + (y-y_center)*cosa
                 return X,Y
 
 
@@ -228,9 +231,14 @@ while n_cycle < N_CYCLIES_MAX:
 
                 # Interpolation # 
                 # ------------- #
+                is_moving_border = 13 in segment_index
+
+                с1 = Psi1-Psi0-Vx*Y1 if is_moving_border else Psi1-Psi0
+                с2 = Psi2-Psi0-Vx*Y2 if is_moving_border else Psi2-Psi0
+
                 delta = 0.5*Y1*Y2*(X1*Y2 - X2*Y1)
-                delta_a = 0.5*((Psi1-Psi0)*(Y2**2) - (Psi2-Psi0)*(Y1**2))
-                delta_b = (Psi2-Psi0)*X1*Y1- (Psi1-Psi0)*X2*Y2
+                delta_a = 0.5*(с1*(Y2**2) - с2*(Y1**2))
+                delta_b = с2*X1*Y1- с1*X2*Y2
 
                 a = 0
                 b = 0
@@ -238,19 +246,22 @@ while n_cycle < N_CYCLIES_MAX:
                     a = delta_a / delta
                     b = delta_b / delta
                 else:
+                    if Y1 == 0 and Y2 == 0:
+                        print(f"exception in node {n_node}")
                     if Y1 == 0:
-                        Psi1 = Psi0
-                        b = 2*(Psi2-Psi0)/(Y2**2)
+                        b = 2*с2/(Y2**2)
                     elif Y2 == 0:
-                        Psi2 = Psi0
-                        b = 2*(Psi1-Psi0)/(Y1**2)
+                        b = 2*с1/(Y1**2)
 
                 xa, ya = X1*0.5, Y1*0.5
                 xb, yb = X2*0.5, Y2*0.5
                 xc, yc = (X1+X2)/3.0, (Y1+Y2)/3.0 
+
+                moving_border_add = Vx*(xb-xa) if is_moving_border else 0
                 
-                border_part = 0.5*a*(yb**2-ya**2) - 0.5*a*(xb**2-xa**2) - \
-                                   b*(0.5*(ya+yc)*(xc-xa) + 0.5*(yb+yc)*(xb-xc))
+                border_part = 0.5*a*(yb*yb-ya*ya) - 0.5*a*(xb*xb-xa*xa) - \
+                                   b*(0.5*(ya+yc)*(xc-xa) + 0.5*(yb+yc)*(xb-xc))  + \
+                                   moving_border_add
                 W_Border_Integral += border_part
 
                 # TODO abs???
@@ -261,14 +272,9 @@ while n_cycle < N_CYCLIES_MAX:
 
                 W_Source_Area_Integral += 11.0*triangle_delta/108.0
                 W_Source_Integral += (7.0*W[n1]+ 7.0*W[n2])*triangle_delta/216.0
-
-                if n_node == 107 and False:
-                    s = "triangle = {0}, Border_Integral = {1}, d = {2}, s={3}"
-                    formated = s.format(triangle, border_part, triangle_delta, (7.0*W[n1]+ 7.0*W[n2])*triangle_delta/216.0)
-                    print(formated)
             
             Psi_new[n_node] = 0
-            W_new[n_node] = (W_Border_Integral + W_Source_Integral)/W_Source_Area_Integral
+            W_new[n_node] = (-W_Border_Integral + W_Source_Integral)/W_Source_Area_Integral
     # ERRORS # 
     # ------ #
     Delta_Psi_Error_Squared = sum((Psi - Psi_new)**2)
@@ -279,8 +285,8 @@ while n_cycle < N_CYCLIES_MAX:
 
     # NEXT STEP #
     # --------- #
-    Psi = np.copy(Psi_new)
-    W = np.copy(W_new)
+    Psi = Psi*(1-QPsi) + np.copy(Psi_new)*QPsi
+    W = W_new*(1-QW) + np.copy(W_new)*QW
 
     n_cycle += 1
 
