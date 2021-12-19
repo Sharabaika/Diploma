@@ -13,7 +13,9 @@ Saver = files.ResultSaving("W", "Psi")
 SOLID_BORDER_INDEX = 1000
 MEDIUM_INDEX = 2000
 
-nodes, triangles, segment_indices, trig_neighbors, node_neighbours = ReadSaved("SavedMeshes/square_saved.dat")
+mesh_name = "square_saved"
+
+nodes, triangles, segment_indices, trig_neighbors, node_neighbours = ReadSaved(f"SavedMeshes/{mesh_name}.dat")
 
 N_nodes = len(nodes)
 N_trigs = len(triangles)
@@ -27,8 +29,11 @@ Max_Delta_Error = 1e-5
 
 Vx = 1
 
-QPsi = 0.5
+QPsi = 1.2
 QW = 0.5
+
+
+Saver.AddParams(mesh_name = mesh_name, Re = Re, QPsi = QPsi, QW = QW)
 
 # Init variables #
 # -------------- #
@@ -58,7 +63,7 @@ for n_node in range(N_nodes):
 Psi_new = np.array(Psi)
 W_new = np.array(W)
 
-N_CYCLIES_MAX = 10000
+N_CYCLIES_MAX = 10
 Error = 2*Max_Delta_Error
 n_cycle = 0
 while n_cycle < N_CYCLIES_MAX:
@@ -298,7 +303,7 @@ import matplotlib as matplot
 x, y = nodes[:,0], nodes[:,1]
 triangulation = matplot.tri.Triangulation(x,y,triangles)
 
-Saver.SaveResults("SavedResults", "Test", W = W, Psi = Psi)
+Saver.SaveResults("SavedResults", "TestV2", W = W, Psi = Psi)
 
 # from MeshHandling.Plotter import PlotNodes
 # PlotNodes(triangulation, Psi)

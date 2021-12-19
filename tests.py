@@ -5,7 +5,7 @@ from Scripts.MeshWriter import SaveMesh
 import pandas as pd
 import matplotlib.tri as tri
 import sys
-from Scripts.Plotter import CoolPlots, PlotNodes, ResultAnalysis
+from Scripts.Plotter import CoolPlots, DynamycsAnalysis, PlotNodes, ResultAnalysis
 
 from Scripts.ResultFileHandling import ResultSaving
 sys.path.insert(0, '/home/amninder/Desktop/Folder_2')
@@ -31,18 +31,9 @@ def main():
     # from MeshHandling.Plotter import PlotMesh 
     # PlotMesh(nodes, triangles, segment_indices, False, False, True)
 
-    an = ResultAnalysis("SavedResults", "Test")
-    an.LoadLogs()
-    # an.PlotErrors(traces = ["Psi", "W"], xrange = (500, -1))
+    an = DynamycsAnalysis("SavedResults", "TestV2")
 
-    df = ResultSaving.ReadResult("SavedResults\Test\saved.csv")
-
-    x, y = nodes[:,0], nodes[:,1]
-    triangulation = matplotlib.tri.Triangulation(x,y,triangles)
-
-    # PlotNodes(triangulation, df["Psi"])
-
-    CoolPlots.PlotLevel(x,y, df["Psi"], nlevels = 100, xrange = (0,1), yrange = (0,1), manual = True)
+    an.PlotW()
 
 
 

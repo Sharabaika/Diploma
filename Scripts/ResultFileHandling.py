@@ -5,7 +5,11 @@ import os
 class ResultSaving:
     def __init__(self, *args, **kwargs):
         self.logger = Logger(*args, **kwargs)
+        self.params = {}
 
+    def AddParams(self, **kwargs):
+        self.params.update(kwargs)
+    
     def SaveResults(self, folder, result_name, *args, **kwargs):
         df = pd.DataFrame(data = kwargs)
 
@@ -19,6 +23,10 @@ class ResultSaving:
 
         logger_path = os.path.join(path, "logs.csv")
         self.logger.ToDataFrame().to_csv(logger_path)
+
+        if self.params is not None:
+            params_path = os.path.join(path, "params.csv")
+            pd.DataFrame(data=self.params, index=[0]).to_csv(params_path)
 
     def ReadResult(path):
         df = pd.read_csv(path)

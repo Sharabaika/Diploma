@@ -1,7 +1,10 @@
 import os
 import matplotlib.pyplot as plt
+import matplotlib
 import numpy as np
 import pandas as pd
+
+from Scripts.MeshReader import ReadSaved
 
 def PlotMesh(points, triangles, segment_idex, index_nodes = False, scatted_nodes = False, index_regions = False):
     x, y = points[:, 0], points[:, 1]
@@ -108,10 +111,33 @@ class ResultAnalysis:
         
         self.logs = None
         self.saved = None
+        self.params = None
 
-    def LoadLogs(self):
-        logs_path = os.path.join(self.path, "logs.csv")
-        self.logs = pd.read_csv(logs_path, index_col=0)
+        self.loaded_mesh = None
+
+    def GetLogs(self):
+        if self.logs is None:
+            logs_path = os.path.join(self.path, "logs.csv")
+            self.logs = pd.read_csv(logs_path, index_col=0)
+        return self.logs
+
+    def GetSavedResults(self):
+        if self.saved is None:
+            saved_path = os.path.join(self.path, "saved.csv")
+            self.saved = pd.read_csv(saved_path)
+        return self.saved
+
+    def GetParams(self):
+        if self.params is None:
+            params_path = os.path.join(self.path, "params.csv")
+            self.params = pd.read_csv(params_path)
+        return self.params
+
+    def GetMesh(self):
+        if self.loaded_mesh is None:
+            mesh_name = self.GetParams().iloc[0]['mesh_name']
+            self.loaded_mesh = ReadSaved(f"SavedMeshes/{mesh_name}.dat")
+        return self.loaded_mesh
 
     def PlotErrors(self, *args, **kwargs):
         if self.logs is None:
@@ -120,10 +146,33 @@ class ResultAnalysis:
         xmin, xmax = kwargs.get("xrange", (0,-1))
         xmax = len(self.logs) if xmax == -1 else xmax 
 
-        traces = kwargs.get("traces", self.logs.columns)
+        traces = kwargs.get("traces", self.GetLogs().columns)
 
-        ax = self.logs[traces][xmin:xmax].plot()
+        ax = self.GetLogs()[traces][xmin:xmax].plot()
         plt.show()
+
+class DynamycsAnalysis(ResultAnalysis):
+    def __init__(self, folder, result_name):
+        super().__init__(folder, result_name)
+
+    def GetPsi(self):
+        return self.GetSavedResults()["Psi"]
+
+    def GetW(self):
+        return self.GetSavedResults()["W"]
+    
+    def PlotW(self):
+        nodes, triangles, segment_indices, trig_neighbors, node_neighbours = self.GetMesh()
+
+        x, y = nodes[:,0], nodes[:,1]
+        triangulation = matplotlib.tri.Triangulation(x,y,triangles)
+
+        PlotMesh(nodes, triangles, segment_indices)
+        
+        # CoolPlots.PlotLevel(x, y, self.GetPsi(), nlevels = 10, xrange = (0,1), yrange = (0,1), manual = False)
+        PlotNodes(triangulation, self.GetPsi())
+
+        
 
 def main():
     pass
