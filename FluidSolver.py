@@ -1,11 +1,13 @@
 from types import MemberDescriptorType
 import matplotlib
 import numpy as np
-from MeshFileHandling.MeshReader import ReadRaw, ReadSaved
+from Scripts.MeshReader import ReadRaw, ReadSaved
 from math import exp, sqrt
 import matplotlib.tri as tri
-from MeshHandling.Plotter import PlotMesh, PlotScatter 
+from Scripts.Plotter import PlotMesh, PlotScatter 
+import Scripts.ResultFileHandling as files
 
+Saver = files.ResultSaving("W", "Psi")
 
 # Regions
 SOLID_BORDER_INDEX = 1000
@@ -25,7 +27,7 @@ Max_Delta_Error = 1e-5
 
 Vx = 1
 
-QPsi = 1.5
+QPsi = 0.5
 QW = 0.5
 
 # Init variables #
@@ -56,11 +58,11 @@ for n_node in range(N_nodes):
 Psi_new = np.array(Psi)
 W_new = np.array(W)
 
-N_CYCLIES_MAX = 1000
+N_CYCLIES_MAX = 10000
 Error = 2*Max_Delta_Error
 n_cycle = 0
 while n_cycle < N_CYCLIES_MAX:
-    if n_cycle % 5 == 0 or True:
+    if n_cycle % 50 == 0:
         print("cycle n = {n}, error == {err}".format(n=n_cycle, err = Error))
     for n_node in range(N_nodes):
         segment_index = segment_indices[n_node]
@@ -233,12 +235,12 @@ while n_cycle < N_CYCLIES_MAX:
                 # ------------- #
                 is_moving_border = 13 in segment_index
 
-                с1 = Psi1-Psi0-Vx*Y1 if is_moving_border else Psi1-Psi0
-                с2 = Psi2-Psi0-Vx*Y2 if is_moving_border else Psi2-Psi0
+                c1 = Psi1-Psi0-Vx*Y1 if is_moving_border else Psi1-Psi0
+                c2 = Psi2-Psi0-Vx*Y2 if is_moving_border else Psi2-Psi0
 
                 delta = 0.5*Y1*Y2*(X1*Y2 - X2*Y1)
-                delta_a = 0.5*(с1*(Y2**2) - с2*(Y1**2))
-                delta_b = с2*X1*Y1- с1*X2*Y2
+                delta_a = 0.5*(c1*(Y2**2) - c2*(Y1**2))
+                delta_b = c2*X1*Y1- c1*X2*Y2
 
                 a = 0
                 b = 0
@@ -249,9 +251,9 @@ while n_cycle < N_CYCLIES_MAX:
                     if Y1 == 0 and Y2 == 0:
                         print(f"exception in node {n_node}")
                     if Y1 == 0:
-                        b = 2*с2/(Y2**2)
+                        b = 2*c2/(Y2**2)
                     elif Y2 == 0:
-                        b = 2*с1/(Y1**2)
+                        b = 2*c1/(Y1**2)
 
                 xa, ya = X1*0.5, Y1*0.5
                 xb, yb = X2*0.5, Y2*0.5
@@ -277,11 +279,12 @@ while n_cycle < N_CYCLIES_MAX:
             W_new[n_node] = (-W_Border_Integral + W_Source_Integral)/W_Source_Area_Integral
     # ERRORS # 
     # ------ #
-    Delta_Psi_Error_Squared = sum((Psi - Psi_new)**2)
-    Delta_Ws_Error_Squared = sum((W - W_new)**2)
+    Delta_Psi_Error_Squared = sum((Psi - Psi_new)**2)/(QPsi*QPsi)
+    Delta_Ws_Error_Squared = sum((W - W_new)**2)/(QW*QW)
 
     Error = sqrt(Delta_Psi_Error_Squared + Delta_Ws_Error_Squared)
 
+    Saver.logger.LogErrors(Psi = sqrt(Delta_Psi_Error_Squared), W = sqrt(Delta_Ws_Error_Squared))
 
     # NEXT STEP #
     # --------- #
@@ -295,7 +298,9 @@ import matplotlib as matplot
 x, y = nodes[:,0], nodes[:,1]
 triangulation = matplot.tri.Triangulation(x,y,triangles)
 
-from MeshHandling.Plotter import PlotNodes
-PlotNodes(triangulation, Psi)
-PlotNodes(triangulation, W)
-PlotScatter(nodes, W)
+Saver.SaveResults("SavedResults", "Test", W = W, Psi = Psi)
+
+# from MeshHandling.Plotter import PlotNodes
+# PlotNodes(triangulation, Psi)
+# PlotNodes(triangulation, W)
+# PlotScatter(nodes, W)

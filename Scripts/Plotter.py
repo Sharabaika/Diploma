@@ -1,5 +1,7 @@
+import os
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 
 def PlotMesh(points, triangles, segment_idex, index_nodes = False, scatted_nodes = False, index_regions = False):
     x, y = points[:, 0], points[:, 1]
@@ -10,10 +12,7 @@ def PlotMesh(points, triangles, segment_idex, index_nodes = False, scatted_nodes
     ax.set_aspect('equal')
     
     if scatted_nodes:
-        ax.scatter(x, y, s=100, c=[arr[0] for arr in segment_idex])    
-    #     ax.scatter(x, y, s=100, c=[0 if point in [122., 130., 140., 143., 144., 147., 150., 173., 180., 181., 190.,
-    #    191., 195., 198., 200., 210., 214., 216., 220., 224., 234., 236.,
-    #    275., 302., 303., 364.] else 1 for point in range(len(points))])    
+        ax.scatter(x, y, s=100, c=[arr[0] for arr in segment_idex])     
 
     if index_nodes:
         for point_index in range(len(x)):
@@ -102,6 +101,29 @@ class CoolPlots:
         
         CoolPlots.PlotLevel(XPoints, YPoints, F, **kwargs)
 
+
+class ResultAnalysis:
+    def __init__(self, folder, result_name):
+        self.path = os.path.join(folder, result_name)
+        
+        self.logs = None
+        self.saved = None
+
+    def LoadLogs(self):
+        logs_path = os.path.join(self.path, "logs.csv")
+        self.logs = pd.read_csv(logs_path, index_col=0)
+
+    def PlotErrors(self, *args, **kwargs):
+        if self.logs is None:
+            raise Exception("Logs are not loaded")
+        
+        xmin, xmax = kwargs.get("xrange", (0,-1))
+        xmax = len(self.logs) if xmax == -1 else xmax 
+
+        traces = kwargs.get("traces", self.logs.columns)
+
+        ax = self.logs[traces][xmin:xmax].plot()
+        plt.show()
 
 def main():
     pass

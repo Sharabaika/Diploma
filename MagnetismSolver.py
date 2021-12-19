@@ -1,8 +1,8 @@
 import matplotlib
 from matplotlib.pyplot import title
 import numpy as np
-from MeshFileHandling.MeshReader import ReadRaw
-import MeshHandling.Plotter as Plotter
+from Scripts.MeshReader import ReadRaw
+import Scripts.Plotter as Plotter
 from math import exp, sqrt
 import matplotlib.tri as tri
 
