@@ -31,9 +31,11 @@ def main():
     # from MeshHandling.Plotter import PlotMesh 
     # PlotMesh(nodes, triangles, segment_indices, False, False, True)
 
-    an = DynamycsAnalysis("SavedResults", "TestV2")
+    an = DynamycsAnalysis("SavedResults", "FinalTestV2")
 
-    an.PlotW()
+    # an.PlotPsi()
+    # an.PlotW()
+    an.PlotErrors(xrange = (10,-1))
 
 
 

@@ -73,6 +73,9 @@ class CoolPlots:
             levels = np.arange(minF, maxF + step/2, step)
             
 
+        fig, ax = plt.subplots()
+        ax.set_aspect('equal')
+
         plot.title(title)
 
         pylab.xlim(xrange)
@@ -80,6 +83,7 @@ class CoolPlots:
 
         plot.xlabel('X')
         plot.ylabel('Y')
+
 
         if len(levels):
             contours = plot.tricontour(x, y, F, levels = levels)
@@ -139,16 +143,14 @@ class ResultAnalysis:
             self.loaded_mesh = ReadSaved(f"SavedMeshes/{mesh_name}.dat")
         return self.loaded_mesh
 
-    def PlotErrors(self, *args, **kwargs):
-        if self.logs is None:
-            raise Exception("Logs are not loaded")
-        
+    def PlotErrors(self, *args, **kwargs):       
         xmin, xmax = kwargs.get("xrange", (0,-1))
-        xmax = len(self.logs) if xmax == -1 else xmax 
+        xmax = len(self.GetLogs().index) if xmax == -1 else xmax 
 
         traces = kwargs.get("traces", self.GetLogs().columns)
 
         ax = self.GetLogs()[traces][xmin:xmax].plot()
+        ax.set_ylim((0,0.125))
         plt.show()
 
 class DynamycsAnalysis(ResultAnalysis):
@@ -161,16 +163,20 @@ class DynamycsAnalysis(ResultAnalysis):
     def GetW(self):
         return self.GetSavedResults()["W"]
     
-    def PlotW(self):
+    def PlotPsi(self):
         nodes, triangles, segment_indices, trig_neighbors, node_neighbours = self.GetMesh()
 
         x, y = nodes[:,0], nodes[:,1]
         triangulation = matplotlib.tri.Triangulation(x,y,triangles)
-
-        PlotMesh(nodes, triangles, segment_indices)
         
-        # CoolPlots.PlotLevel(x, y, self.GetPsi(), nlevels = 10, xrange = (0,1), yrange = (0,1), manual = False)
-        PlotNodes(triangulation, self.GetPsi())
+        CoolPlots.PlotLevel(x, y, self.GetPsi(), nlevels = 100, xrange = (0,1), yrange = (0,1), manual = False)
+
+    def PlotW(self):
+        nodes, triangles, segment_indices, trig_neighbors, node_neighbours = self.GetMesh()
+        x, y = nodes[:,0], nodes[:,1]
+        triangulation = matplotlib.tri.Triangulation(x,y,triangles)
+
+        PlotNodes(triangulation, self.GetW())
 
         
 

@@ -25,12 +25,15 @@ N_trigs = len(triangles)
 Re = 300
 Pr = 1/Re
 Vc = 1 
-Max_Delta_Error = 1e-5
+
+
+N_CYCLIES_MAX = 2000
+MAX_DELTA_ERROR = 1e-5
 
 Vx = 1
 
-QPsi = 1.2
-QW = 0.5
+QPsi = 0.85
+QW = 0.35
 
 
 Saver.AddParams(mesh_name = mesh_name, Re = Re, QPsi = QPsi, QW = QW)
@@ -63,12 +66,11 @@ for n_node in range(N_nodes):
 Psi_new = np.array(Psi)
 W_new = np.array(W)
 
-N_CYCLIES_MAX = 10
-Error = 2*Max_Delta_Error
+Max_Error_Sqrd = MAX_DELTA_ERROR**2
+Error = 2*Max_Error_Sqrd
+
 n_cycle = 0
-while n_cycle < N_CYCLIES_MAX:
-    if n_cycle % 50 == 0:
-        print("cycle n = {n}, error == {err}".format(n=n_cycle, err = Error))
+while n_cycle < N_CYCLIES_MAX and Error>=Max_Error_Sqrd:
     for n_node in range(N_nodes):
         segment_index = segment_indices[n_node]
         
@@ -100,20 +102,24 @@ while n_cycle < N_CYCLIES_MAX:
 
                 # Psi #
                 # --- #
-                Delta_PsiA = Psi[n0]*y12 + Psi[n1]*y20 + Psi[n2]*y01
-                Delta_PsiB = Psi[n0]*x21 + Psi[n1]*x02 + Psi[n2]*x10
+                Psi0, Psi1, Psi2 = Psi[n0], Psi[n1], Psi[n2]
+                W0, W1, W2 = W[n0], W[n1], W[n2]
+
+
+                Delta_PsiA = Psi0*y12 + Psi1*y20 + Psi2*y01
+                Delta_PsiB = Psi0*x21 + Psi1*x02 + Psi2*x10
 
                 A_Psi = Delta_PsiA / Delta
                 B_PSi = Delta_PsiB / Delta
 
                 a0      = (x21*x21+y12*y12)/Delta
-                a1_psi1 = Psi[n1] * (y20*y12+x02*x21) / Delta
-                a2_psi2 = Psi[n2] * (y01*y12+x10*x21) / Delta
+                a1_psi1 = Psi1 * (y20*y12+x02*x21) / Delta
+                a2_psi2 = Psi2 * (y01*y12+x10*x21) / Delta
 
                 Psi_BorderIntegral_a0 += a0
                 Psi_BorderIntegral_nb += (a1_psi1+a2_psi2)
 
-                Psi_AreaIntegral += (22.0*W[n0]+7.0*W[n1]+7.0*W[n2])*Delta/216.0
+                Psi_AreaIntegral += (22.0*W0+7.0*W1+7.0*W2)*Delta/216.0
 
                 # W #
                 # - # 
@@ -155,18 +161,16 @@ while n_cycle < N_CYCLIES_MAX:
                 EW2 = exp(U_ell*(X2-X_max)/(Pr*Vc))
 
                 Delta_W   = EW0*Y12 + EW1*Y20 + EW2*Y01
-                Delta_W_A = W[n0]*Y12 + W[n1]*Y20 + W[n2]*Y01
-                Delta_W_B = W[n0]*(EW2-EW1) + W[n1]*(EW0-EW2) + W[n2]*(EW1-EW0)
-                Delta_W_C = + W[n0]*(EW1*Y2 - EW2*Y1)  \
-                            + W[n1]*(EW2*Y0 - EW0*Y2)  \
-                            + W[n2]*(EW0*Y1 - EW1*Y0)
+                Delta_W_A = W0*Y12 + W1*Y20 + W2*Y01
+                Delta_W_B = W0*(EW2-EW1) + W1*(EW0-EW2) + W2*(EW1-EW0)
+                Delta_W_C = + W0*(EW1*Y2 - EW2*Y1)  \
+                            + W1*(EW2*Y0 - EW0*Y2)  \
+                            + W2*(EW0*Y1 - EW1*Y0)
 
 
                 A_W = Delta_W_A / Delta_W
                 B_W = Delta_W_B / Delta_W
                 C_W = Delta_W_C / Delta_W
-
-                W0, W1, W2 = W[n0], W[n1], W[n2]
 
                 aBw = U_ell*Y12*Y0/ 8.0 / Pr + Vc*X12/2
                 aCw = (U_ell*Y12)/(2.0*Pr)
@@ -226,15 +230,17 @@ while n_cycle < N_CYCLIES_MAX:
             for n_trig_neigbor in trig_neighbors[n_node]:
                 triangle = triangles[n_trig_neigbor]
 
-                n0 = n_node
-                n1, n2 = list(filter(lambda n: n!=n0, triangle))
+                n0, n1, n2 = triangle
+                if n_node == n1:
+                    n0, n1, n2 =  n_node, n2, n0
+                elif n_node == n2:
+                    n0, n1, n2 = n_node, n0, n1
 
                 X0, Y0 = ToLocal_Border(*nodes[n0])
                 X1, Y1 = ToLocal_Border(*nodes[n1])
                 X2, Y2 = ToLocal_Border(*nodes[n2])
 
                 Psi0, Psi1, Psi2 = Psi[n0], Psi[n1], Psi[n2]
-
 
                 # Interpolation # 
                 # ------------- #
@@ -277,17 +283,22 @@ while n_cycle < N_CYCLIES_MAX:
                 x2, y2 = nodes[n2]
                 triangle_delta = abs((x1-x0)*(y2-y0) - (x0-x2)*(y0-y1))
 
+                W1, W2 = W[n1], W[n2]
+
                 W_Source_Area_Integral += 11.0*triangle_delta/108.0
-                W_Source_Integral += (7.0*W[n1]+ 7.0*W[n2])*triangle_delta/216.0
+                W_Source_Integral += (7.0*W1+ 7.0*W2)*triangle_delta/216.0
             
             Psi_new[n_node] = 0
             W_new[n_node] = (-W_Border_Integral + W_Source_Integral)/W_Source_Area_Integral
     # ERRORS # 
     # ------ #
-    Delta_Psi_Error_Squared = sum((Psi - Psi_new)**2)/(QPsi*QPsi)
-    Delta_Ws_Error_Squared = sum((W - W_new)**2)/(QW*QW)
+    Delta_Psi_Error_Squared = sum((Psi - Psi_new)**2)/(QPsi*QPsi)/sum(Psi_new**2)
+    Delta_Ws_Error_Squared = sum((W - W_new)**2)/(QW*QW)/sum(W_new**2)
 
-    Error = sqrt(Delta_Psi_Error_Squared + Delta_Ws_Error_Squared)
+    Error = max(Delta_Psi_Error_Squared, Delta_Ws_Error_Squared)
+
+    if n_cycle % 50 == 0 or True:
+        print(f"cycle n = {n_cycle}, dpsi == {Delta_Psi_Error_Squared:.2e}, dW = {Delta_Ws_Error_Squared:.2e}")
 
     Saver.logger.LogErrors(Psi = sqrt(Delta_Psi_Error_Squared), W = sqrt(Delta_Ws_Error_Squared))
 
@@ -303,9 +314,9 @@ import matplotlib as matplot
 x, y = nodes[:,0], nodes[:,1]
 triangulation = matplot.tri.Triangulation(x,y,triangles)
 
-Saver.SaveResults("SavedResults", "TestV2", W = W, Psi = Psi)
+Saver.SaveResults("SavedResults", "FinalTestV2", W = W, Psi = Psi)
 
-# from MeshHandling.Plotter import PlotNodes
-# PlotNodes(triangulation, Psi)
-# PlotNodes(triangulation, W)
-# PlotScatter(nodes, W)
+from Scripts.Plotter import PlotNodes
+PlotNodes(triangulation, Psi)
+PlotNodes(triangulation, W)
+PlotScatter(nodes, W)
