@@ -150,7 +150,7 @@ class ResultAnalysis:
         traces = kwargs.get("traces", self.GetLogs().columns)
 
         ax = self.GetLogs()[traces][xmin:xmax].plot()
-        ax.set_ylim((0,0.125))
+        ax.set_ylim((0,1))
         plt.show()
 
 class DynamycsAnalysis(ResultAnalysis):
@@ -169,7 +169,7 @@ class DynamycsAnalysis(ResultAnalysis):
         x, y = nodes[:,0], nodes[:,1]
         triangulation = matplotlib.tri.Triangulation(x,y,triangles)
         
-        CoolPlots.PlotLevel(x, y, self.GetPsi(), nlevels = 100, xrange = (0,1), yrange = (0,1), manual = False)
+        CoolPlots.PlotLevel(x, y, self.GetPsi(), nlevels = 1000, xrange = (0,1), yrange = (0,1), manual = True)
 
     def PlotW(self):
         nodes, triangles, segment_indices, trig_neighbors, node_neighbours = self.GetMesh()

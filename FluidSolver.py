@@ -22,18 +22,18 @@ N_trigs = len(triangles)
 
 # PARAMS #
 # ====== #
-Re = 300
+Re = 305
 Pr = 1/Re
 Vc = 1 
 
 
-N_CYCLIES_MAX = 2000
+N_CYCLIES_MAX = 10000
 MAX_DELTA_ERROR = 1e-5
 
 Vx = 1
 
-QPsi = 0.85
-QW = 0.35
+QPsi = 1.2
+QW = 0.5
 
 
 Saver.AddParams(mesh_name = mesh_name, Re = Re, QPsi = QPsi, QW = QW)
@@ -154,31 +154,38 @@ while n_cycle < N_CYCLIES_MAX and Error>=Max_Error_Sqrd:
                 Ya, Yb = (Y1 + Y0)*0.5, (Y2 + Y0)*0.5
                 Xa, Xb = (X1 + X0)*0.5, (X2 + X0)*0.5
 
+                X_min = min(X0, X1, X2)
                 X_max = max(X0, X1, X2)
 
-                EW0 = exp(U_ell*(X0-X_max)/(Pr*Vc))
-                EW1 = exp(U_ell*(X1-X_max)/(Pr*Vc))
-                EW2 = exp(U_ell*(X2-X_max)/(Pr*Vc))
+                kw0, kw1, kw2 = 0, 0, 0
 
-                Delta_W   = EW0*Y12 + EW1*Y20 + EW2*Y01
-                Delta_W_A = W0*Y12 + W1*Y20 + W2*Y01
-                Delta_W_B = W0*(EW2-EW1) + W1*(EW0-EW2) + W2*(EW1-EW0)
-                Delta_W_C = + W0*(EW1*Y2 - EW2*Y1)  \
-                            + W1*(EW2*Y0 - EW0*Y2)  \
-                            + W2*(EW0*Y1 - EW1*Y0)
+                ReVel =  U_ell/(Pr*Vc)
+                vel = ReVel*(X_max-X_min)
 
-
-                A_W = Delta_W_A / Delta_W
-                B_W = Delta_W_B / Delta_W
-                C_W = Delta_W_C / Delta_W
-
-                aBw = U_ell*Y12*Y0/ 8.0 / Pr + Vc*X12/2
+                aBw = U_ell*Y12*Y0/ (8.0 * Pr) + Vc*X12/2
                 aCw = (U_ell*Y12)/(2.0*Pr)
-                
-                W_BorderIntegral += W1*(aBw*(EW0-EW2)+ aCw*(EW2*Y0-EW0*Y2)) \
-                                 +  W2*(aBw*(EW1-EW0)+ aCw*(EW0*Y1-EW1*Y0))
 
-                W_BorderIntegral_k0 += aBw*(EW2-EW1)+ aCw*(EW1*Y2-EW2*Y1)
+                if vel<=1e-8:
+                    DW=ReVel*(X0*Y12+X1*Y20+X2*Y01)
+
+                    k0W=(aBw*ReVel*(X2-X1)+aCw*(-Y12+ReVel*((X1-X_max)*Y2-(X2-X_max)*Y1)))/DW
+                    k1W=(aBw*ReVel*(X0-X2)+aCw*(-Y20+ReVel*((X2-X_max)*Y0-(X0-X_max)*Y2)))/DW
+                    k2W=(aBw*ReVel*(X1-X0)+aCw*(-Y01+ReVel*((X0-X_max)*Y1-(X1-X_max)*Y0)))/DW
+                
+                else:
+                    EW0 = exp(U_ell*(X0-X_max)/(Pr*Vc))
+                    EW1 = exp(U_ell*(X1-X_max)/(Pr*Vc))
+                    EW2 = exp(U_ell*(X2-X_max)/(Pr*Vc))
+
+                    Delta_W   = EW0*Y12 + EW1*Y20 + EW2*Y01
+                    one_over_Delta_W = 1 / Delta_W
+
+                    kw0 = (aBw*(EW2-EW1)+ aCw*(EW1*Y2-EW2*Y1))*one_over_Delta_W
+                    kw1 = (aBw*(EW0-EW2)+ aCw*(EW2*Y0-EW0*Y2))*one_over_Delta_W
+                    kw2 = (aBw*(EW1-EW0)+ aCw*(EW0*Y1-EW1*Y0))*one_over_Delta_W
+                    
+                W_BorderIntegral    += W1*(kw1) +  W2*(kw2)
+                W_BorderIntegral_k0 += kw0
 
 
             Psi_new[n_node] = (-Psi_BorderIntegral_nb + Psi_AreaIntegral)/Psi_BorderIntegral_a0
@@ -289,7 +296,15 @@ while n_cycle < N_CYCLIES_MAX and Error>=Max_Error_Sqrd:
                 W_Source_Integral += (7.0*W1+ 7.0*W2)*triangle_delta/216.0
             
             Psi_new[n_node] = 0
-            W_new[n_node] = (-W_Border_Integral + W_Source_Integral)/W_Source_Area_Integral
+
+            x, y = node
+            if x == 0 and y == 0 or \
+               x == 0 and y == 1 or \
+               x == 1 and y == 1 or \
+               x == 1 and y == 0:
+                W_new[n_node] = 0 
+            else:
+                W_new[n_node] = (-W_Border_Integral + W_Source_Integral)/W_Source_Area_Integral
     # ERRORS # 
     # ------ #
     Delta_Psi_Error_Squared = sum((Psi - Psi_new)**2)/(QPsi*QPsi)/sum(Psi_new**2)
@@ -305,7 +320,7 @@ while n_cycle < N_CYCLIES_MAX and Error>=Max_Error_Sqrd:
     # NEXT STEP #
     # --------- #
     Psi = Psi*(1-QPsi) + np.copy(Psi_new)*QPsi
-    W = W_new*(1-QW) + np.copy(W_new)*QW
+    W = W*(1-QW) + np.copy(W_new)*QW
 
     n_cycle += 1
 
@@ -314,7 +329,7 @@ import matplotlib as matplot
 x, y = nodes[:,0], nodes[:,1]
 triangulation = matplot.tri.Triangulation(x,y,triangles)
 
-Saver.SaveResults("SavedResults", "FinalTestV2", W = W, Psi = Psi)
+Saver.SaveResults("SavedResults", "Reworked", W = W, Psi = Psi)
 
 from Scripts.Plotter import PlotNodes
 PlotNodes(triangulation, Psi)
