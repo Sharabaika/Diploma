@@ -1,0 +1,6 @@
+pyproject.toml
+setup.py
+pybind_11_example.egg-info/PKG-INFO
+pybind_11_example.egg-info/SOURCES.txt
+pybind_11_example.egg-info/dependency_links.txt
+pybind_11_example.egg-info/top_level.txt
