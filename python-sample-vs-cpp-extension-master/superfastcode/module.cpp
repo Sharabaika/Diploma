@@ -2,45 +2,47 @@
 #include <Windows.h>
 #include <vector>
 #include "Converters.h"
+#include "Solver.h"
 
 using std::vector;
  
 PyObject* FluidSolver_Wrapper(PyObject* _, PyObject* args)
 {
-	PyObject* X;
-	PyObject* Y;
-	PyObject* Nodes;
+	PyObject *x, *y, *triangles, *segment_indecies, *trig_neighbours, *node_neighbours;
+	PyObject *re, *vx;
+	PyObject *qPsi, * qW, *max_error, *max_cycles;
 
-	PyArg_UnpackTuple(args, "ref", 1, 3, &X, &Y, &Nodes);
+	PyArg_UnpackTuple(args, "ref", 1, 12, &x, &y, &triangles, &segment_indecies, &trig_neighbours, &node_neighbours, &re, &vx, &qPsi, &qW, &max_error, &max_cycles);
 
-	vector<double> X_arr = listTupleToVector_Double(X);
-	vector<double> Y_arr = listTupleToVector_Double(Y);
-	vector<vector<double>> Nodes_arr = listListToVector_Double(Nodes);
+	Arr X_arr = listTupleToVector_Double(x);
+	Arr Y_arr = listTupleToVector_Double(y);
+	JaggedArr Triangles_arr = listListToVector_Int(triangles);
+	JaggedArr Segments = listListToVector_Int(segment_indecies);
+	JaggedArr Trig_neighbours = listListToVector_Int(trig_neighbours);
+	JaggedArr Node_neighbours = listListToVector_Int(node_neighbours);
+
+	double Re = PyFloat_AsDouble(re);
+	double Vx = PyFloat_AsDouble(vx);
+
+	double QPsi = PyFloat_AsDouble(qPsi);
+	double QW = PyFloat_AsDouble(qW);
+	double Max_error = PyFloat_AsDouble(max_error);
+	int Max_cycles = PyFloat_AsDouble(max_cycles);
 
 	for (size_t i = 0; i < X_arr.size(); i++)
 	{
 		X_arr[i] = X_arr[i] + 1.0f;
 	}
 
-	for (size_t i = 0; i < Nodes_arr.size(); i++)
-	{
-		Nodes_arr[i][0] = i;
-	}
-
-	X = vectorToList_Double(X_arr);
-	Y = vectorToList_Double(Y_arr);
+	x = vectorToList_Double(X_arr);
+	y = vectorToList_Double(Y_arr);
 
 
-	Nodes = vectorVectorToTuple_Double(Nodes_arr);
-
-
-	PyObject* res = PyTuple_New(3);
-	PyTuple_SetItem(res, 0, X);
-	PyTuple_SetItem(res, 1, Y);
-	PyTuple_SetItem(res, 2, Nodes);
+	PyObject* res = PyTuple_New(2);
+	PyTuple_SetItem(res, 0, x);
+	PyTuple_SetItem(res, 1, y);
 
 	return res;
-
 }
 
 PyObject* test_fun_impl(PyObject*, PyObject* args) 

@@ -17,4 +17,7 @@ vector<int> listTupleToVector_Int(PyObject* incoming);
 
 vector<vector<double>> listListToVector_Double(PyObject* in);
 
+vector<vector<int>> listListToVector_Int(PyObject* in);
+
+
 #endif

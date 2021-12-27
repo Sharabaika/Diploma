@@ -38,9 +38,22 @@ def main():
     from superfastcode import SolveFluids
 
     X = [0,0,1]
-    Y = [20,30]
-    Nodes = [[10, 11], [100,111]]
-    print(SolveFluids((X,Y, Nodes)))
+    Y = [20,30, 40]
+    Triangles = [[10, 11], [100,111]]
+    Segments = [[1,2,3], [1,2,4]]
+    Trig_neighbours = [[1,2,3], [1,2,4]]
+    Node_neighbours = [[1,2,3], [1,2,4]]
+
+    Re = 300
+    Vx = 10
+
+    QPsi = 1.2
+    QW = 0.5
+
+    Max_error = 1e-5
+    Max_cycles = 10000
+
+    print(SolveFluids((X,Y, Triangles, Segments, Trig_neighbours, Node_neighbours, Re, Vx, QPsi, QW, Max_error, Max_cycles)))
 
     print("aboba")
 

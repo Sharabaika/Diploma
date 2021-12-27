@@ -130,3 +130,26 @@ vector<vector<double>> listListToVector_Double(PyObject* incoming)
 	}
 	return data;
 }
+
+vector<vector<int>> listListToVector_Int(PyObject* incoming)
+{
+	vector<vector<int>> data;
+	if (PyTuple_Check(incoming)) {
+		for (Py_ssize_t i = 0; i < PyTuple_Size(incoming); i++) {
+			PyObject* value = PyTuple_GetItem(incoming, i);
+			data.push_back(listTupleToVector_Int(value));
+		}
+	}
+	else {
+		if (PyList_Check(incoming)) {
+			for (Py_ssize_t i = 0; i < PyList_Size(incoming); i++) {
+				PyObject* value = PyList_GetItem(incoming, i);
+				data.push_back(listTupleToVector_Int(value));
+			}
+		}
+		else {
+			throw logic_error("Passed PyObject pointer was not a list or tuple!");
+		}
+	}
+	return data;
+}
