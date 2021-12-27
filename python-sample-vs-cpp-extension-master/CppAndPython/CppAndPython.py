@@ -3,6 +3,7 @@ from random import random
 from time import perf_counter
 
 
+
 if __name__ == "__main__":
 
     from superfastcode import test_fun
