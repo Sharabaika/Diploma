@@ -37,12 +37,17 @@ def main():
 
     from superfastcode import SolveFluids
 
-    X = [0,0,1]
-    Y = [20,30, 40]
-    Triangles = [[10, 11], [100,111]]
-    Segments = [[1,2,3], [1,2,4]]
-    Trig_neighbours = [[1,2,3], [1,2,4]]
-    Node_neighbours = [[1,2,3], [1,2,4]]
+    #X = [0,0,1]
+    #Y = [20,30, 40]
+    #Triangles = [[10, 11], [100,111]]
+    #Segments = [[1,2,3], [1,2,4]]
+    #Trig_neighbours = [[1,2,3], [1,2,4]]
+    #Node_neighbours = [[1,2,3], [1,2,4]]
+
+    mesh_name = "square_saved"
+    nodes, Triangles, Segments, Trig_neighbours, Node_neighbours = ReadSaved(f"SavedMeshes/{mesh_name}.dat")
+    X = nodes[:,0]
+    Y = nodes[:,1]
 
     Re = 300
     Vx = 10

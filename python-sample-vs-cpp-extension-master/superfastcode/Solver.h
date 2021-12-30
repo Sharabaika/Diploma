@@ -3,13 +3,17 @@
 
 using std::vector;
 
-typedef vector<vector<int>> JaggedArr;
 typedef vector<double> Arr;
+typedef vector<int> ArrInt;
+typedef vector<ArrInt> JaggedArr;
 
-#define MeshData Arr x, Arr y, JaggedArr triangles, JaggedArr segment_indices, JaggedArr trig_neighbors, JaggedArr node_neighbours
-#define FluidDynamicsParams double Re, double Vx
-#define FluidDynamicsNumericParams double QPsi, double QW, double max_error, int max_cycles
-#define FluidDynamicsOUTResults Arr& Psi, Arr& W
-#define FluidDynamicsOutErrors Arr& Delta_Psi, Arr& Delta_W
+const static int SOLID_BORDER_INDEX = 1000;
+const static int MEDIUM_INDEX = 2000;
 
-void SolveFluid_Implementation(MeshData, FluidDynamicsParams, FluidDynamicsNumericParams, FluidDynamicsOUTResults, FluidDynamicsOutErrors);
+const double PI = 3.141592653589793;
+
+void SolveFluid_Implementation(const Arr x, const Arr y, const JaggedArr triangles, const JaggedArr segment_indices, const JaggedArr trig_neighbors, const JaggedArr node_neighbours,
+	const double Re, const double Vx,
+	const double QPsi, const double QW, const double max_error, const int max_cycles,
+	Arr& Psi, Arr& W,
+	Arr& Delta_Psi, Arr& Delta_W);

@@ -29,18 +29,19 @@ PyObject* FluidSolver_Wrapper(PyObject* _, PyObject* args)
 	double Max_error = PyFloat_AsDouble(max_error);
 	int Max_cycles = PyFloat_AsDouble(max_cycles);
 
-	for (size_t i = 0; i < X_arr.size(); i++)
-	{
-		X_arr[i] = X_arr[i] + 1.0f;
-	}
+	Arr PsiRes({1,2,3});
+	Arr WRes({ 1,2,3 });
 
-	x = vectorToList_Double(X_arr);
-	y = vectorToList_Double(Y_arr);
+	Arr Psi_Error({ 1,2,3 });
+	Arr W_Error({ 1,2,3 });
 
+	//SolveFluid_Implementation(X_arr, Y_arr, Triangles_arr, Segments, Trig_neighbours, Node_neighbours, Re, Vx, QPsi, QW, Max_error, Max_cycles, PsiRes, WRes, Psi_Error, W_Error);
 
-	PyObject* res = PyTuple_New(2);
-	PyTuple_SetItem(res, 0, x);
-	PyTuple_SetItem(res, 1, y);
+	PyObject* res = PyTuple_New(4);
+	PyTuple_SetItem(res, 0, vectorToList_Double(PsiRes));
+	PyTuple_SetItem(res, 1, vectorToList_Double(WRes));
+	PyTuple_SetItem(res, 2, vectorToList_Double(Psi_Error));
+	PyTuple_SetItem(res, 3, vectorToList_Double(W_Error));
 
 	return res;
 }
