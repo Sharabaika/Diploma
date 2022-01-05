@@ -33,24 +33,13 @@ def main():
     #from superfastcode import test_fun
     #print(test_fun((1,2)))
 
-    print("aboba123")
-
-    from superfastcode import SolveFluids
-
-    #X = [0,0,1]
-    #Y = [20,30, 40]
-    #Triangles = [[10, 11], [100,111]]
-    #Segments = [[1,2,3], [1,2,4]]
-    #Trig_neighbours = [[1,2,3], [1,2,4]]
-    #Node_neighbours = [[1,2,3], [1,2,4]]
-
     mesh_name = "square_saved"
     nodes, Triangles, Segments, Trig_neighbours, Node_neighbours = ReadSaved(f"SavedMeshes/{mesh_name}.dat")
-    X = nodes[:,0]
-    Y = nodes[:,1]
+    X = nodes[:,0].tolist()
+    Y = nodes[:,1].tolist()
 
     Re = 300
-    Vx = 10
+    Vx = -1
 
     QPsi = 1.2
     QW = 0.5
@@ -58,15 +47,28 @@ def main():
     Max_error = 1e-5
     Max_cycles = 10000
 
-    print(SolveFluids((X,Y, Triangles, Segments, Trig_neighbours, Node_neighbours, Re, Vx, QPsi, QW, Max_error, Max_cycles)))
+    triangulation = tri.Triangulation(X,Y, Triangles)
 
-    print("aboba")
+    Saver = ResultSaving("W", "Psi")
+    Saver.AddParams(mesh_name = mesh_name, Re = Re, QPsi = QPsi, QW = QW)
 
-    #an = DynamycsAnalysis("SavedResults", "ReworkedRe1000")
+    #import Scripts.Plotter as plotter
+    #plotter.PlotMesh(nodes, Triangles, Segments, False, False, False)
 
-    #an.PlotPsi()
-    #an.PlotW()
-    #an.PlotErrors()
+    from superfastcode import SolveFluids
+    Psi, W, DPsi, DW = SolveFluids((X,Y, Triangles, Segments, Trig_neighbours, Node_neighbours, Re, Vx, QPsi, QW, Max_error, Max_cycles))
+
+    #print(len(DPsi))
+
+    #Saver.logger.LogErrorsList(Psi = DPsi, W = DW)
+    #Saver.SaveResults("SavedResults", "CPPTestFinal", W = W, Psi = Psi)
+
+
+    an = DynamycsAnalysis("SavedResults", "CPPTestFinal")
+
+    an.PlotPsi()
+    an.PlotW()
+    an.PlotErrors()
 
 
 

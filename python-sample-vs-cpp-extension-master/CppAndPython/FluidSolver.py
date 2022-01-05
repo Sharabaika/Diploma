@@ -11,7 +11,6 @@ from time import perf_counter
 
 from pstats import Stats, SortKey
 
-@profile
 def main():
     Saver = files.ResultSaving("W", "Psi")
 
@@ -29,12 +28,12 @@ def main():
 
     # PARAMS #
     # ====== #
-    Re = 1000
+    Re = 300
     Pr = 1/Re
     Vc = 1 
 
 
-    N_CYCLIES_MAX = 10
+    N_CYCLIES_MAX = 1
     MAX_DELTA_ERROR = 1e-5
 
     Vx = -1
@@ -79,8 +78,6 @@ def main():
 
     n_cycle = 0
     while n_cycle < N_CYCLIES_MAX and Error>=Max_Error_Sqrd:
-        start_counter = perf_counter()
-
         for n_node in range(N_nodes):
             segment_index = segment_indices[n_node]
             
@@ -182,9 +179,9 @@ def main():
                     if vel<=1e-8:
                         DW=ReVel*(X0*Y12+X1*Y20+X2*Y01)
 
-                        k0W=(aBw*ReVel*(X2-X1)+aCw*(-Y12+ReVel*((X1-X_max)*Y2-(X2-X_max)*Y1)))/DW
-                        k1W=(aBw*ReVel*(X0-X2)+aCw*(-Y20+ReVel*((X2-X_max)*Y0-(X0-X_max)*Y2)))/DW
-                        k2W=(aBw*ReVel*(X1-X0)+aCw*(-Y01+ReVel*((X0-X_max)*Y1-(X1-X_max)*Y0)))/DW
+                        kw0=(aBw*ReVel*(X2-X1)+aCw*(-Y12+ReVel*((X1-X_max)*Y2-(X2-X_max)*Y1)))/DW
+                        kw1=(aBw*ReVel*(X0-X2)+aCw*(-Y20+ReVel*((X2-X_max)*Y0-(X0-X_max)*Y2)))/DW
+                        kw2=(aBw*ReVel*(X1-X0)+aCw*(-Y01+ReVel*((X0-X_max)*Y1-(X1-X_max)*Y0)))/DW
                     
                     else:
                         EW0 = exp(U_ell*(X0-X_max)/(Pr*Vc))
@@ -200,8 +197,6 @@ def main():
                         
                     W_BorderIntegral    += W1*(kw1) +  W2*(kw2)
                     W_BorderIntegral_k0 += kw0
-
-
                 Psi_new[n_node] = (-Psi_BorderIntegral_nb + Psi_AreaIntegral)/Psi_BorderIntegral_a0
                 W_new[n_node] = (-W_BorderIntegral + W_AreaIntegral)/W_BorderIntegral_k0
 
@@ -307,8 +302,7 @@ def main():
                     W1, W2 = W[n1], W[n2]
 
                     W_Source_Area_Integral += 11.0*triangle_delta/108.0
-                    W_Source_Integral += (7.0*W1+ 7.0*W2)*triangle_delta/216.0
-                
+                    W_Source_Integral += (7.0*W1+ 7.0*W2)*triangle_delta/216.0                
                 Psi_new[n_node] = 0
 
                 x, y = node
@@ -319,19 +313,19 @@ def main():
                     W_new[n_node] = 0 
                 else:
                     W_new[n_node] = (-W_Border_Integral + W_Source_Integral)/W_Source_Area_Integral
+
+                if 13 in segment_index:
+                    print(f"n = {n_node}, w = {W_new[n_node]} \n")
         # ERRORS # 
         # ------ #
         Delta_Psi_Error_Squared = sum((Psi - Psi_new)**2)/(QPsi*QPsi)/sum(Psi_new**2)
         Delta_Ws_Error_Squared = sum((W - W_new)**2)/(QW*QW)/sum(W_new**2)
 
         Error = max(Delta_Psi_Error_Squared, Delta_Ws_Error_Squared)
-
-
-        stop_counter = perf_counter()
         
 
         if n_cycle % 50 == 0 or True:
-            print(f"cycle n = {n_cycle}, dpsi == {Delta_Psi_Error_Squared:.2e}, dW = {Delta_Ws_Error_Squared:.2e}, start time == {start_counter}, stoptime = {stop_counter}")
+            print(f"cycle n = {n_cycle}, dpsi == {sqrt(Delta_Psi_Error_Squared):.2e}, dW = {sqrt(Delta_Ws_Error_Squared):.2e}")
 
         Saver.logger.LogErrors(Psi = sqrt(Delta_Psi_Error_Squared), W = sqrt(Delta_Ws_Error_Squared))
 
@@ -353,9 +347,9 @@ def main():
 
     # Saver.SaveResults("SavedResults", "ReworkedRe1000", W = W, Psi = Psi)
 
-    # from Scripts.Plotter import PlotNodes
+    from Scripts.Plotter import PlotNodes
     # PlotNodes(triangulation, Psi)
-    # PlotNodes(triangulation, W)
+    PlotNodes(triangulation, W)
     # PlotScatter(nodes, W)
 
 

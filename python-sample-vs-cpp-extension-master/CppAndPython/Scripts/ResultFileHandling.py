@@ -42,6 +42,10 @@ class Logger:
         for key, value in kwargs.items():
             self.errors[key].append(value)
 
+    def LogErrorsList(self, **kwargs):
+        for key, value in kwargs.items():
+            self.errors[key].extend(value)
+
     def ToDataFrame(self):
         return pd.DataFrame(data=self.errors)
 

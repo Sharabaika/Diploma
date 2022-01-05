@@ -1,11 +1,15 @@
 #include "Solver.h"
 #include <algorithm>
+#include <iostream>
 
 #define _USE_MATH_DEFINES
 
 using std::find;
 using std::min;
 using std::max;
+
+using std::cout;
+using std::endl;
 
 bool containts_index(const ArrInt& indecies, const int& index) 
 {
@@ -19,7 +23,7 @@ void SolveFluid_Implementation(const Arr x,const Arr y,const JaggedArr triangles
 	Arr& Delta_Psi, Arr& Delta_W
 )
 {
-    return;
+    const int begin_time = std::clock();
 
     int n_cycle = 0;
     int MAX_CYCLES = max_cycles;
@@ -54,7 +58,7 @@ void SolveFluid_Implementation(const Arr x,const Arr y,const JaggedArr triangles
             const double& xn = x[n_node];
             const double& yn = y[n_node];
 
-            Psi[n_node] = 0.0001 * sin(xn * PI) * cos(yn * PI);
+            Psi[n_node] = 0.0001 * sin(xn * PI) * sin(yn * PI);
         }
 
         W[n_node] = 0.0;
@@ -70,27 +74,27 @@ void SolveFluid_Implementation(const Arr x,const Arr y,const JaggedArr triangles
             // ============ //
             if (containts_index(Segment_Index, MEDIUM_INDEX))
             {
-                double psi_borderIntegral_a0 = 0;
-                double psi_borderIntegral_nb = 0;
-                double psi_areaIntegral = 0;
+                double Psi_BorderIntegral_a0 = 0;
+                double Psi_BorderIntegral_nb = 0;
+                double Psi_AreaIntegral = 0;
 
-                double w_borderIntegral = 0;
-                double w_borderIntegral_k0 = 0;
-                double w_areaIntegral = 0;
+                double W_BorderIntegral = 0;
+                double W_BorderIntegral_k0 = 0;
+                double W_AreaIntegral = 0;
 
-                for (const int& n_trig_neighbour : trig_neighbors[n_node]) 
+                for (const int& n_trig_neighbour : trig_neighbors[n_node])
                 {
                     const ArrInt Triangle = triangles[n_trig_neighbour];
 
                     int n0 = n_node;
                     int n1 = Triangle[1];
                     int n2 = Triangle[2];
-                    if (n_node == n1) 
+                    if (n_node == n1)
                     {
                         n1 = Triangle[2];
                         n2 = Triangle[0];
                     }
-                    else if (n_node == n2) 
+                    else if (n_node == n2)
                     {
                         n1 = Triangle[0];
                         n2 = Triangle[1];
@@ -121,11 +125,10 @@ void SolveFluid_Implementation(const Arr x,const Arr y,const JaggedArr triangles
                     const double a1_psi1 = Psi1 * (y20 * y12 + x02 * x21) / Delta;
                     const double a2_psi2 = Psi2 * (y01 * y12 + x10 * x21) / Delta;
 
-                    psi_borderIntegral_a0 += a0;
-                    psi_borderIntegral_nb += (a1_psi1 + a2_psi2);
+                    Psi_BorderIntegral_a0 += a0;
+                    Psi_BorderIntegral_nb += (a1_psi1 + a2_psi2);
 
-                    psi_areaIntegral += (22.0 * W0 + 7.0 * W1 + 7.0 * W2) * Delta / 216.0;
-
+                    Psi_AreaIntegral += (22.0 * W0 + 7.0 * W1 + 7.0 * W2) * Delta / 216.0;
 
                     // W //
                     // = //
@@ -136,14 +139,14 @@ void SolveFluid_Implementation(const Arr x,const Arr y,const JaggedArr triangles
                     double sina = 0;
                     double cosa = 1;
 
-                    if (U_ell > 0) 
+                    if (U_ell > 0.0)
                     {
                         sina = U_y / U_ell;
                         cosa = U_x / U_ell;
                     }
 
                     const double xc = (x0 + x1 + x2) / 3.0;
-                    const double yc = (y0 + y1 + y2) / 3;
+                    const double yc = (y0 + y1 + y2) / 3.0;
 
                     const double X0 = (x0 - xc) * cosa + (y0 - yc) * sina; const double Y0 = -(x0 - xc) * sina + (y0 - yc) * cosa;
                     const double X1 = (x1 - xc) * cosa + (y1 - yc) * sina; const double Y1 = -(x1 - xc) * sina + (y1 - yc) * cosa;
@@ -153,21 +156,18 @@ void SolveFluid_Implementation(const Arr x,const Arr y,const JaggedArr triangles
                     const double X20 = X2 - X0; const double Y20 = Y2 - Y0;
                     const double X01 = X0 - X1; const double Y01 = Y0 - Y1;
 
-                    const double Ya = (Y1 + Y0) * 0.5; const double Yb = (Y2 + Y0) * 0.5;
-                    const double Xa = (X1 + X0) * 0.5; const double Xb = (X2 + X0) * 0.5;
-
                     const double X_min = min({ X0, X1, X2 });
                     const double X_max = max({ X0, X1, X2 });
 
-                    double kw0; double kw1; double kw2;
+                    double kw0 = 0; double kw1 = 0; double kw2 = 0;
 
                     const double ReVel = U_ell / (Pr * Vc);
                     const double vel = ReVel * (X_max - X_min);
 
-                    const double aBw = U_ell * Y12 * Y0 / (8.0 * Pr) + Vc * X12 / 2;
+                    const double aBw = U_ell * Y12 * Y0 / (8.0 * Pr) + Vc * X12 / 2.0;
                     const double aCw = (U_ell * Y12) / (2.0 * Pr);
 
-                    if (vel <= 1e-8) 
+                    if (vel <= 1e-8)
                     {
                         const double DW = ReVel * (X0 * Y12 + X1 * Y20 + X2 * Y01);
 
@@ -178,23 +178,24 @@ void SolveFluid_Implementation(const Arr x,const Arr y,const JaggedArr triangles
                     else
                     {
                         const double EW0 = exp(U_ell * (X0 - X_max) / (Pr * Vc));
-                        const  double EW1 = exp(U_ell * (X1 - X_max) / (Pr * Vc));
+                        const double EW1 = exp(U_ell * (X1 - X_max) / (Pr * Vc));
                         const double EW2 = exp(U_ell * (X2 - X_max) / (Pr * Vc));
 
                         const double Delta_W = EW0 * Y12 + EW1 * Y20 + EW2 * Y01;
-                        const double one_over_Delta_W = 1 / Delta_W;
+                        const double one_over_Delta_W = 1.0 / Delta_W;
 
                         kw0 = (aBw * (EW2 - EW1) + aCw * (EW1 * Y2 - EW2 * Y1)) * one_over_Delta_W;
                         kw1 = (aBw * (EW0 - EW2) + aCw * (EW2 * Y0 - EW0 * Y2)) * one_over_Delta_W;
                         kw2 = (aBw * (EW1 - EW0) + aCw * (EW0 * Y1 - EW1 * Y0)) * one_over_Delta_W;
                     }
 
-                    w_borderIntegral += W1 * (kw1)+W2 * (kw2);
-                    w_borderIntegral_k0 += kw0;
+                    W_BorderIntegral += W1 * kw1 + W2 * kw2;
+                    W_BorderIntegral_k0 += kw0;
                 }
 
-                Psi_new[n_node] = (-psi_borderIntegral_nb + psi_areaIntegral) / psi_borderIntegral_a0;
-                W_new[n_node] = (-w_borderIntegral + w_areaIntegral) / w_borderIntegral_k0;
+                Psi_new[n_node] = (-Psi_BorderIntegral_nb + Psi_AreaIntegral) / Psi_BorderIntegral_a0;
+                W_new[n_node] = (-W_BorderIntegral + W_AreaIntegral) / W_BorderIntegral_k0;
+
             }
             // SOLID BORDER //
             // ============ //
@@ -203,8 +204,7 @@ void SolveFluid_Implementation(const Arr x,const Arr y,const JaggedArr triangles
                 // normal //
                 // ------ //
                  
-                double sina, cosa;
-                double normalX, normalY;
+                double sina = 0, cosa = 0;
 
                 if (containts_index(Segment_Index, 10)) 
                 {
@@ -268,7 +268,7 @@ void SolveFluid_Implementation(const Arr x,const Arr y,const JaggedArr triangles
                     const double& Psi0 = Psi[n0]; const double& Psi1 = Psi[n1]; const double& Psi2 = Psi[n2];
                     const double& W0 = W[n0]; const double& W1 = W[n1]; const double& W2 = W[n2];
 
-                    const double X0 = 0; const double Y0 = 0;
+                    const double X0 = (x0 - xc) * cosa + (y0 - yc) * sina; const double Y0 = -(x0 - xc) * sina + (y0 - yc) * cosa;
                     const double X1 = (x1 - xc) * cosa + (y1 - yc) * sina; const double Y1 = -(x1 - xc) * sina + (y1 - yc) * cosa;
                     const double X2 = (x2 - xc) * cosa + (y2 - yc) * sina; const double Y2 = -(x2 - xc) * sina + (y2 - yc) * cosa;
 
@@ -282,7 +282,7 @@ void SolveFluid_Implementation(const Arr x,const Arr y,const JaggedArr triangles
                     const double delta_a = 0.5 * (c1 * (Y2 * Y2) - c2 * (Y1 * Y1));
                     const double delta_b = c2 * X1 * Y1 - c1 * X2 * Y2;
 
-                    double a, b;
+                    double a = 0, b = 0;
                     if (delta != 0)
                     {
                         a = delta_a / delta;
@@ -306,8 +306,8 @@ void SolveFluid_Implementation(const Arr x,const Arr y,const JaggedArr triangles
 
                     const double moving_border_add = v_border_local * (xb - xa);
 
-                    const double border_part = 0.5 * a * (yb * yb - ya * ya) - 0.5 * a * (xb * xb - xa * xa) -
-                        b * (0.5 * (ya + yc) * (xc - xa) + 0.5 * (yb + yc) * (xb - xc)) +
+                    const double border_part = 0.5 * a * (yb * yb - ya * ya) - 0.5 * a * (xb * xb - xa * xa) - 
+                        b * (0.5 * (ya + yc) * (xc - xa) + 0.5 * (yb + yc) * (xb - xc)) + 
                         moving_border_add;
 
                     const double x10 = x1 - x0; const double y01 = y0 - y1;
@@ -339,21 +339,41 @@ void SolveFluid_Implementation(const Arr x,const Arr y,const JaggedArr triangles
             }
         }
 
-        double Delta_Psi_Error; double Delta_W_Error;
 
-        for (int n_node = 0; n_node < N_NODES; n_node++) 
+
+        double Psi_sum = 0, W_sum = 0;
+        double Psi_errors = 0, W_errors = 0;
+        for (int n_node = 0; n_node < N_NODES; n_node++)
         {
             const double& psi_old = Psi[n_node];
             const double& psi_new = Psi_new[n_node];
-            Delta_Psi_Error += abs(psi_old - psi_new)/(psi_old * QPsi);
 
-            Psi[n_node] = Psi_new[n_node];
+            if (psi_new != 0)
+            {
+                Psi_sum += psi_new * psi_new;
+                Psi_errors += (psi_old - psi_new) * (psi_old - psi_new);
+            }
+
+            Psi[n_node] = psi_new * QPsi + psi_old * (1.0 - QPsi);
 
             const double& w_old = W[n_node];
             const double& w_new = W_new[n_node];
-            Delta_W_Error += abs(w_old - w_new) / (w_old * QW);
 
-            W[n_node] = W_new[n_node];
+            if (w_new != 0)
+            {
+                W_sum = w_new * w_new;
+                W_errors += (w_old - w_new) * (w_old - w_new);
+            }
+
+            W[n_node] = w_new * QW + w_old * (1.0 - QW);
+        }
+
+        const double Delta_Psi_Error = sqrt(Psi_errors/Psi_sum) / QPsi;
+        const double Delta_W_Error = sqrt(W_errors / W_sum) / QW;
+
+        if (n_cycle % 50 == 0) 
+        {
+            printf("n cycle = %06i, dw = %.5e, dpsi = %.5e \n", n_cycle, Delta_W_Error, Delta_Psi_Error);
         }
 
         Delta_Psi.push_back(Delta_Psi_Error);
@@ -363,4 +383,10 @@ void SolveFluid_Implementation(const Arr x,const Arr y,const JaggedArr triangles
 
         n_cycle++;
     }
+
+    const int end_time = clock();
+
+    printf("===================================================\n");
+    printf("n cycle = %06i, dw = %.5e, dpsi = %.5e \n", n_cycle, Delta_W[Delta_W.size() - 1], Delta_Psi[Delta_Psi.size() - 1]);
+    printf("time spent = %i \n", (end_time - begin_time) / CLOCKS_PER_SEC);
 }
