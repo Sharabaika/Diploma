@@ -32,16 +32,12 @@ def main():
     Vc_T = 1 
 
 
-    N_CYCLIES_MAX = 200
+    N_CYCLIES_MAX = 100
     MAX_DELTA_ERROR = 1e-5
 
     QT = 1
 
-    Saver.AddParams(mesh_name = mesh_name, Re = Re_T, QT = QT)
-
-    # Init variables #
-    # -------------- #
-    Delta_T_Error_Squared = 0
+    Saver.AddParams(mesh_name = mesh_name, QT = QT)
 
     # Arrays #
     # ====== #
@@ -160,7 +156,7 @@ def main():
                         q = 1
                         T_BorderIntegral += l * q
 
-                if 0.4<x0<0.6 and 0.4<y0<0.6:
+                if 0.4<x0<0.6 and 0.4<y0<0.6  and False:
                     T_new[n_node] = 1.0
                 else:
                     T_new[n_node] = (-T_BorderIntegral + T_AreaIntegral)/T_BorderIntegral_k0                

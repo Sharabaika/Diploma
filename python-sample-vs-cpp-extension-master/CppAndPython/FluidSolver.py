@@ -33,7 +33,7 @@ def main():
     Vc = 1 
 
 
-    N_CYCLIES_MAX = 1
+    N_CYCLIES_MAX = 100
     MAX_DELTA_ERROR = 1e-5
 
     Vx = -1
@@ -314,8 +314,6 @@ def main():
                 else:
                     W_new[n_node] = (-W_Border_Integral + W_Source_Integral)/W_Source_Area_Integral
 
-                if 13 in segment_index:
-                    print(f"n = {n_node}, w = {W_new[n_node]} \n")
         # ERRORS # 
         # ------ #
         Delta_Psi_Error_Squared = sum((Psi - Psi_new)**2)/(QPsi*QPsi)/sum(Psi_new**2)
@@ -348,8 +346,8 @@ def main():
     # Saver.SaveResults("SavedResults", "ReworkedRe1000", W = W, Psi = Psi)
 
     from Scripts.Plotter import PlotNodes
-    # PlotNodes(triangulation, Psi)
-    PlotNodes(triangulation, W)
+    PlotNodes(triangulation, Psi)
+    # PlotNodes(triangulation, W)
     # PlotScatter(nodes, W)
 
 

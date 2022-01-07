@@ -35,13 +35,16 @@ def ReadRaw(mesh, default_tags, *segment_files):
         triangles.append([int(a)-1, int(b)-1, int(c)-1])
 
     trig_neighbours = [[] for _ in range(points_len)]
-    node_neighbours = []
+    node_neighbours = [[] for _ in range(points_len)]
     for point_index in range(points_len):
         for n_triangle, triangle in enumerate(triangles):
             if point_index in triangle:
                 trig_neighbours[point_index].append(n_triangle)
 
-        node_neighbours.append(list(dict.fromkeys(trig_neighbours[point_index])))
+        for n_trig_neighbour in trig_neighbours[point_index]:
+            for p in triangles[n_trig_neighbour]:
+                node_neighbours[point_index].append(p)
+        node_neighbours[point_index] = (list(dict.fromkeys(node_neighbours[point_index])))
         if point_index in node_neighbours[point_index]:
             node_neighbours[point_index].remove(point_index)
 

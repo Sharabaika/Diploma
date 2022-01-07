@@ -11,15 +11,19 @@ from time import perf_counter
 
 from pstats import Stats, SortKey
 
-@profile
 def main():
     Saver = files.ResultSaving("W", "Psi")
 
     # Regions
-    SOLID_BORDER_INDEX = 1000
-    MEDIUM_INDEX = 2000
+    HEATCONVECTION_REGION_INDEX = 2000  # solve fluid and heat equations
 
-    mesh_name = "square_saved"
+    CONVECTION_REGION_INDEX = 2000      # "water like" medium  
+    CONVECTION_BORDER_INDEX = 1000      # solid border for fluid equation
+
+    CONSTANT_T_REGION_INDEX = 2300      # region with constant temperature
+    CONSTANT_T_FLOW_BORDER_INDEX = 2400 # border with defined q
+
+    mesh_name = "square"
 
     nodes, triangles, segment_indices, trig_neighbors, node_neighbours = ReadSaved(f"SavedMeshes/{mesh_name}.dat")
 
@@ -29,64 +33,56 @@ def main():
 
     # PARAMS #
     # ====== #
-    Re = 1000
+    Re = 300
     Pr = 1/Re
     Vc = 1 
 
+    Re_T = 1
+    Pr_T = 1
+    Vc_T = 1 
 
-    N_CYCLIES_MAX = 10
+    N_CYCLIES_MAX = 1000
     MAX_DELTA_ERROR = 1e-5
 
-    Vx = -1
+    Vx = 0
 
-    QPsi = 1.2
+    QPsi = 0.6
     QW = 0.5
+    QT = 1
 
-
-    Saver.AddParams(mesh_name = mesh_name, Re = Re, QPsi = QPsi, QW = QW)
-
-    # Init variables #
-    # -------------- #
-    Delta_Psi_Error_Squared = 0
-    Delta_Ws_Error_Squared = 0
+    Saver.AddParams(mesh_name = mesh_name, Re = Re, QPsi = QPsi, QW = QW, QT = QT)
 
 
     # Arrays #
     # ====== #
     Psi = np.zeros(N_nodes)
     W = np.zeros(N_nodes)
+    T = np.zeros(N_nodes)
 
-
-    # Init Arrays #
-    # =========== # 
-
-    # Dynamics #
-    # -------- #
     for n_node in range(N_nodes):
         tags = segment_indices[n_node]
-        is_wall = SOLID_BORDER_INDEX in tags
+        is_wall = CONVECTION_BORDER_INDEX in tags
         x, y = nodes[n_node]
         # W[n_node] = np.random.rand(1)*0.001+0.001 
         Psi[n_node] = 0 if is_wall else 0.0001*np.sin(x*np.pi)*np.sin(y*np.pi)
+        T [n_node] = np.random.rand(1)*0.001+0.001
 
 
     Psi_new = np.array(Psi)
     W_new = np.array(W)
+    T_new = np.array(T)
 
-    Max_Error_Sqrd = MAX_DELTA_ERROR**2
-    Error = 2*Max_Error_Sqrd
-
+    Error = 2*MAX_DELTA_ERROR
 
     n_cycle = 0
-    while n_cycle < N_CYCLIES_MAX and Error>=Max_Error_Sqrd:
-        start_counter = perf_counter()
 
+    while n_cycle < N_CYCLIES_MAX and Error>=Error:
         for n_node in range(N_nodes):
             segment_index = segment_indices[n_node]
             
             # USUAL MEDIUM #
             # ============ #
-            if MEDIUM_INDEX in segment_index :
+            if CONVECTION_REGION_INDEX in segment_index :
                 Psi_BorderIntegral_a0 = 0
                 Psi_BorderIntegral_nb = 0
                 Psi_AreaIntegral = 0
@@ -94,6 +90,10 @@ def main():
                 W_BorderIntegral = 0
                 W_BorderIntegral_k0 = 0
                 W_AreaIntegral = 0
+
+                T_BorderIntegral = 0
+                T_BorderIntegral_k0 = 0
+                T_AreaIntegral = 0
 
                 for n_trig_neigbor in trig_neighbors[n_node]:
                     n0, n1, n2 = triangles[n_trig_neigbor]
@@ -114,7 +114,7 @@ def main():
                     # --- #
                     Psi0, Psi1, Psi2 = Psi[n0], Psi[n1], Psi[n2]
                     W0, W1, W2 = W[n0], W[n1], W[n2]
-
+                    T0, T1, T2 = T[n0], T[n1], T[n2]
 
                     Delta_PsiA = Psi0*y12 + Psi1*y20 + Psi2*y01
                     Delta_PsiB = Psi0*x21 + Psi1*x02 + Psi2*x10
@@ -197,17 +197,55 @@ def main():
                         kw0 = (aBw*(EW2-EW1)+ aCw*(EW1*Y2-EW2*Y1))*one_over_Delta_W
                         kw1 = (aBw*(EW0-EW2)+ aCw*(EW2*Y0-EW0*Y2))*one_over_Delta_W
                         kw2 = (aBw*(EW1-EW0)+ aCw*(EW0*Y1-EW1*Y0))*one_over_Delta_W
-                        
+
                     W_BorderIntegral    += W1*(kw1) +  W2*(kw2)
                     W_BorderIntegral_k0 += kw0
 
+                    Delta_TA = T0*y12 + T1*y20 + T2*y01
+                    A_T = Delta_TA / Delta
+                    W_AreaIntegral += Delta / 6 * (-A_T)
+
+                    kw0_T, kw1_T, kw2_T = 0, 0, 0
+
+                    ReVel_T =  U_ell/(Pr_T*Vc_T)
+                    vel_T = ReVel_T*(X_max-X_min)
+
+                    aBw_T = U_ell*Y12*Y0/ (8.0 * Pr_T) + Vc_T*X12/2
+                    aCw_T = (U_ell*Y12)/(2.0*Pr_T)
+
+                    if vel_T<=1e-8:
+                        DW_T=ReVel_T*(X0*Y12+X1*Y20+X2*Y01)
+
+                        kw0_T=(aBw_T*ReVel_T*(X2-X1)+aCw_T*(-Y12+ReVel_T*((X1-X_max)*Y2-(X2-X_max)*Y1)))/DW_T
+                        kw1_T=(aBw_T*ReVel_T*(X0-X2)+aCw_T*(-Y20+ReVel_T*((X2-X_max)*Y0-(X0-X_max)*Y2)))/DW_T
+                        kw2_T=(aBw_T*ReVel_T*(X1-X0)+aCw_T*(-Y01+ReVel_T*((X0-X_max)*Y1-(X1-X_max)*Y0)))/DW_T
+                    
+                    else:
+                        EW0_T = exp(U_ell*(X0-X_max)/(Pr_T*Vc_T))
+                        EW1_T = exp(U_ell*(X1-X_max)/(Pr_T*Vc_T))
+                        EW2_T = exp(U_ell*(X2-X_max)/(Pr_T*Vc_T))
+
+                        Delta_W_T   = EW0_T*Y12 + EW1_T*Y20 + EW2_T*Y01
+                        one_over_Delta_W_T = 1 / Delta_W_T
+
+                        kw0_T = (aBw_T*(EW2_T-EW1_T)+ aCw_T*(EW1_T*Y2-EW2_T*Y1))*one_over_Delta_W_T
+                        kw1_T = (aBw_T*(EW0_T-EW2_T)+ aCw_T*(EW2_T*Y0-EW0_T*Y2))*one_over_Delta_W_T
+                        kw2_T = (aBw_T*(EW1_T-EW0_T)+ aCw_T*(EW0_T*Y1-EW1_T*Y0))*one_over_Delta_W_T
+
+                        
+
+
+                    T_BorderIntegral    += T1*(kw1_T) +  T2*(kw2_T)
+                    T_BorderIntegral_k0 += kw0_T
 
                 Psi_new[n_node] = (-Psi_BorderIntegral_nb + Psi_AreaIntegral)/Psi_BorderIntegral_a0
                 W_new[n_node] = (-W_BorderIntegral + W_AreaIntegral)/W_BorderIntegral_k0
 
+                T_new[n_node] = (-T_BorderIntegral + T_AreaIntegral)/T_BorderIntegral_k0
+
             # SOLID BORDER #
             # ============ #
-            elif SOLID_BORDER_INDEX in segment_index:            
+            elif CONVECTION_BORDER_INDEX in segment_index:            
                 # normal #
                 # ------ #
                 node = nodes[n_node]
@@ -247,6 +285,10 @@ def main():
 
                 # Integral a to b
                 W_Border_Integral = 0
+
+                T_BorderIntegral = 0
+                T_BorderIntegral_k0 = 0
+                T_AreaIntegral = 0
 
                 for n_trig_neigbor in trig_neighbors[n_node]:
                     triangle = triangles[n_trig_neigbor]
@@ -308,7 +350,85 @@ def main():
 
                     W_Source_Area_Integral += 11.0*triangle_delta/108.0
                     W_Source_Integral += (7.0*W1+ 7.0*W2)*triangle_delta/216.0
-                
+
+
+                    x0, y0 = nodes[n0]
+                    x1, y1 = nodes[n1]
+                    x2, y2 = nodes[n2]
+                    x10, y01 = x1-x0, y0-y1
+                    x21, y12 = x2-x1, y1-y2
+                    x02, y20 = x0-x2, y2-y0
+                    Delta = x10*y20-x02*y01
+
+                    Delta_PsiA = Psi0*y12 + Psi1*y20 + Psi2*y01
+                    Delta_PsiB = Psi0*x21 + Psi1*x02 + Psi2*x10
+
+                    A_Psi = Delta_PsiA / Delta
+                    B_PSi = Delta_PsiB / Delta
+
+                    U_x = B_PSi
+                    U_y = -A_Psi
+                    U_ell = sqrt(U_x*U_x + U_y*U_y)
+
+                    sina_T = 0
+                    cosa_T = 1
+
+                    if U_ell > 0:
+                        sina_T = U_y / U_ell
+                        cosa_T = U_x / U_ell
+
+                    xc = (x0+x1+x2)/3
+                    yc = (y0+y1+y2)/3
+
+                    def ToLocal_T(x, y):
+                        X =  (x-xc)*cosa_T + (y-yc)*sina_T
+                        Y = -(x-xc)*sina_T + (y-yc)*cosa_T
+                        return X,Y
+
+                    X0, Y0 = ToLocal_T(x0,y0)
+                    X1, Y1 = ToLocal_T(x1,y1)
+                    X2, Y2 = ToLocal_T(x2,y2)
+
+                    kw0_T, kw1_T, kw2_T = 0, 0, 0
+
+                    X_min = min(X0, X1, X2)
+                    X_max = max(X0, X1, X2)
+
+                    X12, Y12 = X1 - X2, Y1 - Y2
+                    X20, Y20 = X2 - X0, Y2 - Y0
+                    X01, Y01 = X0 - X1, Y0 - Y1
+
+                    ReVel_T =  U_ell/(Pr_T*Vc_T)
+                    vel_T = ReVel_T*(X_max-X_min)
+
+                    aBw_T = U_ell*Y12*Y0/ (8.0 * Pr_T) + Vc_T*X12/2
+                    aCw_T = (U_ell*Y12)/(2.0*Pr_T)
+
+                    if vel_T<=1e-8:
+                        DW_T=ReVel_T*(X0*Y12+X1*Y20+X2*Y01)
+
+                        kw0_T=(aBw_T*ReVel_T*(X2-X1)+aCw_T*(-Y12+ReVel_T*((X1-X_max)*Y2-(X2-X_max)*Y1)))/DW_T
+                        kw1_T=(aBw_T*ReVel_T*(X0-X2)+aCw_T*(-Y20+ReVel_T*((X2-X_max)*Y0-(X0-X_max)*Y2)))/DW_T
+                        kw2_T=(aBw_T*ReVel_T*(X1-X0)+aCw_T*(-Y01+ReVel_T*((X0-X_max)*Y1-(X1-X_max)*Y0)))/DW_T
+                    
+                    else:
+                        EW0_T = exp(U_ell*(X0-X_max)/(Pr_T*Vc_T))
+                        EW1_T = exp(U_ell*(X1-X_max)/(Pr_T*Vc_T))
+                        EW2_T = exp(U_ell*(X2-X_max)/(Pr_T*Vc_T))
+
+                        Delta_W_T   = EW0_T*Y12 + EW1_T*Y20 + EW2_T*Y01
+                        one_over_Delta_W_T = 1 / Delta_W_T
+
+                        kw0_T = (aBw_T*(EW2_T-EW1_T)+ aCw_T*(EW1_T*Y2-EW2_T*Y1))*one_over_Delta_W_T
+                        kw1_T = (aBw_T*(EW0_T-EW2_T)+ aCw_T*(EW2_T*Y0-EW0_T*Y2))*one_over_Delta_W_T
+                        kw2_T = (aBw_T*(EW1_T-EW0_T)+ aCw_T*(EW0_T*Y1-EW1_T*Y0))*one_over_Delta_W_T
+
+                        
+                    T0, T1, T2 = T[n0], T[n1], T[n2]
+
+                    T_BorderIntegral    += T1*(kw1_T) +  T2*(kw2_T)
+                    T_BorderIntegral_k0 += kw0_T
+
                 Psi_new[n_node] = 0
 
                 x, y = node
@@ -319,19 +439,39 @@ def main():
                     W_new[n_node] = 0 
                 else:
                     W_new[n_node] = (-W_Border_Integral + W_Source_Integral)/W_Source_Area_Integral
+
+                # Add "q" term
+                x0, y0 = nodes[n_node]
+                if CONSTANT_T_FLOW_BORDER_INDEX in segment_index or True:
+                    border_neighbours = []
+                    for neighbour in node_neighbours[n_node]:
+                        if CONSTANT_T_FLOW_BORDER_INDEX in segment_indices[neighbour]:
+                            border_neighbours.append(neighbour)
+
+                    for n_border_neighbour in border_neighbours:
+                        x1, y1 = nodes[n_border_neighbour]
+                        l = sqrt((x1-x0)**2 + (y1-y0)**2)*0.5
+
+                        q = 0
+                        T_BorderIntegral += l * q
+
+                T_new[n_node] = (-T_BorderIntegral + T_AreaIntegral)/T_BorderIntegral_k0   
+                if 12 in segment_index and x0 > 0.5:
+                    T_new[n_node] = 1             
+
+
         # ERRORS # 
         # ------ #
         Delta_Psi_Error_Squared = sum((Psi - Psi_new)**2)/(QPsi*QPsi)/sum(Psi_new**2)
         Delta_Ws_Error_Squared = sum((W - W_new)**2)/(QW*QW)/sum(W_new**2)
 
+        Delta_Ts_Error_Squared = sum((T- T_new)**2)/(QT*QT)/sum(T_new**2)
+
         Error = max(Delta_Psi_Error_Squared, Delta_Ws_Error_Squared)
-
-
-        stop_counter = perf_counter()
         
 
         if n_cycle % 50 == 0 or True:
-            print(f"cycle n = {n_cycle}, dpsi == {Delta_Psi_Error_Squared:.2e}, dW = {Delta_Ws_Error_Squared:.2e}, start time == {start_counter}, stoptime = {stop_counter}")
+            print(f"cycle n = {n_cycle}, dpsi == {sqrt(Delta_Psi_Error_Squared):.2e}, dW = {sqrt(Delta_Ws_Error_Squared):.2e}, dT = {sqrt(Delta_Ts_Error_Squared):.2e}")
 
         Saver.logger.LogErrors(Psi = sqrt(Delta_Psi_Error_Squared), W = sqrt(Delta_Ws_Error_Squared))
 
@@ -340,9 +480,9 @@ def main():
         Psi = Psi*(1-QPsi) + np.copy(Psi_new)*QPsi
         W = W*(1-QW) + np.copy(W_new)*QW
 
+        T = T*(1-QT) + np.copy(T_new)*QT
+
         n_cycle += 1
-
-
 
 
 
@@ -353,9 +493,11 @@ def main():
 
     # Saver.SaveResults("SavedResults", "ReworkedRe1000", W = W, Psi = Psi)
 
-    # from Scripts.Plotter import PlotNodes
-    # PlotNodes(triangulation, Psi)
-    # PlotNodes(triangulation, W)
+    from Scripts.Plotter import PlotNodes
+    PlotNodes(triangulation, T)
+    PlotNodes(triangulation, Psi)
+
+    PlotNodes(triangulation, W)
     # PlotScatter(nodes, W)
 
 
