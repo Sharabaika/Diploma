@@ -150,7 +150,9 @@ class ResultAnalysis:
         traces = kwargs.get("traces", self.GetLogs().columns)
 
         ax = self.GetLogs()[traces][xmin:xmax].plot()
+        ax.set_yscale("log")
         ax.set_ylim((0,1))
+
         plt.show()
 
 class DynamycsAnalysis(ResultAnalysis):

@@ -23,7 +23,7 @@ void SolveFluid_Implementation(const Arr x,const Arr y,const JaggedArr triangles
 	Arr& Delta_Psi, Arr& Delta_W
 )
 {
-    const int begin_time = std::clock();
+    const clock_t begin_time = std::clock();
 
     int n_cycle = 0;
     int MAX_CYCLES = max_cycles;
@@ -384,9 +384,9 @@ void SolveFluid_Implementation(const Arr x,const Arr y,const JaggedArr triangles
         n_cycle++;
     }
 
-    const int end_time = clock();
+    const clock_t end_time = clock();
 
     printf("===================================================\n");
     printf("n cycle = %06i, dw = %.5e, dpsi = %.5e \n", n_cycle, Delta_W[Delta_W.size() - 1], Delta_Psi[Delta_Psi.size() - 1]);
-    printf("time spent = %i \n", (end_time - begin_time) / CLOCKS_PER_SEC);
+    printf("time spent = %f \n", float(end_time - begin_time) / CLOCKS_PER_SEC);
 }

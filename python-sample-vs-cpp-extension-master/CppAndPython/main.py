@@ -55,8 +55,8 @@ def main():
     #import Scripts.Plotter as plotter
     #plotter.PlotMesh(nodes, Triangles, Segments, False, False, False)
 
-    from superfastcode import SolveFluids
-    Psi, W, DPsi, DW = SolveFluids((X,Y, Triangles, Segments, Trig_neighbours, Node_neighbours, Re, Vx, QPsi, QW, Max_error, Max_cycles))
+    #from superfastcode import SolveFluids
+    #Psi, W, DPsi, DW = SolveFluids((X,Y, Triangles, Segments, Trig_neighbours, Node_neighbours, Re, Vx, QPsi, QW, Max_error, Max_cycles))
 
     #print(len(DPsi))
 
