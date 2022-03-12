@@ -24,6 +24,10 @@ def PlotMesh(points, triangles, segment_idex, index_nodes = False, scatted_nodes
     if index_regions:
         for point_index in range(len(x)):
             ax.text(x=x[point_index], y=y[point_index], s = segment_idex[point_index], color='red', fontsize=8)
+
+    x, y = points[0]
+    ax.arrow(0, 0, x, y, head_width=0.005, head_length=0.01, fc='k', ec='k')
+
     plt.show()
 
 def PlotNodes(triangulation, Fi):

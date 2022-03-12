@@ -60,7 +60,9 @@ def SaveMesh(path, filename, nodes, triangles, segment_tags, trig_neighbors, nod
 
 
 def main():
-    pass
+    from MeshGenerator import GenerateCurvyMesh
+    points = GenerateCurvyMesh(260, 5, 0.3, 0.1)
+    WriteMeshToDAT("test", points)
 
 if __name__ == "__main__":
     main()

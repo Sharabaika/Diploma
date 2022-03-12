@@ -1,7 +1,7 @@
 import numpy as np
 
 def GenerateCurvyMesh(N, n, R, dr):
-    res = np.zeros((N+1,3))
+    res = np.zeros((N,3))
 
     for i,fi in enumerate(np.linspace(0, 2*np.pi, N)):
         r = R+dr*np.sin(fi*n)
