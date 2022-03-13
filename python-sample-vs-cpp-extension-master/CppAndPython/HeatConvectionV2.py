@@ -2,6 +2,7 @@ from hashlib import new
 from types import MemberDescriptorType
 import matplotlib
 import numpy as np
+from pytools import delta
 from Scripts.MeshReader import ReadRaw, ReadSaved
 from math import atan2, exp, sqrt
 import matplotlib.tri as tri
@@ -27,9 +28,9 @@ def main():
     # ======= #
     #  2000000001---1000000002
     #  |########|---|########|
-    INNER_MEDIUM_INDEX = 0
-    INNER_BORDER_INDEX = 1
-    OUTER_BORDER_INDEX = 2
+    INNER_MEDIUM_INDEX = 2000 # 0
+    INNER_BORDER_INDEX = 10   # 1
+    OUTER_BORDER_INDEX = 11   # 2
 
     # TODO replace ?
     is_a_wall = lambda node_index : not (INNER_MEDIUM_INDEX in segment_indices[node_index])
@@ -38,7 +39,7 @@ def main():
     # PARAMS #
     # ====== #
     # Dynamics
-    Ra = 1e8
+    Ra = 30000
     Pr = 10
     Vc = 1 
 
@@ -76,8 +77,11 @@ def main():
         tags = segment_indices[n_node]
         is_wall = INNER_BORDER_INDEX in tags or OUTER_BORDER_INDEX in tags
         x, y = nodes[n_node]
+        r = sqrt(x*x+y*y)
+
         W[n_node] = np.random.rand(1)*0.01+0.01 
-        Psi[n_node] = 0 if is_wall else 0.0001*np.sin(3*x*np.pi)*np.sin(3*y*np.pi)
+        Psi[n_node] = 0.0001*np.sin(3*x*np.pi)*np.sin(3*y*np.pi)
+        T[n_node] = T_inner + (T_outer-T_inner)*(r-1.0)
 
         if INNER_BORDER_INDEX in tags:
             Psi[n_node] = 0
@@ -85,8 +89,6 @@ def main():
         elif OUTER_BORDER_INDEX in tags:
             Psi[n_node] = 0
             T[n_node] = T_outer
-        else:
-            Psi[n_node] = 0.0001
 
     Psi_new = np.array(Psi)
     W_new = np.array(W)
@@ -270,7 +272,11 @@ def main():
                     k1T=0
                     k2T=0
                     
-                    if abs(Vel*(Xmax-Xmin))<1e-8:
+                    if abs(Vel)<1e-14:
+                        k0T = 0
+                        k1T = 0
+                        k2T = 0
+                    elif abs(Vel*(Xmax-Xmin))<1e-8:
                         DT = Vel*(X0*Y12+X1*Y20+X2*Y01)
                         k0T = (abT*Vel*(X2-X1)+acT*(-Y12+Vel*((X1-Xmax)*Y2-(X2-Xmax)*Y1)))/DT
                         k1T = (abT*Vel*(X0-X2)+acT*(-Y20+Vel*((X2-Xmax)*Y0-(X0-Xmax)*Y2)))/DT
@@ -279,7 +285,7 @@ def main():
                         E0T = exp(Vel*(X0-Xmax))
                         E1T = exp(Vel*(X1-Xmax))
                         E2T = exp(Vel*(X2-Xmax))
-                        DT = (E0T*Y12+E1T*Y20+E2T*Y01)
+                        DT = E0T*Y12+E1T*Y20+E2T*Y01
                         k0T = (abT*(E2T-E1T)+acT*(E1T*Y2-E2T*Y1))/DT
                         k1T = (abT*(E0T-E2T)+acT*(E2T*Y0-E0T*Y2))/DT
                         k2T = (abT*(E1T-E0T)+acT*(E0T*Y1-E1T*Y0))/DT
@@ -300,7 +306,11 @@ def main():
                     k1W=0
                     k2W=0
 
-                    if abs(VelPr*(Xmax-Xmin))<1e-8:
+                    if abs(Vel)<1e-14:
+                        k0W = 0
+                        k1W = 0
+                        k2W = 0
+                    elif abs(VelPr*(Xmax-Xmin))<1e-8:
                             DW = VelPr*(X0*Y12+X1*Y20+X2*Y01)
                             k0W = (abW*VelPr*(X2-X1)+acW*(-Y12+VelPr*((X1-Xmax)*Y2-(X2-Xmax)*Y1)))/DW
                             k1W = (abW*VelPr*(X0-X2)+acW*(-Y20+VelPr*((X2-Xmax)*Y0-(X0-Xmax)*Y2)))/DW
@@ -319,13 +329,17 @@ def main():
             
             # Advance #
             # ======= #
-            if is_a_wall(n_node):
-                Psi_new[n_node] = (-aPsinb+S)/aPsi0 * QPsi + Psi[n_node]*(1-QPsi)
-                W_new[n_node] = -(aWnb+Ra*SdTdx)/aW0 * QW + W[n_node]*(1-QW)
-                T_new[n_node] = -aTnb/aT0 * QT + T[n_node]*(1-QT)
+            if not is_a_wall(n_node):
+                # Medium #
+                # ====== #
+                Psi_new[n_node] = (-aPsinb+S)/aPsi0
+                W_new[n_node] = -(aWnb+Ra*SdTdx)/aW0
+                T_new[n_node] = -aTnb/aT0
             else:
+                # Wall #
+                # ==== #
                 Psi_new[n_node] = 0
-                W_new[n_node] = -(I+aWnb)/aW0 * QW + W[n_node]*(1-QW)
+                W_new[n_node] = -(I+aWnb)/aW0
                 if INNER_BORDER_INDEX in segment_index:
                     T_new[n_node] = T_inner
                 else:

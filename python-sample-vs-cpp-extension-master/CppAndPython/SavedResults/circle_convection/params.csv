@@ -1,2 +1,2 @@
-,mesh_name,Re,QPsi,QW,QT
-0,circle,0.01,1.7,0.02,0.7
+,mesh_name,Ra,Pr,QPsi,QW,QT
+0,circle,30000,10,1.2,0.7,1.2
