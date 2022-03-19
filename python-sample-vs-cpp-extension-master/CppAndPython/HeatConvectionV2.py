@@ -6,7 +6,7 @@ from pytools import delta
 from Scripts.MeshReader import ReadRaw, ReadSaved
 from math import atan2, exp, sqrt
 import matplotlib.tri as tri
-from Scripts.Plotter import PlotMesh, PlotScatter 
+from Scripts.ResultAnalysis import PlotMesh, PlotScatter 
 import Scripts.ResultFileHandling as files
 
 ONE_THIRD = 1.0 / 3.0
@@ -53,7 +53,7 @@ def main():
 
     # Cycles
     N_CYCLIES_MAX = 10000
-    MAX_DELTA_ERROR = 1e-5
+    MAX_DELTA_ERROR = 1e-4
 
     # Unused, wall velocity
     Vx = 0 
@@ -376,9 +376,9 @@ def main():
     x, y = nodes[:,0], nodes[:,1]
     triangulation = matplot.tri.Triangulation(x,y,triangles)
 
-    Saver.SaveResults("SavedResults", "circle_convection", W = W, Psi = Psi, T = T)
+    Saver.SaveResults("SavedResults", "circle_convectionV2", W = W, Psi = Psi, T = T)
 
-    from Scripts.Plotter import PlotNodes
+    from Scripts.ResultAnalysis import PlotNodes
     PlotNodes(triangulation, T)
     PlotNodes(triangulation, Psi)
 

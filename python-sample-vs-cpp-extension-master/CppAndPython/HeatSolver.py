@@ -4,7 +4,7 @@ import numpy as np
 from Scripts.MeshReader import ReadRaw, ReadSaved
 from math import exp, sqrt
 import matplotlib.tri as tri
-from Scripts.Plotter import PlotMesh, PlotScatter 
+from Scripts.ResultAnalysis import PlotMesh, PlotScatter 
 import Scripts.ResultFileHandling as files
 
 from time import perf_counter
@@ -187,7 +187,7 @@ def main():
 
     # Saver.SaveResults("SavedResults", "ReworkedRe1000", W = W, Psi = Psi)
 
-    from Scripts.Plotter import PlotNodes
+    from Scripts.ResultAnalysis import PlotNodes
     # PlotNodes(triangulation, Psi)
     PlotNodes(triangulation, T)
     # PlotScatter(nodes, W)

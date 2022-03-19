@@ -2,7 +2,7 @@ import matplotlib
 from matplotlib.pyplot import title
 import numpy as np
 from Scripts.MeshReader import ReadRaw
-import Scripts.Plotter as Plotter
+import Scripts.ResultAnalysis as ResultAnalysis
 from math import exp, sqrt
 import matplotlib.tri as tri
 
@@ -159,6 +159,6 @@ for n_cycle in range(N_cyclies):
     H = H_new
     Fi = Fi_new
 
-Plotter.CoolPlots.PlotLevelNodes(nodes, Fi, xrange = (-1.5,1.5), yrange = (-1.5,1.5), nlevels = 30, manual = True,  title="Fi")
+ResultAnalysis.CoolPlots.PlotLevelNodes(nodes, Fi, xrange = (-1.5,1.5), yrange = (-1.5,1.5), nlevels = 30, manual = True,  title="Fi")
 # Plotter.CoolPlots.PlotLevelTriangles(nodes, triangles, H,  xrange = (-1.5,1.5), yrange = (-1.5,1.5), title="H")
 # Plotter.CoolPlots.PlotLevelTriangles(nodes, triangles, Mu,  xrange = (-1.5,1.5), yrange = (-1.5,1.5), title="Mu")

@@ -168,14 +168,26 @@ class DynamycsAnalysis(ResultAnalysis):
 
     def GetW(self):
         return self.GetSavedResults()["W"]
+
+    def GetT(self):
+        return self.GetSavedResults()["T"]
     
-    def PlotPsi(self):
+    def PlotPsiLevel(self):
         nodes, triangles, segment_indices, trig_neighbors, node_neighbours = self.GetMesh()
 
         x, y = nodes[:,0], nodes[:,1]
         triangulation = matplotlib.tri.Triangulation(x,y,triangles)
         
-        CoolPlots.PlotLevel(x, y, self.GetPsi(), nlevels = 30, xrange = (0,1), yrange = (0,1), manual = True)
+        CoolPlots.PlotLevel(x, y, self.GetPsi(), nlevels = 30, xrange = (-2,2), yrange = (-2,2), manual = True)
+
+    def PlotPsi(self):
+        nodes, triangles, segment_indices, trig_neighbors, node_neighbours = self.GetMesh()
+
+        x, y = nodes[:,0], nodes[:,1]
+        triangulation = matplotlib.tri.Triangulation(x,y,triangles)
+
+        PlotNodes(triangulation, self.GetPsi())
+
 
     def PlotW(self):
         nodes, triangles, segment_indices, trig_neighbors, node_neighbours = self.GetMesh()
@@ -183,6 +195,57 @@ class DynamycsAnalysis(ResultAnalysis):
         triangulation = matplotlib.tri.Triangulation(x,y,triangles)
 
         PlotNodes(triangulation, self.GetW())
+    
+    def CalculateNulselt(self):
+        nodes, triangles, segment_indices, trig_neighbors, node_neighbours = self.GetMesh()
+        T = self.GetT()
+        
+        OUTER_BORDER_INDEX = 11   # 2
+        def is_wall(n):
+            return OUTER_BORDER_INDEX in segment_indices[n]
+
+
+        integral = 0.0
+        border_length = 0.0
+        n_triangles = len(triangles)
+        for n_triangle in range(n_triangles):
+            triangle = triangles[n_triangle]
+            
+            border_nodes = []
+            for n_node in triangle:
+                if is_wall(n_node):
+                    border_nodes.append(n_node)
+            
+            if len(border_nodes) == 2:
+                a,b,c = triangle
+                if is_wall(a) and is_wall(b):
+                    pass
+                elif is_wall(b) and is_wall(c):
+                    a,b,c = b,c,a
+                elif is_wall(c) and is_wall(a):
+                    a,b,c = c,a,b
+                
+                ax,ay = nodes[a]
+                bx,by = nodes[b]
+                cx,cy = nodes[c]
+
+                ab = np.sqrt((ax-bx)**2+(ay-by)**2)
+                bc = np.sqrt((bx-cx)**2+(by-cy)**2)
+                ca = np.sqrt((cx-ax)**2+(cy-ay)**2)
+
+                p = (ab+bc+ca)*0.5
+
+                h = 2.0*np.sqrt(p*(p-ab)*(p-bc)*(p-ca))/ab
+
+                dtdy = T[c]/h
+                integral += dtdy*ab
+                border_length += ab
+
+        return integral/border_length
+                
+
+            
+
 
         
 

@@ -12,6 +12,7 @@ class ResultSaving:
     
     def SaveResults(self, folder, result_name, *args, **kwargs):
         df = pd.DataFrame(data = kwargs)
+        float_format = '{:.5f}'.format
 
         path = os.path.join(folder, result_name)
 
@@ -19,14 +20,14 @@ class ResultSaving:
             os.makedirs(path)
 
         file_path = os.path.join(path, "saved.csv")
-        df.to_csv(file_path)
+        df.to_csv(file_path, float_format=float_format)
 
         logger_path = os.path.join(path, "logs.csv")
-        self.logger.ToDataFrame().to_csv(logger_path)
+        self.logger.ToDataFrame().to_csv(logger_path, float_format=float_format)
 
         if self.params is not None:
             params_path = os.path.join(path, "params.csv")
-            pd.DataFrame(data=self.params, index=[0]).to_csv(params_path)
+            pd.DataFrame(data=self.params, index=[0]).to_csv(params_path, float_format=float_format)
 
     def ReadResult(path):
         df = pd.read_csv(path)

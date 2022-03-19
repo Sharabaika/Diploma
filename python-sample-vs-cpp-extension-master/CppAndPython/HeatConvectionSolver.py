@@ -4,7 +4,7 @@ import numpy as np
 from Scripts.MeshReader import ReadRaw, ReadSaved
 from math import atan2, exp, sqrt
 import matplotlib.tri as tri
-from Scripts.Plotter import PlotMesh, PlotScatter 
+from Scripts.ResultAnalysis import PlotMesh, PlotScatter 
 import Scripts.ResultFileHandling as files
 
 from time import perf_counter
@@ -434,7 +434,7 @@ def main():
 
     Saver.SaveResults("SavedResults", "circle_convection", W = W, Psi = Psi, T = T)
 
-    from Scripts.Plotter import PlotNodes
+    from Scripts.ResultAnalysis import PlotNodes
     PlotNodes(triangulation, T)
     PlotNodes(triangulation, Psi)
 
