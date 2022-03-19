@@ -132,9 +132,18 @@ def main():
     # plt.show()
 
     meshes = ["N120_n0_R1_dr0", "N120_n3_R1_dr0.3", "N120_n4_R1_dr0.3"]
+
     for mesh in meshes:
         # SaveRawMesh(mesh)
-        PlotSavedMesh(mesh)
+        # PlotSavedMesh(mesh)
+        results = DynamycsAnalysis("SavedResults", mesh)
+        fi, nu = results.CalculateLocalNulselt()
+        print(results.CalculateNulselt())
+        plt.plot(fi, nu)
+    plt.show()
+
+    # PlotResults("FinalTestV2")
+
 
 if __name__ == "__main__":
     # test()

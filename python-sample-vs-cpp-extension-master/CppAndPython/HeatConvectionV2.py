@@ -17,7 +17,7 @@ def main():
 
     # Mesh data #
     # ========= #
-    mesh_name = "N120_n0_R1_dr0"
+    mesh_name = "N120_n4_R1_dr0.3"
 
     nodes, triangles, segment_indices, trig_neighbors, node_neighbours = ReadSaved(f"SavedMeshes/{mesh_name}.dat")
 
@@ -53,7 +53,7 @@ def main():
 
     # Cycles
     N_CYCLIES_MAX = 10000
-    MAX_DELTA_ERROR = 1e-4
+    MAX_DELTA_ERROR = 1e-5
 
     # Unused, wall velocity
     Vx = 0 
@@ -376,7 +376,7 @@ def main():
     x, y = nodes[:,0], nodes[:,1]
     triangulation = matplot.tri.Triangulation(x,y,triangles)
 
-    Saver.SaveResults("SavedResults", "circle_convectionV2", W = W, Psi = Psi, T = T)
+    Saver.SaveResults("SavedResults", f"{mesh_name}", W = W, Psi = Psi, T = T)
 
     from Scripts.ResultAnalysis import PlotNodes
     PlotNodes(triangulation, T)
