@@ -61,8 +61,16 @@ def SaveMesh(path, filename, nodes, triangles, segment_tags, trig_neighbors, nod
 
 def main():
     from MeshGenerator import GenerateCurvyMesh
-    points = GenerateCurvyMesh(260, 5, 0.3, 0.1)
-    WriteMeshToDAT("test", points)
+
+    N = 120
+    R = 1
+    dr = 0.3
+
+    points = GenerateCurvyMesh(N, 0, R, 0)
+    WriteMeshToDAT(f"SavedCurves/N{N}_n{0}_R{R}_dr{0}", points)
+    for n in [3,4]:
+        points = GenerateCurvyMesh(N, n, R, dr)
+        WriteMeshToDAT(f"SavedCurves/N{N}_n{n}_R{R}_dr{dr}", points)
 
 if __name__ == "__main__":
     main()

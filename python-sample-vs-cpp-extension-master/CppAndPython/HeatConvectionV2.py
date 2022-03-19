@@ -17,7 +17,7 @@ def main():
 
     # Mesh data #
     # ========= #
-    mesh_name = "circle"
+    mesh_name = "N120_n0_R1_dr0"
 
     nodes, triangles, segment_indices, trig_neighbors, node_neighbours = ReadSaved(f"SavedMeshes/{mesh_name}.dat")
 

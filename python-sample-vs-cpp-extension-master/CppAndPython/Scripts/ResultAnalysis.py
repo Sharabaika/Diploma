@@ -1,3 +1,4 @@
+from math import atan2
 import os
 import matplotlib.pyplot as plt
 import matplotlib
@@ -24,9 +25,6 @@ def PlotMesh(points, triangles, segment_idex, index_nodes = False, scatted_nodes
     if index_regions:
         for point_index in range(len(x)):
             ax.text(x=x[point_index], y=y[point_index], s = segment_idex[point_index], color='red', fontsize=8)
-
-    x, y = points[0]
-    ax.arrow(0, 0, x, y, head_width=0.005, head_length=0.01, fc='k', ec='k')
 
     plt.show()
 
@@ -195,7 +193,60 @@ class DynamycsAnalysis(ResultAnalysis):
         triangulation = matplotlib.tri.Triangulation(x,y,triangles)
 
         PlotNodes(triangulation, self.GetW())
-    
+
+    def CalculateLocalNulselt(self):
+        nodes, triangles, segment_indices, trig_neighbors, node_neighbours = self.GetMesh()
+        T = self.GetT()
+        
+        OUTER_BORDER_INDEX = 11   # 2
+        def is_wall(n):
+            return OUTER_BORDER_INDEX in segment_indices[n]
+
+        fis = []
+        nuls = []
+
+        n_triangles = len(triangles)
+        for n_triangle in range(n_triangles):
+            triangle = triangles[n_triangle]
+            
+            border_nodes = []
+            for n_node in triangle:
+                if is_wall(n_node):
+                    border_nodes.append(n_node)
+            
+            if len(border_nodes) == 2:
+                a,b,c = triangle
+                if is_wall(a) and is_wall(b):
+                    pass
+                elif is_wall(b) and is_wall(c):
+                    a,b,c = b,c,a
+                elif is_wall(c) and is_wall(a):
+                    a,b,c = c,a,b
+                
+                ax,ay = nodes[a]
+                bx,by = nodes[b]
+                cx,cy = nodes[c]
+
+                ab = np.sqrt((ax-bx)**2+(ay-by)**2)
+                bc = np.sqrt((bx-cx)**2+(by-cy)**2)
+                ca = np.sqrt((cx-ax)**2+(cy-ay)**2)
+
+                p = (ab+bc+ca)*0.5
+
+                h = 2.0*np.sqrt(p*(p-ab)*(p-bc)*(p-ca))/ab
+
+                dtdy = T[c]/h
+                nuls.append(dtdy)
+                
+                midx, midy = (ax+bx)*0.5, (ay+by)*0.5
+                fi = atan2(midy, midx)
+                fis.append(fi)
+
+        order = np.argsort(fis)
+        return np.array(fis)[order], np.array(nuls)[order]
+
+        
+
     def CalculateNulselt(self):
         nodes, triangles, segment_indices, trig_neighbors, node_neighbours = self.GetMesh()
         T = self.GetT()

@@ -5,8 +5,9 @@ from Scripts.MeshWriter import SaveMesh
 import pandas as pd
 import matplotlib.tri as tri
 import sys
-from Scripts.ResultAnalysis import CoolPlots, DynamycsAnalysis, PlotNodes, ResultAnalysis
+from Scripts.ResultAnalysis import CoolPlots, DynamycsAnalysis, PlotMesh, PlotNodes, ResultAnalysis
 from math import atan2, exp, sqrt
+import matplotlib.pyplot as plt
 
 from Scripts.ResultFileHandling import ResultSaving
 
@@ -17,13 +18,13 @@ def PlotResults(result_name):
     results.PlotPsi()
     
 
-def SaveRawMesh():
-    mesh_name = "circle"
+def SaveRawMesh(name):
+    mesh_name = name
 
-    grid = open(f"meshes/{mesh_name}/mesh.dat", "r")
+    grid = open(f"MeshProjects/{mesh_name}/grid.dat", "r")
 
-    inner = open(f"meshes/{mesh_name}/inner.dat", "r")
-    outer = open(f"meshes/{mesh_name}/outer.dat", "r")
+    inner = open(f"MeshProjects/{mesh_name}/inner.dat", "r")
+    outer = open(f"MeshProjects/{mesh_name}/outer.dat", "r")
 
 
     nodes, triangles, segment_indices, trig_neighbors, node_neighbours = ReadRaw(grid, [2000], 
@@ -119,14 +120,21 @@ def test():
 def Nulselt(result_name):
     results = DynamycsAnalysis("SavedResults", f"{result_name}")
 
-    return results.CalculateNulselt()
+    return results.CalculateLocalNulselt()
 
-
+def PlotSavedMesh(name):
+    nodes, triangles, segment_indices, trig_neighbors, node_neighbours = ReadSaved(f"SavedMeshes/{name}.dat")
+    PlotMesh(nodes, triangles, segment_indices, False, True, True)
+    
 def main():
-    PlotResults("circle_convectionV2")
-    # nulselt = Nulselt("circle_convectionV2")
-    # print(nulselt)
+    # fi, nu = Nulselt("circle_convectionV2")
+    # plt.plot(fi, nu)
+    # plt.show()
 
+    meshes = ["N120_n0_R1_dr0", "N120_n3_R1_dr0.3", "N120_n4_R1_dr0.3"]
+    for mesh in meshes:
+        # SaveRawMesh(mesh)
+        PlotSavedMesh(mesh)
 
 if __name__ == "__main__":
     # test()
