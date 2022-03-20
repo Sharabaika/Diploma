@@ -9,8 +9,8 @@ class ResultSaving:
 
     def AddParams(self, **kwargs):
         self.params.update(kwargs)
-    
-    def SaveResults(self, folder, result_name, *args, **kwargs):
+
+    def SaveResult(self, folder, result_name, category, *args, **kwargs ):
         df = pd.DataFrame(data = kwargs)
         float_format = '{:.5f}'.format
 
@@ -19,8 +19,16 @@ class ResultSaving:
         if not os.path.exists(path):
             os.makedirs(path)
 
-        file_path = os.path.join(path, "saved.csv")
+        file_path = os.path.join(path, f"{category}.csv")
         df.to_csv(file_path, float_format=float_format)
+    
+    def SaveResults(self, folder, result_name):
+        float_format = '{:.5f}'.format
+
+        path = os.path.join(folder, result_name)
+
+        if not os.path.exists(path):
+            os.makedirs(path)
 
         logger_path = os.path.join(path, "logs.csv")
         self.logger.ToDataFrame().to_csv(logger_path, float_format=float_format)

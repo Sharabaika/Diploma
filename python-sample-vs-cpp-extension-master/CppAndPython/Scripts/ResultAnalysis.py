@@ -239,7 +239,7 @@ class DynamycsAnalysis(ResultAnalysis):
                 nuls.append(dtdy)
                 
                 midx, midy = (ax+bx)*0.5, (ay+by)*0.5
-                fi = atan2(midy, midx)
+                fi = np.rad2deg(atan2(midy, midx))
                 fis.append(fi)
 
         order = np.argsort(fis)

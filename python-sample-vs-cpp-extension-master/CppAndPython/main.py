@@ -5,7 +5,7 @@ from Scripts.MeshWriter import SaveMesh
 import pandas as pd
 import matplotlib.tri as tri
 import sys
-from Scripts.ResultAnalysis import CoolPlots, DynamycsAnalysis, PlotMesh, PlotNodes, ResultAnalysis
+from Scripts.ResultAnalysis import CoolPlots, DynamycsAnalysis, PlotElements, PlotMesh, PlotNodes, ResultAnalysis
 from math import atan2, exp, sqrt
 import matplotlib.pyplot as plt
 
@@ -23,14 +23,19 @@ def SaveRawMesh(name):
 
     grid = open(f"MeshProjects/{mesh_name}/grid.dat", "r")
 
-    inner = open(f"MeshProjects/{mesh_name}/inner.dat", "r")
-    outer = open(f"MeshProjects/{mesh_name}/outer.dat", "r")
+    conductor = open(f"MeshProjects/{mesh_name}/conductor_region.dat", "r")
+    conductor_border = open(f"MeshProjects/{mesh_name}/conductor_border.dat", "r")
 
+    medium = open(f"MeshProjects/{mesh_name}/medium_region.dat", "r")
+    medium_border = open(f"MeshProjects/{mesh_name}/medium_border.dat", "r")
 
-    nodes, triangles, segment_indices, trig_neighbors, node_neighbours = ReadRaw(grid, [2000], 
-        (inner, [10, 1000]), (outer, [11, 1000]))
+    void = open(f"MeshProjects/{mesh_name}/void_region.dat", "r")
+    void_border = open(f"MeshProjects/{mesh_name}/void_border.dat", "r")
 
-    SaveMesh("SavedMeshes", f"{mesh_name}", nodes, triangles, segment_indices, trig_neighbors, node_neighbours)
+    nodes, triangles, segment_indices, trig_neighbors, node_neighbours, trianlge_indices = ReadRaw(grid, -1, 
+        (conductor, 0), (void, 4), (medium, 2), (void_border, 5), (medium_border, 3), (conductor_border, 1))
+
+    SaveMesh("SavedMeshes", f"{mesh_name}_extended", nodes, triangles, segment_indices, trig_neighbors, node_neighbours, trianlge_indices)
 
 
 def CPPStuff():
@@ -127,23 +132,16 @@ def PlotSavedMesh(name):
     PlotMesh(nodes, triangles, segment_indices, False, True, True)
     
 def main():
-    # fi, nu = Nulselt("circle_convectionV2")
-    # plt.plot(fi, nu)
-    # plt.show()
+    # SaveRawMesh("N120_n4_R1_dr0.3")
+    nodes, triangles, Segments, Trig_neighbours, Node_neighbours, trianlge_indices = ReadSaved(f"SavedMeshes/N120_n4_R1_dr0.3_extended.dat")
 
-    meshes = ["N120_n0_R1_dr0", "N120_n3_R1_dr0.3", "N120_n4_R1_dr0.3"]
+    x, y = nodes[:, 0], nodes[:, 1]
 
-    for mesh in meshes:
-        # SaveRawMesh(mesh)
-        # PlotSavedMesh(mesh)
-        results = DynamycsAnalysis("SavedResults", mesh)
-        fi, nu = results.CalculateLocalNulselt()
-        print(results.CalculateNulselt())
-        plt.plot(fi, nu)
-    plt.show()
+    triangulation = tri.Triangulation(x, y, triangles) 
 
-    # PlotResults("FinalTestV2")
+    PlotElements(triangulation, trianlge_indices)
 
+    # PlotMesh(nodes, Triangles, Segments, True, False, False)
 
 if __name__ == "__main__":
     # test()

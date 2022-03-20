@@ -48,7 +48,31 @@ def ReadRaw(mesh, default_tags, *segment_files):
         if point_index in node_neighbours[point_index]:
             node_neighbours[point_index].remove(point_index)
 
-    return points, triangles, region_tags, trig_neighbours, node_neighbours
+
+    def most_common(lst):
+        return max(set(lst), key=lst.count)
+    
+    N_triangles = len(triangles)
+    triangle_indecies = [-1 for _ in range(N_triangles)]
+    for n_triangle in range(N_triangles):
+        indices = [region_tags[i] for i in triangles[n_triangle]]
+
+        bConductor = any([index == 0 for index in indices])
+        if bConductor:
+            triangle_indecies[n_triangle] = 0
+            continue
+
+        bMedium = any([index == 2 for index in indices])
+        if bMedium:
+            triangle_indecies[n_triangle] = 2 
+            continue
+
+        bVoid = any([index == 4 for index in indices])
+        if bVoid:
+            triangle_indecies[n_triangle] = 4
+            continue          
+
+    return points, triangles, region_tags, trig_neighbours, node_neighbours, triangle_indecies
 
 
 def ReadSaved(filename):
@@ -56,7 +80,7 @@ def ReadSaved(filename):
     import os
     file = open(filename, "r")
 
-    def ReadArray(dim):
+    def ReadArrays(dim):
         array_header = file.readline()
         array_len =  int(file.readline())
         array = np.empty((array_len, dim))
@@ -64,7 +88,7 @@ def ReadSaved(filename):
             array[i] = np.asfarray(file.readline().split(), dtype = float)
         return array
 
-    def ReadList(data_type = float):
+    def ReadLists(data_type = float):
         list_header = file.readline()
         list_len =  int(file.readline())
         res_list = []
@@ -72,13 +96,25 @@ def ReadSaved(filename):
             data = list(data_type(string) for string in file.readline().replace(',','').strip("[]\n").split(" "))
             res_list.append(data)
         return res_list
+    
+    def ReadInts():
+        header = file.readline()
+        list_len = int(file.readline())
+        res_list = [-1 for _ in range(list_len)]
+        
+        for i in range(list_len):
+            res_list[i] = int(file.readline())
+
+        return res_list
+
 
     file_header = file.readline()
 
-    nodes = ReadArray(2)
-    triangles = ReadList(int)
-    tags = ReadList(int)
-    trig_neighbours = ReadList(int)
-    node_neighbours = ReadList(int)
+    nodes = ReadArrays(2)
+    triangles = ReadLists(int)
+    tags = ReadInts()
+    trig_neighbours = ReadLists(int)
+    node_neighbours = ReadLists(int)
+    trianlge_indices = ReadInts()
 
-    return nodes, triangles, tags, trig_neighbours, node_neighbours
+    return nodes, triangles, tags, trig_neighbours, node_neighbours, trianlge_indices

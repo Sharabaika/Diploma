@@ -16,6 +16,9 @@ class MeshConfig:
     MESH_FILE_NODE_NEIGBOUR_HEADER = "node neighbours\n"
     MESH_FILE_NODE_NEIGBOUR_FORMAT = "{0}\n"
 
+    MESH_FILE_TRIANGLE_INDICES_HEADER = "trianlge indices\n"
+    MESH_FILE_TRIANGLE_INDICES_FORMAT = "{0}\n"
+
 def WriteMeshToDAT(filename, mesh):
     new_file=open("{filename}.dat".format(filename=filename),mode="w",encoding="utf-8")
 
@@ -27,7 +30,7 @@ def WriteMeshToDAT(filename, mesh):
 
     new_file.close()
 
-def SaveMesh(path, filename, nodes, triangles, segment_tags, trig_neighbors, node_neighbours):
+def SaveMesh(path, filename, nodes, triangles, segment_tags, trig_neighbors, node_neighbours, trianlge_indices):
     import numpy as np
     import os
     
@@ -57,6 +60,10 @@ def SaveMesh(path, filename, nodes, triangles, segment_tags, trig_neighbors, nod
         new_file.write(MeshConfig.MESH_FILE_NODE_NEIGBOUR_HEADER)
         new_file.write(str(len(node_neighbours)) + '\n')
         new_file.writelines(map(lambda nodes:MeshConfig.MESH_FILE_NODE_NEIGBOUR_FORMAT.format(nodes), node_neighbours))
+
+        new_file.write(MeshConfig.MESH_FILE_TRIANGLE_INDICES_HEADER)
+        new_file.write(str(len(trianlge_indices)) + '\n')
+        new_file.writelines(map(lambda index:MeshConfig.MESH_FILE_TRIANGLE_INDICES_FORMAT.format(index), trianlge_indices))
 
 
 def main():
