@@ -104,12 +104,6 @@ def main():
 
     n_cycle = 0 
     while n_cycle < N_CYCLIES_MAX and Error>=MAX_DELTA_ERROR:
-        sPsi = 0  # ???
-        dPsi = 0  # 
-        sW = 0
-        dW = 0
-        sT = 0
-        dT = 0
         for n_node in range(N_nodes):
             aPsi0 = 0
             aPsinb = 0
@@ -117,7 +111,7 @@ def main():
             aWnb = 0
             aT0 = 0
             aTnb = 0
-            S = 0         # Area ?
+            S = 0         
             I = 0
             SdTdx = 0
 

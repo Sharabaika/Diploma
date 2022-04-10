@@ -16,7 +16,7 @@ def PlotMesh(points, triangles, segment_idex, index_nodes = False, scatted_nodes
     ax.set_aspect('equal')
     
     if scatted_nodes:
-        ax.scatter(x, y, s=100, c=[arr[0] for arr in segment_idex])     
+        ax.scatter(x, y, s=100, c=segment_idex)     
 
     if index_nodes:
         for point_index in range(len(x)):
@@ -28,7 +28,7 @@ def PlotMesh(points, triangles, segment_idex, index_nodes = False, scatted_nodes
 
     plt.show()
 
-def PlotNodes(triangulation, Fi):
+def PlotNodes(triangulation, Fi, **kwargs):
     fig, ax = plt.subplots()
     ax.set_aspect('equal')
     cf = ax.tricontourf(triangulation, Fi)
@@ -44,10 +44,10 @@ def PlotScatter(points, z):
     plt.colorbar(sc)
     plt.show()
 
-def PlotElements(triang, z):
+def PlotElements(triang, z, **kwargs):
     fig1, ax1 = plt.subplots()
     ax1.set_aspect('equal')
-    tpc = ax1.tripcolor(triang, z, shading='flat')
+    tpc = ax1.tripcolor(triang, z, shading='flat', **kwargs)
     fig1.colorbar(tpc)
     plt.show()
 
@@ -116,7 +116,7 @@ class ResultAnalysis:
         self.path = os.path.join(folder, result_name)
         
         self.logs = None
-        self.saved = None
+        self.saved = {}
         self.params = None
 
         self.loaded_mesh = None
@@ -127,11 +127,11 @@ class ResultAnalysis:
             self.logs = pd.read_csv(logs_path, index_col=0)
         return self.logs
 
-    def GetSavedResults(self):
-        if self.saved is None:
-            saved_path = os.path.join(self.path, "saved.csv")
-            self.saved = pd.read_csv(saved_path)
-        return self.saved
+    def GetSavedResults(self, category="saved"):
+        if not category in self.saved:
+            saved_path = os.path.join(self.path, f"{category}.csv")
+            self.saved[category] = pd.read_csv(saved_path)
+        return self.saved[category]
 
     def GetParams(self):
         if self.params is None:
@@ -169,9 +169,18 @@ class DynamycsAnalysis(ResultAnalysis):
 
     def GetT(self):
         return self.GetSavedResults()["T"]
+
+    def GetFi(self):
+        return self.GetSavedResults("nodes")["Fi"]
+
+    def GetH(self):
+        return self.GetSavedResults("triangles")["H"]
     
+    def GetMu(self):
+        return self.GetSavedResults("triangles")["Mu"]
+
     def PlotPsiLevel(self):
-        nodes, triangles, segment_indices, trig_neighbors, node_neighbours = self.GetMesh()
+        nodes, triangles, segment_indices, trig_neighbors, node_neighbours, trianlge_indices = self.GetMesh()
 
         x, y = nodes[:,0], nodes[:,1]
         triangulation = matplotlib.tri.Triangulation(x,y,triangles)
@@ -179,7 +188,7 @@ class DynamycsAnalysis(ResultAnalysis):
         CoolPlots.PlotLevel(x, y, self.GetPsi(), nlevels = 30, xrange = (-2,2), yrange = (-2,2), manual = True)
 
     def PlotPsi(self):
-        nodes, triangles, segment_indices, trig_neighbors, node_neighbours = self.GetMesh()
+        nodes, triangles, segment_indices, trig_neighbors, node_neighbours, trianlge_indices = self.GetMesh()
 
         x, y = nodes[:,0], nodes[:,1]
         triangulation = matplotlib.tri.Triangulation(x,y,triangles)
@@ -188,11 +197,35 @@ class DynamycsAnalysis(ResultAnalysis):
 
 
     def PlotW(self):
-        nodes, triangles, segment_indices, trig_neighbors, node_neighbours = self.GetMesh()
+        nodes, triangles, segment_indices, trig_neighbors, node_neighbours, trianlge_indices = self.GetMesh()
         x, y = nodes[:,0], nodes[:,1]
         triangulation = matplotlib.tri.Triangulation(x,y,triangles)
 
         PlotNodes(triangulation, self.GetW())
+
+    def PlotFi(self, **kwargs):
+        nodes, triangles, segment_indices, trig_neighbors, node_neighbours, trianlge_indices = self.GetMesh()
+
+        x, y = nodes[:,0], nodes[:,1]
+        triangulation = matplotlib.tri.Triangulation(x,y,triangles)
+
+        PlotNodes(triangulation, self.GetFi(), **kwargs)
+
+    def PlotH(self, **kwargs):
+        nodes, triangles, segment_indices, trig_neighbors, node_neighbours, trianlge_indices = self.GetMesh()
+
+        x, y = nodes[:,0], nodes[:,1]
+        triangulation = matplotlib.tri.Triangulation(x,y,triangles)
+
+        PlotElements(triangulation, self.GetH(), **kwargs)
+
+    def PlotMu(self, **kwargs):
+        nodes, triangles, segment_indices, trig_neighbors, node_neighbours, trianlge_indices = self.GetMesh()
+
+        x, y = nodes[:,0], nodes[:,1]
+        triangulation = matplotlib.tri.Triangulation(x,y,triangles)
+
+        PlotElements(triangulation, self.GetMu(), **kwargs)
 
     def CalculateLocalNulselt(self):
         nodes, triangles, segment_indices, trig_neighbors, node_neighbours = self.GetMesh()

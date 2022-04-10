@@ -27,17 +27,18 @@ MEDIUM_REGION_INDEX = 2
 MEDIUM_OUTER_BORDER_INDEX = 3
 VOID_REGION_INDEX = 4
 VOID_OUTER_BORDER_INDEX = 5
+# 5 444 3 222 1 000 1 222 3 444 5
 
 
 # PARAMS #
 # ====== #
 # Relaxation
-QF = 1.9
+QF = 1.0
 
 #Field
 chi0 = 3.0
-H0 = 10000.0
-mu0 = 1000000.0
+H0 = 1.0
+mu0 = 100
 
 # Cycles
 N_CYCLIES_MAX = 150
@@ -61,7 +62,8 @@ for n_triangle in range(N_trigs):
     if segment_index == 0:
         Mu[n_triangle] = mu0
     elif segment_index == 2:
-        Mu[n_triangle] = 1 + chi0/(1+chi0*H[n_triangle])
+        Mu[n_triangle] = 1 + chi0*H[n_triangle]/(1+chi0*H[n_triangle])
+        # Mu[n_triangle] = 1
     elif segment_index == 4:
         Mu[n_triangle] = 1
 
@@ -140,10 +142,10 @@ while n_cycle < N_CYCLIES_MAX and Error>=MAX_DELTA_ERROR:
         if segment_index == CONDUCTOR_REGION_INDEX:
             Mu_new[n_triangle] = mu0
         elif segment_index == MEDIUM_REGION_INDEX:
-            # Mu_new[n_triangle] = 1 + chi0*H[n_triangle]/(1+chi0*H[n_triangle])
-            Mu_new[n_triangle] = 1 
+            Mu_new[n_triangle] = 1 + chi0*H_new[n_triangle]/(1+chi0*H_new[n_triangle])
+            # Mu_new[n_triangle] = 1 
         elif segment_index == VOID_REGION_INDEX:
-            Mu[n_triangle] = 1
+            Mu_new[n_triangle] = 1
         else:
             print("aboba")
 
@@ -165,6 +167,13 @@ Saver.SaveResults("SavedResults", f"{mesh_name}_magnet")
 Saver.SaveResult("SavedResults", f"{mesh_name}_magnet", "triangles",  H = H, Mu = Mu)
 Saver.SaveResult("SavedResults", f"{mesh_name}_magnet", "nodes", Fi = Fi)
 
-ResultAnalysis.CoolPlots.PlotLevelNodes(nodes, Fi, xrange = (-5,5), yrange = (-5,5), nlevels = 100, manual = True,  title="Fi")
+x, y = nodes[:, 0], nodes[:, 1]
+triangulation = tri.Triangulation(x, y, triangles) 
+
+ResultAnalysis.PlotNodes(triangulation, Fi)
+ResultAnalysis.PlotElements(triangulation, H)
+ResultAnalysis.PlotElements(triangulation, Mu, vmin=1, vmax=5)
+
+# ResultAnalysis.CoolPlots.PlotLevelNodes(nodes, Fi, xrange = (-5,5), yrange = (-5,5), nlevels = 100, manual = True,  title="Fi")
 # Plotter.CoolPlots.PlotLevelTriangles(nodes, triangles, H,  xrange = (-1.5,1.5), yrange = (-1.5,1.5), title="H")
 # Plotter.CoolPlots.PlotLevelTriangles(nodes, triangles, Mu,  xrange = (-1.5,1.5), yrange = (-1.5,1.5), title="Mu")

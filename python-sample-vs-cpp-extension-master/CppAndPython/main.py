@@ -132,16 +132,11 @@ def PlotSavedMesh(name):
     PlotMesh(nodes, triangles, segment_indices, False, True, True)
     
 def main():
-    # SaveRawMesh("N120_n4_R1_dr0.3")
-    nodes, triangles, Segments, Trig_neighbours, Node_neighbours, trianlge_indices = ReadSaved(f"SavedMeshes/N120_n4_R1_dr0.3_extended.dat")
+    result_name = "N120_n4_R1_dr0.3_extended_magnet"
+    results = DynamycsAnalysis("SavedResults", f"{result_name}")
+    # results.PlotMu(vmin=1, vmax=1.5)
+    results.PlotH()
 
-    x, y = nodes[:, 0], nodes[:, 1]
-
-    triangulation = tri.Triangulation(x, y, triangles) 
-
-    PlotElements(triangulation, trianlge_indices)
-
-    # PlotMesh(nodes, Triangles, Segments, True, False, False)
 
 if __name__ == "__main__":
     # test()
