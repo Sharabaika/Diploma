@@ -176,6 +176,9 @@ class DynamycsAnalysis(ResultAnalysis):
     def GetH(self):
         return self.GetSavedResults("triangles")["H"]
     
+    def GetH_Nodes(self):
+        return self.GetSavedResults("nodes")["H_nodes"]
+
     def GetMu(self):
         return self.GetSavedResults("triangles")["Mu"]
 
@@ -218,6 +221,14 @@ class DynamycsAnalysis(ResultAnalysis):
         triangulation = matplotlib.tri.Triangulation(x,y,triangles)
 
         PlotElements(triangulation, self.GetH(), **kwargs)
+
+    def PlotH_Nodes(self, **kwargs):
+        nodes, triangles, segment_indices, trig_neighbors, node_neighbours, trianlge_indices = self.GetMesh()
+
+        x, y = nodes[:,0], nodes[:,1]
+        triangulation = matplotlib.tri.Triangulation(x,y,triangles)
+
+        PlotNodes(triangulation, self.GetH_Nodes(), **kwargs)
 
     def PlotMu(self, **kwargs):
         nodes, triangles, segment_indices, trig_neighbors, node_neighbours, trianlge_indices = self.GetMesh()

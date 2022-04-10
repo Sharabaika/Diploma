@@ -12,6 +12,7 @@ Saver = files.ResultSaving("Fi")
 # Mesh data #
 # ========= #
 mesh_name = f"N120_n4_R1_dr0.3_extended"
+result_name = f"magnetic_test_finall_{mesh_name}"
 
 nodes, triangles, segment_indices, trig_neighbors, node_neighbours, trianlge_indices = ReadSaved(f"SavedMeshes/{mesh_name}.dat")
 
@@ -38,11 +39,11 @@ QF = 1.0
 #Field
 chi0 = 3.0
 H0 = 1.0
-mu0 = 100
+mu0 = 1000
 
 # Cycles
-N_CYCLIES_MAX = 150
-MAX_DELTA_ERROR = 1e-4
+N_CYCLIES_MAX = 2000
+MAX_DELTA_ERROR = 1e-5
 
 
 Saver.AddParams(mesh_name = mesh_name, chi0 = chi0, H0 = H0, mu0 = mu0, QF = QF)
@@ -53,6 +54,7 @@ H = np.zeros(N_trigs)
 Mu = np.zeros(N_trigs)
 Fi = np.zeros(N_nodes)  
 
+H_nodes = np.zeros(N_nodes)
 
 # Init
 for n_triangle in range(N_trigs):
@@ -163,17 +165,42 @@ while n_cycle < N_CYCLIES_MAX and Error>=MAX_DELTA_ERROR:
 
     n_cycle += 1
 
-Saver.SaveResults("SavedResults", f"{mesh_name}_magnet")
-Saver.SaveResult("SavedResults", f"{mesh_name}_magnet", "triangles",  H = H, Mu = Mu)
-Saver.SaveResult("SavedResults", f"{mesh_name}_magnet", "nodes", Fi = Fi)
+for n_node in range(N_nodes):
+    numerator_sum = 0.0
+    denominator_sum = 0.0
+
+    for n_trig_neigbor in trig_neighbors[n_node]:
+        n0, n1, n2 = triangles[n_trig_neigbor]
+        if n_node == n1:
+            n0, n1, n2 =  n_node, n2, n0
+        elif n_node == n2:
+            n0, n1, n2 = n_node, n0, n1
+
+        x0, y0 = nodes[n0]
+        x1, y1 = nodes[n1]
+        x2, y2 = nodes[n2]
+
+        Mx = (x1+x2)*0.5
+        My = (y1+y2)*0.5
+
+        dx = Mx-x0
+        dy = My-y0 
+        mr = sqrt(dx*dx+dy*dy)
+        r = 2.0*mr/3.0
+
+        numerator_sum += H[n_trig_neigbor]/r
+        denominator_sum += 1.0/r
+        
+    H_nodes[n_node] = numerator_sum / denominator_sum
+
+
+Saver.SaveResults("SavedResults", result_name)
+Saver.SaveResult("SavedResults", result_name, "triangles",  H = H, Mu = Mu)
+Saver.SaveResult("SavedResults", result_name, "nodes", Fi = Fi, H_nodes = H_nodes)
 
 x, y = nodes[:, 0], nodes[:, 1]
 triangulation = tri.Triangulation(x, y, triangles) 
 
 ResultAnalysis.PlotNodes(triangulation, Fi)
 ResultAnalysis.PlotElements(triangulation, H)
-ResultAnalysis.PlotElements(triangulation, Mu, vmin=1, vmax=5)
-
-# ResultAnalysis.CoolPlots.PlotLevelNodes(nodes, Fi, xrange = (-5,5), yrange = (-5,5), nlevels = 100, manual = True,  title="Fi")
-# Plotter.CoolPlots.PlotLevelTriangles(nodes, triangles, H,  xrange = (-1.5,1.5), yrange = (-1.5,1.5), title="H")
-# Plotter.CoolPlots.PlotLevelTriangles(nodes, triangles, Mu,  xrange = (-1.5,1.5), yrange = (-1.5,1.5), title="Mu")
+ResultAnalysis.PlotElements(triangulation, Mu)

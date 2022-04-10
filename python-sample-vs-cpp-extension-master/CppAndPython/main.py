@@ -132,10 +132,13 @@ def PlotSavedMesh(name):
     PlotMesh(nodes, triangles, segment_indices, False, True, True)
     
 def main():
-    result_name = "N120_n4_R1_dr0.3_extended_magnet"
+    mesh_name = f"N120_n4_R1_dr0.3_extended"
+    result_name = f"magnetic_test_finall_{mesh_name}"
     results = DynamycsAnalysis("SavedResults", f"{result_name}")
-    # results.PlotMu(vmin=1, vmax=1.5)
+    results.PlotFi()
+    results.PlotH_Nodes()
     results.PlotH()
+    results.PlotMu()
 
 
 if __name__ == "__main__":
