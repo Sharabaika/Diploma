@@ -21,7 +21,7 @@ class ResultSaving:
 
         file_path = os.path.join(path, f"{category}.csv")
         df.to_csv(file_path, float_format=float_format)
-    
+
     def SaveResults(self, folder, result_name):
         float_format = '{:.5f}'.format
 

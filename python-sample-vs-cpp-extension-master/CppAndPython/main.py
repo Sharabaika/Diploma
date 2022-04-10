@@ -5,7 +5,7 @@ from Scripts.MeshWriter import SaveMesh
 import pandas as pd
 import matplotlib.tri as tri
 import sys
-from Scripts.ResultAnalysis import CoolPlots, DynamycsAnalysis, PlotElements, PlotMesh, PlotNodes, ResultAnalysis
+from Scripts.ResultAnalysis import CoolPlots, DynamycsAnalysis, MagneticsAnalysis, PlotElements, PlotMesh, PlotNodes, ResultAnalysis
 from math import atan2, exp, sqrt
 import matplotlib.pyplot as plt
 
@@ -132,14 +132,19 @@ def PlotSavedMesh(name):
     PlotMesh(nodes, triangles, segment_indices, False, True, True)
     
 def main():
-    mesh_name = f"N120_n4_R1_dr0.3_extended"
-    result_name = f"magnetic_test_finall_{mesh_name}"
-    results = DynamycsAnalysis("SavedResults", f"{result_name}")
-    results.PlotFi()
-    results.PlotH_Nodes()
-    results.PlotH()
-    results.PlotMu()
+    # mesh_name = f"N120_n4_R1_dr0.3_extended"
+    # result_name = f"magnetic_test_finall_{mesh_name}"
+    # results = MagneticsAnalysis("SavedResults", f"{result_name}")
+    # fi = results.GetFi()
+    # results.PlotFi()
+    # results.PlotH_Nodes()
+    # results.PlotH()
+    # results.PlotMu()
 
+    result_name = f"N120_n4_R1_dr0.3"
+    results = DynamycsAnalysis("SavedResults", f"{result_name}")
+
+    results.PlotPsi()
 
 if __name__ == "__main__":
     # test()

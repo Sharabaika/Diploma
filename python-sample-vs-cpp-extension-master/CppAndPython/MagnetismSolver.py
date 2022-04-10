@@ -194,9 +194,9 @@ for n_node in range(N_nodes):
     H_nodes[n_node] = numerator_sum / denominator_sum
 
 
-Saver.SaveResults("SavedResults", result_name)
-Saver.SaveResult("SavedResults", result_name, "triangles",  H = H, Mu = Mu)
-Saver.SaveResult("SavedResults", result_name, "nodes", Fi = Fi, H_nodes = H_nodes)
+Saver.SaveResults("SavedMagnetics", result_name)
+Saver.SaveResult("SavedMagnetics", result_name, "triangles",  H = H, Mu = Mu)
+Saver.SaveResult("SavedMagnetics", result_name, "nodes", Fi = Fi, H_nodes = H_nodes)
 
 x, y = nodes[:, 0], nodes[:, 1]
 triangulation = tri.Triangulation(x, y, triangles) 

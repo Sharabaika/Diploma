@@ -12,12 +12,13 @@ import Scripts.ResultFileHandling as files
 ONE_THIRD = 1.0 / 3.0
 ELEVEN_OVER_108 = 11.0 / 108.0
 
-def main():
+def solve(*args, **kwargs):
     Saver = files.ResultSaving("W", "Psi", "T")
 
     # Mesh data #
     # ========= #
-    mesh_name = "N120_n4_R1_dr0.3"
+    mesh_name = kwargs.get("mesh_name", "N120_n4_R1_dr0.3")
+    result_name = f"saved_result_{mesh_name}"
 
     nodes, triangles, segment_indices, trig_neighbors, node_neighbours = ReadSaved(f"SavedMeshes/{mesh_name}.dat")
 
@@ -39,9 +40,8 @@ def main():
     # PARAMS #
     # ====== #
     # Dynamics
-    Pr = 10
-    Ra = 1 / Pr
-    Vc = 1 
+    Pr = kwargs.get("Pr", 10)
+    Ra = kwargs.get("Ra", 30000)
 
     # Temperature
     Re_T = 1
@@ -52,18 +52,18 @@ def main():
     T_outer = 0
 
     # Cycles
-    N_CYCLIES_MAX = 10000
-    MAX_DELTA_ERROR = 1e-5
+    N_CYCLIES_MAX = kwargs.get("N_CYCLIES_MAX", 10000)
+    MAX_DELTA_ERROR = kwargs.get("MAX_DELTA_ERROR", 1e-5)
 
     # Unused, wall velocity
     Vx = 0 
 
     # Relaxation
-    QW=0.7
-    QPsi=1.2
-    QT=1.2
+    QW = kwargs.get("QW", 0.7)
+    QPsi = kwargs.get("QPsi", 1.2)
+    QT = kwargs.get("QT", 1.2)
 
-    Saver.AddParams(mesh_name = mesh_name, Pr = Pr, QPsi = QPsi, QW = QW, QT = QT)
+    Saver.AddParams(mesh_name = mesh_name, Ra = Ra, Pr = Pr, QPsi = QPsi, QW = QW, QT = QT)
 
 
     # Arrays #
@@ -370,15 +370,10 @@ def main():
     x, y = nodes[:,0], nodes[:,1]
     triangulation = matplot.tri.Triangulation(x,y,triangles)
 
-    Saver.SaveResults("SavedResults", f"{mesh_name}", W = W, Psi = Psi, T = T)
+    Saver.SaveResults("SavedResults", result_name, W = W, Psi = Psi, T = T)
 
-    from Scripts.ResultAnalysis import PlotNodes
-    PlotNodes(triangulation, T)
-    PlotNodes(triangulation, Psi)
-
-    PlotNodes(triangulation, W)
-    # PlotScatter(nodes, W)
-
+def main():
+    solve()
 
 if __name__ == "__main__":
     main()

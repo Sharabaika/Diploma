@@ -157,54 +157,21 @@ class ResultAnalysis:
 
         plt.show()
 
-class DynamycsAnalysis(ResultAnalysis):
+class MagneticsAnalysis(ResultAnalysis):
     def __init__(self, folder, result_name):
         super().__init__(folder, result_name)
 
-    def GetPsi(self):
-        return self.GetSavedResults()["Psi"]
-
-    def GetW(self):
-        return self.GetSavedResults()["W"]
-
-    def GetT(self):
-        return self.GetSavedResults()["T"]
-
     def GetFi(self):
-        return self.GetSavedResults("nodes")["Fi"]
+        return np.array(self.GetSavedResults("nodes")["Fi"])
 
     def GetH(self):
-        return self.GetSavedResults("triangles")["H"]
+        return np.array(self.GetSavedResults("triangles")["H"])
     
     def GetH_Nodes(self):
-        return self.GetSavedResults("nodes")["H_nodes"]
+        return np.array(self.GetSavedResults("nodes")["H_nodes"])
 
     def GetMu(self):
-        return self.GetSavedResults("triangles")["Mu"]
-
-    def PlotPsiLevel(self):
-        nodes, triangles, segment_indices, trig_neighbors, node_neighbours, trianlge_indices = self.GetMesh()
-
-        x, y = nodes[:,0], nodes[:,1]
-        triangulation = matplotlib.tri.Triangulation(x,y,triangles)
-        
-        CoolPlots.PlotLevel(x, y, self.GetPsi(), nlevels = 30, xrange = (-2,2), yrange = (-2,2), manual = True)
-
-    def PlotPsi(self):
-        nodes, triangles, segment_indices, trig_neighbors, node_neighbours, trianlge_indices = self.GetMesh()
-
-        x, y = nodes[:,0], nodes[:,1]
-        triangulation = matplotlib.tri.Triangulation(x,y,triangles)
-
-        PlotNodes(triangulation, self.GetPsi())
-
-
-    def PlotW(self):
-        nodes, triangles, segment_indices, trig_neighbors, node_neighbours, trianlge_indices = self.GetMesh()
-        x, y = nodes[:,0], nodes[:,1]
-        triangulation = matplotlib.tri.Triangulation(x,y,triangles)
-
-        PlotNodes(triangulation, self.GetW())
+        return np.array(self.GetSavedResults("triangles")["Mu"])
 
     def PlotFi(self, **kwargs):
         nodes, triangles, segment_indices, trig_neighbors, node_neighbours, trianlge_indices = self.GetMesh()
@@ -237,6 +204,44 @@ class DynamycsAnalysis(ResultAnalysis):
         triangulation = matplotlib.tri.Triangulation(x,y,triangles)
 
         PlotElements(triangulation, self.GetMu(), **kwargs)
+
+
+class DynamycsAnalysis(ResultAnalysis):
+    def __init__(self, folder, result_name):
+        super().__init__(folder, result_name)
+
+    def GetPsi(self):
+        return self.GetSavedResults()["Psi"]
+
+    def GetW(self):
+        return self.GetSavedResults()["W"]
+
+    def GetT(self):
+        return self.GetSavedResults()["T"]
+
+    def PlotPsiLevel(self):
+        nodes, triangles, segment_indices, trig_neighbors, node_neighbours, trianlge_indices = self.GetMesh()
+
+        x, y = nodes[:,0], nodes[:,1]
+        triangulation = matplotlib.tri.Triangulation(x,y,triangles)
+        
+        CoolPlots.PlotLevel(x, y, self.GetPsi(), nlevels = 30, xrange = (-2,2), yrange = (-2,2), manual = True)
+
+    def PlotPsi(self):
+        nodes, triangles, segment_indices, trig_neighbors, node_neighbours, trianlge_indices = self.GetMesh()
+
+        x, y = nodes[:,0], nodes[:,1]
+        triangulation = matplotlib.tri.Triangulation(x,y,triangles)
+
+        PlotNodes(triangulation, self.GetPsi())
+
+
+    def PlotW(self):
+        nodes, triangles, segment_indices, trig_neighbors, node_neighbours, trianlge_indices = self.GetMesh()
+        x, y = nodes[:,0], nodes[:,1]
+        triangulation = matplotlib.tri.Triangulation(x,y,triangles)
+
+        PlotNodes(triangulation, self.GetW())
 
     def CalculateLocalNulselt(self):
         nodes, triangles, segment_indices, trig_neighbors, node_neighbours = self.GetMesh()
