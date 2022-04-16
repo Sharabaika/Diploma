@@ -1,3 +1,4 @@
+from unittest import result
 import matplotlib
 import numpy as np
 from Scripts.MeshReader import ReadRaw, ReadSaved
@@ -35,7 +36,7 @@ def SaveRawMesh(name):
     nodes, triangles, segment_indices, trig_neighbors, node_neighbours, trianlge_indices = ReadRaw(grid, -1, 
         (conductor, 0), (void, 4), (medium, 2), (void_border, 5), (medium_border, 3), (conductor_border, 1))
 
-    SaveMesh("SavedMeshes", f"{mesh_name}_extended", nodes, triangles, segment_indices, trig_neighbors, node_neighbours, trianlge_indices)
+    SaveMesh("SavedMeshes", f"{mesh_name}", nodes, triangles, segment_indices, trig_neighbors, node_neighbours, trianlge_indices)
 
 
 def CPPStuff():
@@ -132,10 +133,10 @@ def Nulselt(result_name):
 
 def PlotSavedMesh(name):
     nodes, triangles, segment_indices, trig_neighbors, node_neighbours, triangle_indeces = ReadSaved(f"SavedMeshes/{name}.dat")
-    PlotMesh(nodes, triangles, segment_indices, False, True, False)
+    PlotMesh(nodes, triangles, segment_indices, False, False, True)
     
 def main():
-    ram_range = [1, 100, 10000, 100000, 150000, 200000, 250000]
+    ram_range = [1, 100, 10000, 100000, 150000, 200000, 250000, 500000, 1000000]
     nus = []
     for ram in ram_range:    
         nus.append(Nulselt(f"N120_n4_R1_dr0.3\\validation_ram_{ram}"))
@@ -146,6 +147,8 @@ def main():
     plt.title("Nu")
     plt.savefig("meme.png")
     plt.show()
+    PlotSavedMesh("N120_n4_R1_dr0.3_extended")
+
 
 
 if __name__ == "__main__":

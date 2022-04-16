@@ -27,7 +27,7 @@ def solve(*args, **kwargs):
     N_trigs = len(triangles)
 
     magnetics_result_name = f"magnetic_test_finall_{mesh_name}"
-    magnetics_result = MagneticsAnalysis("SavedResults", magnetics_result_name)
+    magnetics_result = MagneticsAnalysis("SavedResults/N120_n4_R1_dr0.3", magnetics_result_name)
 
     magnetics_result_mesh_name = magnetics_result.GetMeshName()
     if (magnetics_result_mesh_name != mesh_name):
@@ -425,18 +425,18 @@ def solve(*args, **kwargs):
     Saver.SaveResults("SavedResults", result_name)
     Saver.SaveResult("SavedResults", result_name, "nodes", W = W, Psi = Psi, T = T)
 
-    # mask = [index != 2 for index in triangle_indeces]
-    # triangulation.set_mask(mask)
+    mask = [index != 2 for index in triangle_indeces]
+    triangulation.set_mask(mask)
 
-    # PlotNodes(triangulation, T)
-    # PlotNodes(triangulation, Psi)
+    PlotNodes(triangulation, T)
+    PlotNodes(triangulation, Psi)
 
-    # PlotNodes(triangulation, W)
+    PlotNodes(triangulation, W)
 
 def main():
-    ram_range = [1, 100, 10000, 100000, 150000, 200000, 250000]
+    ram_range = [500000, 1000000]
     for ram in ram_range:    
-        solve(Ram = ram, result_name = f"validation_ram_{ram}")
+        solve(Ram = ram, result_name = f"N120_n4_R1_dr0.3/validation_ram_{ram}")
 
 if __name__ == "__main__":
     main()
