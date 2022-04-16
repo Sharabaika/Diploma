@@ -243,8 +243,15 @@ class DynamycsAnalysis(ResultAnalysis):
 
         PlotNodes(triangulation, self.GetW())
 
+    def PlotT(self):
+        nodes, triangles, segment_indices, trig_neighbors, node_neighbours, trianlge_indices = self.GetMesh()
+        x, y = nodes[:,0], nodes[:,1]
+        triangulation = matplotlib.tri.Triangulation(x,y,triangles)
+
+        PlotNodes(triangulation, self.GetT())
+
     def CalculateLocalNulselt(self):
-        nodes, triangles, segment_indices, trig_neighbors, node_neighbours = self.GetMesh()
+        nodes, triangles, segment_indices, trig_neighbors, node_neighbours, trianlge_indices = self.GetMesh()
         T = self.GetT()
         
         OUTER_BORDER_INDEX = 11   # 2
@@ -297,7 +304,7 @@ class DynamycsAnalysis(ResultAnalysis):
         
 
     def CalculateNulselt(self):
-        nodes, triangles, segment_indices, trig_neighbors, node_neighbours = self.GetMesh()
+        nodes, triangles, segment_indices, trig_neighbors, node_neighbours, trianlge_indices = self.GetMesh()
         T = self.GetT()
         
         OUTER_BORDER_INDEX = 11   # 2

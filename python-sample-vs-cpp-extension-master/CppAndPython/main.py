@@ -128,8 +128,8 @@ def Nulselt(result_name):
     return results.CalculateLocalNulselt()
 
 def PlotSavedMesh(name):
-    nodes, triangles, segment_indices, trig_neighbors, node_neighbours = ReadSaved(f"SavedMeshes/{name}.dat")
-    PlotMesh(nodes, triangles, segment_indices, False, True, True)
+    nodes, triangles, segment_indices, trig_neighbors, node_neighbours, triangle_indeces = ReadSaved(f"SavedMeshes/{name}.dat")
+    PlotMesh(nodes, triangles, segment_indices, False, True, False)
     
 def main():
     # mesh_name = f"N120_n4_R1_dr0.3_extended"
@@ -140,11 +140,15 @@ def main():
     # results.PlotH_Nodes()
     # results.PlotH()
     # results.PlotMu()
+    # SaveRawMesh("N120_n4_R1_dr0.3")
+    nodes, triangles, segment_indices, trig_neighbors, node_neighbours, triangle_indeces = ReadSaved(f"SavedMeshes/N120_n4_R1_dr0.3_extended.dat")
 
-    result_name = f"N120_n4_R1_dr0.3"
-    results = DynamycsAnalysis("SavedResults", f"{result_name}")
+    import matplotlib as matplot
+    x, y = nodes[:,0], nodes[:,1]
+    triangulation = matplot.tri.Triangulation(x,y,triangles)
 
-    results.PlotPsi()
+    PlotElements(triangulation, triangle_indeces)
+
 
 if __name__ == "__main__":
     # test()

@@ -6,7 +6,7 @@ from pytools import delta
 from Scripts.MeshReader import ReadRaw, ReadSaved
 from math import atan2, exp, sqrt
 import matplotlib.tri as tri
-from Scripts.ResultAnalysis import PlotMesh, PlotScatter 
+from Scripts.ResultAnalysis import PlotMesh, PlotNodes, PlotScatter 
 import Scripts.ResultFileHandling as files
 
 ONE_THIRD = 1.0 / 3.0
@@ -17,25 +17,33 @@ def solve(*args, **kwargs):
 
     # Mesh data #
     # ========= #
-    mesh_name = kwargs.get("mesh_name", "N120_n4_R1_dr0.3")
-    result_name = f"saved_result_{mesh_name}"
+    mesh_name = kwargs.get("mesh_name", "N120_n4_R1_dr0.3_extended")
+    result_name = f"saved_result_fluid_extendedV1_{mesh_name}"
 
-    nodes, triangles, segment_indices, trig_neighbors, node_neighbours = ReadSaved(f"SavedMeshes/{mesh_name}.dat")
+    nodes, triangles, segment_indices, trig_neighbors, node_neighbours, triangle_indeces = ReadSaved(f"SavedMeshes/{mesh_name}.dat")
 
     N_nodes = len(nodes)
     N_trigs = len(triangles)
 
+
     # Regions #
     # ======= #
-    #  2000000001---1000000002
-    #  |########|---|########|
-    INNER_MEDIUM_INDEX = 2000 # 0
-    INNER_BORDER_INDEX = 10   # 1
-    OUTER_BORDER_INDEX = 11   # 2
+    CONDUCTOR_REGION_INDEX = 0
+    CONDUCTOR_BORDER_INDEX = 1
+    MEDIUM_REGION_INDEX = 2
+    MEDIUM_OUTER_BORDER_INDEX = 3
+    VOID_REGION_INDEX = 4
+    VOID_OUTER_BORDER_INDEX = 5
+    # 5 444 3 222 1 000 1 222 3 444 5
 
     # TODO replace ?
-    is_a_wall = lambda node_index : not (INNER_MEDIUM_INDEX in segment_indices[node_index])
+    is_a_fluid_region = lambda node_index : segment_indices[node_index] in [CONDUCTOR_BORDER_INDEX, MEDIUM_REGION_INDEX, MEDIUM_OUTER_BORDER_INDEX]
+    is_a_wall = lambda node_index : segment_indices[node_index] in [CONDUCTOR_BORDER_INDEX, MEDIUM_OUTER_BORDER_INDEX]
 
+    is_a_fluid_region_array = [is_a_fluid_region(n_node) for n_node in range(N_nodes)]
+    is_a_wall_array = [is_a_wall(n_node) for n_node in range(N_nodes)]
+    
+    fluid_domain_nodes_indeces_array = list(filter(is_a_fluid_region, range(N_nodes)))
 
     # PARAMS #
     # ====== #
@@ -52,8 +60,8 @@ def solve(*args, **kwargs):
     T_outer = 0
 
     # Cycles
-    N_CYCLIES_MAX = kwargs.get("N_CYCLIES_MAX", 10000)
-    MAX_DELTA_ERROR = kwargs.get("MAX_DELTA_ERROR", 1e-5)
+    N_CYCLIES_MAX = kwargs.get("N_CYCLIES_MAX", 800)
+    MAX_DELTA_ERROR = kwargs.get("MAX_DELTA_ERROR", 1e-4)
 
     # Unused, wall velocity
     Vx = 0 
@@ -74,21 +82,25 @@ def solve(*args, **kwargs):
 
     # Init
     for n_node in range(N_nodes):
-        tags = segment_indices[n_node]
-        is_wall = INNER_BORDER_INDEX in tags or OUTER_BORDER_INDEX in tags
-        x, y = nodes[n_node]
-        r = sqrt(x*x+y*y)
+        if is_a_fluid_region_array[n_node]:
+            tag = segment_indices[n_node]
+            x, y = nodes[n_node]
+            r = sqrt(x*x+y*y)
 
-        W[n_node] = np.random.rand(1)*0.01+0.01 
-        Psi[n_node] = 0.0001*np.sin(3*x*np.pi)*np.sin(3*y*np.pi)
-        T[n_node] = T_inner + (T_outer-T_inner)*(r-1.0)
+            W[n_node] = np.random.rand(1)*0.01+0.01 
+            Psi[n_node] = 0.0001*np.sin(3*x*np.pi)*np.sin(3*y*np.pi)
+            T[n_node] = T_inner + (T_outer-T_inner)*(r-1.0)
 
-        if INNER_BORDER_INDEX in tags:
-            Psi[n_node] = 0
-            T[n_node] = T_inner
-        elif OUTER_BORDER_INDEX in tags:
-            Psi[n_node] = 0
-            T[n_node] = T_outer
+            if tag == CONDUCTOR_BORDER_INDEX:
+                Psi[n_node] = 0
+                T[n_node] = T_inner
+            elif tag == MEDIUM_OUTER_BORDER_INDEX:
+                Psi[n_node] = 0
+                T[n_node] = T_outer
+        else:
+            Psi[n_node] = 0.0
+            W[n_node] = 0.0
+            T[n_node] = 0.0
 
     Psi_new = np.array(Psi)
     W_new = np.array(W)
@@ -104,7 +116,7 @@ def solve(*args, **kwargs):
 
     n_cycle = 0 
     while n_cycle < N_CYCLIES_MAX and Error>=MAX_DELTA_ERROR:
-        for n_node in range(N_nodes):
+        for n_node in fluid_domain_nodes_indeces_array:
             aPsi0 = 0
             aPsinb = 0
             aW0 = 0
@@ -117,9 +129,11 @@ def solve(*args, **kwargs):
 
             segment_index = segment_indices[n_node]
             for n_trig_neigbor in trig_neighbors[n_node]:
-
                 # Neighbour triangles #
                 # =================== #
+                if not all([is_a_fluid_region_array[n_node_local] for n_node_local in triangles[n_trig_neigbor]]):
+                    continue
+
                 n0, n1, n2 = triangles[n_trig_neigbor]
                 if n_node == n1:
                     n0, n1, n2 =  n_node, n2, n0
@@ -144,7 +158,7 @@ def solve(*args, **kwargs):
                 W0, W1, W2 = W[n0], W[n1], W[n2]
                 T0, T1, T2 = T[n0], T[n1], T[n2]
 
-                if is_a_wall(n_node):
+                if is_a_wall_array[n_node]:
                     # Boundaries # 
                     # ========== #
 
@@ -154,7 +168,7 @@ def solve(*args, **kwargs):
                     # mormal
                     border_neighbours = []
                     for neighbour in node_neighbours[n_node]:
-                        if is_a_wall(neighbour):
+                        if is_a_wall_array[neighbour]:
                             border_neighbours.append(neighbour)
 
                     l, r = border_neighbours
@@ -178,7 +192,7 @@ def solve(*args, **kwargs):
 
                     normalX, normalY = dy, -dx
 
-                    if OUTER_BORDER_INDEX in segment_index:
+                    if segment_index == MEDIUM_OUTER_BORDER_INDEX:
                         normalX, normalY = -normalX, -normalY
 
                     sina, cosa = -normalX, normalY                
@@ -323,7 +337,7 @@ def solve(*args, **kwargs):
             
             # Advance #
             # ======= #
-            if not is_a_wall(n_node):
+            if not is_a_wall_array[n_node]:
                 # Medium #
                 # ====== #
                 Psi_new[n_node] = (-aPsinb+S)/aPsi0
@@ -334,7 +348,7 @@ def solve(*args, **kwargs):
                 # ==== #
                 Psi_new[n_node] = 0
                 W_new[n_node] = -(I+aWnb)/aW0
-                if INNER_BORDER_INDEX in segment_index:
+                if segment_index == CONDUCTOR_BORDER_INDEX:
                     T_new[n_node] = T_inner
                 else:
                     T_new[n_node] = T_outer
@@ -344,15 +358,15 @@ def solve(*args, **kwargs):
             T_errors[n_node] = (T_new[n_node] - T[n_node])
 
 
-        Delta_Psi_Error = sqrt(sum(Psi_errors**2)/(QPsi*QPsi)/sum(Psi_new**2))
-        Delta_Ws_Error = sqrt(sum(W_errors**2)/(QW*QW)/sum(W_new**2))
+        Delta_Psi_Error = sqrt(sum(Psi_errors**2)/(QPsi*QPsi)/sum(Psi_new[is_a_fluid_region_array]**2))
+        Delta_Ws_Error = sqrt(sum(W_errors**2)/(QW*QW)/sum(W_new[is_a_fluid_region_array]**2))
 
-        Delta_Ts_Error = sqrt(sum(T_errors**2)/(QT*QT)/sum(T_new**2))
+        Delta_Ts_Error = sqrt(sum(T_errors**2)/(QT*QT)/sum(T_new[is_a_fluid_region_array]**2))
 
         Error = max(Delta_Psi_Error, Delta_Ws_Error, Delta_Ts_Error)
         
-        if n_cycle % 50 == 0 or True:
-            print(f"cycle n = {n_cycle}, dpsi == {(Delta_Psi_Error):.2e}, dW = {(Delta_Ws_Error):.2e}, dT = {(Delta_Ts_Error):.2e}")
+        if n_cycle % 50 == 0:
+            print(f"cycle n = {n_cycle}, dpsi == {(Delta_Psi_Error):.5e}, dW = {(Delta_Ws_Error):.5e}, dT = {(Delta_Ts_Error):.5e}")
 
         Saver.logger.LogErrors(Psi = (Delta_Psi_Error), W = (Delta_Ws_Error), T = (Delta_Ts_Error))
 
@@ -365,12 +379,19 @@ def solve(*args, **kwargs):
 
         n_cycle += 1
 
-    import matplotlib as matplot
+    Saver.SaveResult("SavedResults", result_name, "nodes", W = W, Psi = Psi, T = T)
 
+    import matplotlib as matplot
     x, y = nodes[:,0], nodes[:,1]
     triangulation = matplot.tri.Triangulation(x,y,triangles)
 
-    Saver.SaveResults("SavedResults", result_name, W = W, Psi = Psi, T = T)
+    mask = [index != 2 for index in triangle_indeces]
+    triangulation.set_mask(mask)
+
+    PlotNodes(triangulation, T)
+    PlotNodes(triangulation, Psi)
+
+    PlotNodes(triangulation, W)
 
 def main():
     solve()
