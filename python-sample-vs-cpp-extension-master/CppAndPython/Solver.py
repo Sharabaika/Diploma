@@ -16,7 +16,7 @@ def solve(*args, **kwargs):
     # Mesh data #
     # ========= #
     mesh_name = kwargs.get("mesh_name", "N120_n4_R1_dr0.3_extended")
-    result_name = f"saved_result_fluid_and_magneticsV1_{mesh_name}"
+    result_name =  kwargs.get("result_name", f"saved_result_fluid_and_magneticsV0_{mesh_name}")
 
     nodes, triangles, segment_indices, trig_neighbors, node_neighbours, triangle_indeces = ReadSaved(f"SavedMeshes/{mesh_name}.dat")
 
@@ -58,7 +58,7 @@ def solve(*args, **kwargs):
     # Dynamics
     Pr = kwargs.get("Pr", 10)
     Ra = kwargs.get("Ra", 30000)
-    Ram = kwargs.get("Ram", 100000)
+    Ram = kwargs.get("Ram", 1)
     chi0 = magnetics_result.GetParam("chi0")
 
     # Temperature
@@ -73,7 +73,7 @@ def solve(*args, **kwargs):
     N_CYCLIES_MAX = kwargs.get("N_CYCLIES_MAX", 2000)
     MAX_DELTA_ERROR = kwargs.get("MAX_DELTA_ERROR", 1e-5)
 
-    PRINT_LOG_EVERY_N_CYCLES = 1
+    PRINT_LOG_EVERY_N_CYCLES = 10
 
     # Unused, wall velocity
     Vx = 0 
@@ -425,16 +425,18 @@ def solve(*args, **kwargs):
     Saver.SaveResults("SavedResults", result_name)
     Saver.SaveResult("SavedResults", result_name, "nodes", W = W, Psi = Psi, T = T)
 
-    mask = [index != 2 for index in triangle_indeces]
-    triangulation.set_mask(mask)
+    # mask = [index != 2 for index in triangle_indeces]
+    # triangulation.set_mask(mask)
 
-    PlotNodes(triangulation, T)
-    PlotNodes(triangulation, Psi)
+    # PlotNodes(triangulation, T)
+    # PlotNodes(triangulation, Psi)
 
-    PlotNodes(triangulation, W)
+    # PlotNodes(triangulation, W)
 
 def main():
-    solve()
+    ram_range = [1, 100, 10000, 100000, 150000, 200000, 250000]
+    for ram in ram_range:    
+        solve(Ram = ram, result_name = f"validation_ram_{ram}")
 
 if __name__ == "__main__":
     main()

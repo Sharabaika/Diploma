@@ -122,32 +122,29 @@ def test():
     plt.show()
 
 
+def LocalNulselt(result_name):
+    results = DynamycsAnalysis("SavedResults", f"{result_name}")
+    return results.CalculateLocalNulselt()
+
 def Nulselt(result_name):
     results = DynamycsAnalysis("SavedResults", f"{result_name}")
-
-    return results.CalculateLocalNulselt()
+    return results.CalculateNulselt()
 
 def PlotSavedMesh(name):
     nodes, triangles, segment_indices, trig_neighbors, node_neighbours, triangle_indeces = ReadSaved(f"SavedMeshes/{name}.dat")
     PlotMesh(nodes, triangles, segment_indices, False, True, False)
     
 def main():
-    mesh_name = f"N120_n4_R1_dr0.3_extended"
-    result_name = f"magnetic_test_finall_{mesh_name}"
-    results = MagneticsAnalysis("SavedResults", f"{result_name}")
-    fi = results.GetFi()
-    results.PlotFi()
-    results.PlotH_Nodes()
-    results.PlotH()
-    results.PlotMu()
-    SaveRawMesh("N120_n4_R1_dr0.3")
-    # nodes, triangles, segment_indices, trig_neighbors, node_neighbours, triangle_indeces = ReadSaved(f"SavedMeshes/N120_n4_R1_dr0.3_extended.dat")
+    ram_range = [1, 100, 10000, 100000, 150000, 200000, 250000]
+    nus = []
+    for ram in ram_range:    
+        nus.append(Nulselt(f"validation_ram_{ram}"))
 
-    # import matplotlib as matplot
-    # x, y = nodes[:,0], nodes[:,1]
-    # triangulation = matplot.tri.Triangulation(x,y,triangles)
-
-    # PlotElements(triangulation, triangle_indeces)
+    print(nus)
+    plt.plot(ram_range, nus)
+    plt.scatter(ram_range, nus)
+    plt.title("Nu")
+    plt.show()
 
 
 if __name__ == "__main__":

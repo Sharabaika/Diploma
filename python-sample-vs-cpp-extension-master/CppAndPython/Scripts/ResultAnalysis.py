@@ -127,7 +127,7 @@ class ResultAnalysis:
             self.logs = pd.read_csv(logs_path, index_col=0)
         return self.logs
 
-    def GetSavedResults(self, category="saved"):
+    def GetSavedResults(self, category="nodes"):
         if not category in self.saved:
             saved_path = os.path.join(self.path, f"{category}.csv")
             self.saved[category] = pd.read_csv(saved_path)
@@ -238,6 +238,8 @@ class DynamycsAnalysis(ResultAnalysis):
 
         x, y = nodes[:,0], nodes[:,1]
         triangulation = matplotlib.tri.Triangulation(x,y,triangles)
+        mask = [index != 2 for index in trianlge_indices]
+        triangulation.set_mask(mask)
 
         PlotNodes(triangulation, self.GetPsi())
 
@@ -312,10 +314,11 @@ class DynamycsAnalysis(ResultAnalysis):
     def CalculateNulselt(self):
         nodes, triangles, segment_indices, trig_neighbors, node_neighbours, trianlge_indices = self.GetMesh()
         T = self.GetT()
-        
-        OUTER_BORDER_INDEX = 11   # 2
+
+        MEDIUM_REGION_INDEX = 2        
+        OUTER_BORDER_INDEX = 3
         def is_wall(n):
-            return OUTER_BORDER_INDEX in segment_indices[n]
+            return OUTER_BORDER_INDEX == segment_indices[n]
 
 
         integral = 0.0
@@ -337,7 +340,10 @@ class DynamycsAnalysis(ResultAnalysis):
                     a,b,c = b,c,a
                 elif is_wall(c) and is_wall(a):
                     a,b,c = c,a,b
-                
+
+                if segment_indices[c] != MEDIUM_REGION_INDEX:
+                    continue
+
                 ax,ay = nodes[a]
                 bx,by = nodes[b]
                 cx,cy = nodes[c]
