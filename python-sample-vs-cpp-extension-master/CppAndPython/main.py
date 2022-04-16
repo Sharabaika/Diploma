@@ -1,3 +1,4 @@
+from turtle import title
 from unittest import result
 import matplotlib
 import numpy as np
@@ -133,23 +134,33 @@ def Nulselt(result_name):
 
 def PlotSavedMesh(name):
     nodes, triangles, segment_indices, trig_neighbors, node_neighbours, triangle_indeces = ReadSaved(f"SavedMeshes/{name}.dat")
-    PlotMesh(nodes, triangles, segment_indices, False, False, True)
+    PlotMesh(nodes, triangles, segment_indices, False, True, False)
     
 def main():
-    ram_range = [1, 100, 10000, 100000, 150000, 200000, 250000, 500000, 1000000]
-    nus = []
-    for ram in ram_range:    
-        nus.append(Nulselt(f"N120_n4_R1_dr0.3\\validation_ram_{ram}"))
+    # ram4_range = [1, 100, 10000, 100000, 150000, 200000, 250000, 500000, 1000000]
+    # nus4 = []
+    # for ram in ram4_range:    
+    #     nus4.append(Nulselt(f"N120_n4_R1_dr0.3\\validation_ram_{ram}"))
 
-    print(nus)
-    plt.plot(ram_range, nus)
-    plt.scatter(ram_range, nus)
-    plt.title("Nu")
-    plt.savefig("meme.png")
-    plt.show()
-    PlotSavedMesh("N120_n4_R1_dr0.3_extended")
+    # nus0 = []
+    # ram0_range = [1, 100, 10000, 100000, 150000, 200000, 250000, 300000]
+    # for ram in ram0_range:    
+    #     nus0.append(Nulselt(f"N120_n0_R1_dr0\\validation_ram_{ram}"))
 
+    # plt.plot(ram4_range, nus4, label = "n = 4")
+    # plt.scatter(ram4_range, nus4)
+    # plt.plot(ram0_range, nus0, label = "n = 0")
+    # plt.scatter(ram0_range, nus0)
+    # plt.title("Nu")
+    # plt.legend()
+    # # plt.savefig("meme.png")
+    # plt.show()
 
+    # results = DynamycsAnalysis("SavedResults", "N120_n0_R1_dr0\\validation_ram_300000")
+    # results.PlotPsi()
+
+    results = MagneticsAnalysis("SavedMagnetics", "N120_n0_R1_dr0/magnetics_N120_n0_R1_dr0")
+    results.PlotH()
 
 if __name__ == "__main__":
     # test()

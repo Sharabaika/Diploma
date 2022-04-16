@@ -11,8 +11,8 @@ Saver = files.ResultSaving("Fi")
 
 # Mesh data #
 # ========= #
-mesh_name = f"N120_n4_R1_dr0.3_extended"
-result_name = f"magnetic_test_finall_{mesh_name}"
+mesh_name = f"N120_n0_R1_dr0"
+result_name = f"N120_n0_R1_dr0/magnetics_{mesh_name}"
 
 nodes, triangles, segment_indices, trig_neighbors, node_neighbours, trianlge_indices = ReadSaved(f"SavedMeshes/{mesh_name}.dat")
 
