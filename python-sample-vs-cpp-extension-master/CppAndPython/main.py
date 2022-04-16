@@ -138,12 +138,13 @@ def main():
     ram_range = [1, 100, 10000, 100000, 150000, 200000, 250000]
     nus = []
     for ram in ram_range:    
-        nus.append(Nulselt(f"validation_ram_{ram}"))
+        nus.append(Nulselt(f"N120_n4_R1_dr0.3\\validation_ram_{ram}"))
 
     print(nus)
     plt.plot(ram_range, nus)
     plt.scatter(ram_range, nus)
     plt.title("Nu")
+    plt.savefig("meme.png")
     plt.show()
 
 
