@@ -1,13 +1,11 @@
-from hashlib import new
-from types import MemberDescriptorType
-import matplotlib
 import numpy as np
 from pytools import delta
 from Scripts.MeshReader import ReadRaw, ReadSaved
 from math import atan2, exp, sqrt
 import matplotlib.tri as tri
-from Scripts.ResultAnalysis import PlotMesh, PlotNodes, PlotScatter 
+from Scripts.ResultAnalysis import MagneticsAnalysis, PlotElements, PlotMesh, PlotNodes, PlotScatter 
 import Scripts.ResultFileHandling as files
+import matplotlib as matplot
 
 ONE_THIRD = 1.0 / 3.0
 ELEVEN_OVER_108 = 11.0 / 108.0
@@ -18,12 +16,22 @@ def solve(*args, **kwargs):
     # Mesh data #
     # ========= #
     mesh_name = kwargs.get("mesh_name", "N120_n4_R1_dr0.3_extended")
-    result_name = f"saved_result_fluid_extendedV1_{mesh_name}"
+    result_name = f"saved_result_fluid_and_magneticsV1_{mesh_name}"
 
     nodes, triangles, segment_indices, trig_neighbors, node_neighbours, triangle_indeces = ReadSaved(f"SavedMeshes/{mesh_name}.dat")
 
+    x_coords, y_coords = nodes[:,0], nodes[:,1]
+    triangulation = matplot.tri.Triangulation(x_coords, y_coords, triangles)
+
     N_nodes = len(nodes)
     N_trigs = len(triangles)
+
+    magnetics_result_name = f"magnetic_test_finall_{mesh_name}"
+    magnetics_result = MagneticsAnalysis("SavedResults", magnetics_result_name)
+
+    magnetics_result_mesh_name = magnetics_result.GetMeshName()
+    if (magnetics_result_mesh_name != mesh_name):
+        raise Exception("magnetics results are made for different mesh")
 
 
     # Regions #
@@ -50,6 +58,8 @@ def solve(*args, **kwargs):
     # Dynamics
     Pr = kwargs.get("Pr", 10)
     Ra = kwargs.get("Ra", 30000)
+    Ram = kwargs.get("Ram", 100000)
+    chi0 = magnetics_result.GetParam("chi0")
 
     # Temperature
     Re_T = 1
@@ -60,8 +70,10 @@ def solve(*args, **kwargs):
     T_outer = 0
 
     # Cycles
-    N_CYCLIES_MAX = kwargs.get("N_CYCLIES_MAX", 800)
-    MAX_DELTA_ERROR = kwargs.get("MAX_DELTA_ERROR", 1e-4)
+    N_CYCLIES_MAX = kwargs.get("N_CYCLIES_MAX", 2000)
+    MAX_DELTA_ERROR = kwargs.get("MAX_DELTA_ERROR", 1e-5)
+
+    PRINT_LOG_EVERY_N_CYCLES = 1
 
     # Unused, wall velocity
     Vx = 0 
@@ -71,14 +83,20 @@ def solve(*args, **kwargs):
     QPsi = kwargs.get("QPsi", 1.2)
     QT = kwargs.get("QT", 1.2)
 
-    Saver.AddParams(mesh_name = mesh_name, Ra = Ra, Pr = Pr, QPsi = QPsi, QW = QW, QT = QT)
-
+    Saver.AddParams(mesh_name = mesh_name, Ra = Ra, Ram=Ram, magnetics_result_name = magnetics_result_name, chi0=chi0, Pr = Pr, QPsi = QPsi, QW = QW, QT = QT)
 
     # Arrays #
     # ====== #
     Psi = np.zeros(N_nodes)
     W = np.zeros(N_nodes)
     T = np.zeros(N_nodes)
+
+    H_nodes = magnetics_result.GetH_Nodes()
+    H_triangles = magnetics_result.GetH()
+    mu_triangles = magnetics_result.GetMu()
+
+    dHdx_triangles = np.zeros(N_trigs)
+    dHdy_triangles = np.zeros(N_trigs)
 
     # Init
     for n_node in range(N_nodes):
@@ -101,6 +119,27 @@ def solve(*args, **kwargs):
             Psi[n_node] = 0.0
             W[n_node] = 0.0
             T[n_node] = 0.0
+
+
+    for n_trig in range(N_trigs):
+        n0, n1, n2 = triangles[n_trig]
+
+        x0, y0 = nodes[n0]
+        x1, y1 = nodes[n1]
+        x2, y2 = nodes[n2]
+
+        x10, y01 = x1-x0, y0-y1
+        x21, y12 = x2-x1, y1-y2
+        x02, y20 = x0-x2, y2-y0
+
+        H0, H1, H2 = H_nodes[n0], H_nodes[n1], H_nodes[n2]
+
+        AH = H0*y12 + H1*y20 + H2*y01
+        BH = H0*x21 + H1*x02 + H2*x10
+        
+        dHdx_triangles[n_trig] = AH
+        dHdy_triangles[n_trig] = BH
+
 
     Psi_new = np.array(Psi)
     W_new = np.array(W)
@@ -125,7 +164,7 @@ def solve(*args, **kwargs):
             aTnb = 0
             S = 0         
             I = 0
-            SdTdx = 0
+            source_integral = 0
 
             segment_index = segment_indices[n_node]
             for n_trig_neigbor in trig_neighbors[n_node]:
@@ -299,7 +338,11 @@ def solve(*args, **kwargs):
                         k2T = (abT*(E1T-E0T)+acT*(E0T*Y1-E1T*Y0))/DT
 
                     AT = T0*y12 + T1*y20 + T2*y01
-                    SdTdx = SdTdx + AT/6.0
+                    BT = T0*x21 + T1*x02 + T2*x10
+
+                    c_mag = dHdx_triangles[n_trig_neigbor] * BT - dHdy_triangles[n_trig_neigbor] * AT
+                    source_integral += Ra*AT/6.0 + Ram*mu_triangles[n_trig_neigbor]*(c_mag)/6.0
+                    
                     aT0 = aT0 + k0T
                     aTnb = aTnb + k1T*T1 + k2T*T2
 
@@ -341,7 +384,7 @@ def solve(*args, **kwargs):
                 # Medium #
                 # ====== #
                 Psi_new[n_node] = (-aPsinb+S)/aPsi0
-                W_new[n_node] = -(aWnb+Ra*SdTdx)/aW0
+                W_new[n_node] = -(aWnb+source_integral)/aW0
                 T_new[n_node] = -aTnb/aT0
             else:
                 # Wall #
@@ -365,7 +408,7 @@ def solve(*args, **kwargs):
 
         Error = max(Delta_Psi_Error, Delta_Ws_Error, Delta_Ts_Error)
         
-        if n_cycle % 50 == 0:
+        if n_cycle % PRINT_LOG_EVERY_N_CYCLES == 0:
             print(f"cycle n = {n_cycle}, dpsi == {(Delta_Psi_Error):.5e}, dW = {(Delta_Ws_Error):.5e}, dT = {(Delta_Ts_Error):.5e}")
 
         Saver.logger.LogErrors(Psi = (Delta_Psi_Error), W = (Delta_Ws_Error), T = (Delta_Ts_Error))
@@ -379,11 +422,8 @@ def solve(*args, **kwargs):
 
         n_cycle += 1
 
+    Saver.SaveResults("SavedResults", result_name)
     Saver.SaveResult("SavedResults", result_name, "nodes", W = W, Psi = Psi, T = T)
-
-    import matplotlib as matplot
-    x, y = nodes[:,0], nodes[:,1]
-    triangulation = matplot.tri.Triangulation(x,y,triangles)
 
     mask = [index != 2 for index in triangle_indeces]
     triangulation.set_mask(mask)

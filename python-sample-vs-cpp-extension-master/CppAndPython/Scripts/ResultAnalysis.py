@@ -139,9 +139,15 @@ class ResultAnalysis:
             self.params = pd.read_csv(params_path)
         return self.params
 
+    def GetParam(self, name):
+        return self.GetParams().iloc[0][name]
+
+    def GetMeshName(self):
+        return self.GetParams().iloc[0]['mesh_name']
+
     def GetMesh(self):
         if self.loaded_mesh is None:
-            mesh_name = self.GetParams().iloc[0]['mesh_name']
+            mesh_name = self.GetMeshName()
             self.loaded_mesh = ReadSaved(f"SavedMeshes/{mesh_name}.dat")
         return self.loaded_mesh
 
