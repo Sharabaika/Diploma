@@ -142,11 +142,22 @@ def main():
     for ram in ram0_range:    
         nus0.append(Nulselt(f"N120_n0_R1_dr0\\validationv2_ram_{ram}"))
 
+    nus4 = []
+    for ram in range(50000, 300001, 25000):
+        nus4.append(Nulselt(f"N120_n4_R1_dr0.3\\validationv2_ram_{ram}"))
+
     plt.scatter(ram0_range, nus0)
-    plt.plot(ram0_range, nus0)
+    plt.plot(ram0_range, nus0, label="n = 0")
+
+    plt.scatter( range(50000, 300001, 25000), nus4,  label="n = 4")
+    plt.plot( range(50000, 300001, 25000), nus4)
+
+    plt.legend()
+
     plt.savefig("meme.png")
     plt.show()
 
+    # PlotSavedMesh("N120_n4_R1_dr0.3_extended")
 
     # results = MagneticsAnalysis("SavedMagnetics", "N120_n0_R1_dr0/magnetics_N120_n0_R1_dr0")
     # results.PlotH()

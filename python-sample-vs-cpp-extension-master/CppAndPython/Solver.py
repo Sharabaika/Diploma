@@ -3,6 +3,7 @@ from pytools import delta
 from Scripts.MeshReader import ReadRaw, ReadSaved
 from math import atan2, exp, sqrt
 import matplotlib.tri as tri
+from Scripts.Plotters import DynamycsPlot, SavePlot
 from Scripts.ResultAnalysis import DynamycsAnalysis, MagneticsAnalysis, PlotElements, PlotMesh, PlotNodes, PlotScatter, ResultAnalysis 
 import Scripts.ResultFileHandling as files
 import matplotlib as matplot
@@ -153,6 +154,9 @@ def solve(*args, **kwargs):
     # Cycles #
     # ====== #
     Error = 2*MAX_DELTA_ERROR
+    last_displayed_psi_error = float('inf')
+    last_displayed_w_error = float('inf')
+    last_displayed_t_error = float('inf')
 
     n_cycle = 0 
     while n_cycle < N_CYCLIES_MAX and Error>=MAX_DELTA_ERROR:
@@ -411,7 +415,14 @@ def solve(*args, **kwargs):
         Error = max(Delta_Psi_Error, Delta_Ws_Error, Delta_Ts_Error)
         
         if n_cycle % PRINT_LOG_EVERY_N_CYCLES == 0:
-            print(f"cycle n = {n_cycle}, dpsi == {(Delta_Psi_Error):.5e}, dW = {(Delta_Ws_Error):.5e}, dT = {(Delta_Ts_Error):.5e}")
+            psi_flag = last_displayed_psi_error > Delta_Psi_Error
+            w_flag = last_displayed_w_error > Delta_Ws_Error
+            t_flag = last_displayed_t_error > Delta_Ts_Error
+            fstr = lambda flag :  '↓' if flag else '↑'
+            print(f"cycle n = {n_cycle:04d}, dpsi == {(Delta_Psi_Error):.5e} {fstr(psi_flag)}, dW = {(Delta_Ws_Error):.5e} {fstr(w_flag)}, dT = {(Delta_Ts_Error):.5e} {fstr(t_flag)}")
+            last_displayed_psi_error = Delta_Psi_Error
+            last_displayed_w_error = Delta_Ws_Error
+            last_displayed_t_error = Delta_Ts_Error
 
         Saver.logger.LogErrors(Psi = (Delta_Psi_Error), W = (Delta_Ws_Error), T = (Delta_Ts_Error))
 
@@ -424,22 +435,31 @@ def solve(*args, **kwargs):
 
         n_cycle += 1
 
-    Saver.SaveResults("SavedResults", result_name)
-    Saver.SaveResult("SavedResults", result_name, "nodes", W = W, Psi = Psi, T = T)
+    Saver.SaveResults(result_name)
+    Saver.SaveResult(result_name, "nodes", W = W, Psi = Psi, T = T)
 
     results = DynamycsAnalysis.MakeExplicit(Psi, W, T, nodes, triangles, segment_indices, trig_neighbors, node_neighbours, triangle_indeces)
-    results.PlotT(show_plot = False, clear_plot = True, save_plot = True, path = f"SavedResults/{result_name}/T.png")
-    results.PlotPsi(show_plot = False, clear_plot = True,save_plot = True, path = f"SavedResults/{result_name}/Psi.png")
-    results.PlotW(show_plot = False, clear_plot = True,save_plot = True, path = f"SavedResults/{result_name}/W.png")
+    plotter = DynamycsPlot(results)
+
+    plotter.PlotT()
+    SavePlot(f"{result_name}/T.png")
+
+    plotter.PlotPsi()
+    SavePlot(f"{result_name}/Psi.png")
+    
+    plotter.PlotW()
+    SavePlot(f"{result_name}/W.png")
 
     print("=============================================================== COMPLETED ===========================================================")
 
 
 def main():
-    ram_range = [50000, 75000, 100000, 125000, 150000, 175000, 200000]
-    mesh_name = "N120_n0_R1_dr0"
+    # ram_range = [50000, 75000, 100000, 125000, 150000, 175000, 200000]
+    ram_range = [325000, 350000, 375000, 400000]
+
+    mesh_name = "N120_n4_R1_dr0.3"
     for ram in ram_range:    
-        solve(Ram = ram, mesh_name = mesh_name, result_name = f"{mesh_name}/validationv2_ram_{ram}")
+        solve(Ram = ram, mesh_name = mesh_name, result_name = f"SavedResults/{mesh_name}/validationv2_ram_{ram}")
 
 if __name__ == "__main__":
     main()
