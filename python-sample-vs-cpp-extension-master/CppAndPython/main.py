@@ -137,30 +137,19 @@ def PlotSavedMesh(name):
     PlotMesh(nodes, triangles, segment_indices, False, True, False)
     
 def main():
-    # ram4_range = [1, 100, 10000, 100000, 150000, 200000, 250000, 500000, 1000000]
-    # nus4 = []
-    # for ram in ram4_range:    
-    #     nus4.append(Nulselt(f"N120_n4_R1_dr0.3\\validation_ram_{ram}"))
+    nus0 = []
+    ram0_range = [50000, 75000, 100000, 125000, 150000, 175000, 200000]
+    for ram in ram0_range:    
+        nus0.append(Nulselt(f"N120_n0_R1_dr0\\validationv2_ram_{ram}"))
 
-    # nus0 = []
-    # ram0_range = [1, 100, 10000, 100000, 150000, 200000, 250000, 300000]
-    # for ram in ram0_range:    
-    #     nus0.append(Nulselt(f"N120_n0_R1_dr0\\validation_ram_{ram}"))
+    plt.scatter(ram0_range, nus0)
+    plt.plot(ram0_range, nus0)
+    plt.savefig("meme.png")
+    plt.show()
 
-    # plt.plot(ram4_range, nus4, label = "n = 4")
-    # plt.scatter(ram4_range, nus4)
-    # plt.plot(ram0_range, nus0, label = "n = 0")
-    # plt.scatter(ram0_range, nus0)
-    # plt.title("Nu")
-    # plt.legend()
-    # # plt.savefig("meme.png")
-    # plt.show()
 
-    # results = DynamycsAnalysis("SavedResults", "N120_n0_R1_dr0\\validation_ram_300000")
-    # results.PlotPsi()
-
-    results = MagneticsAnalysis("SavedMagnetics", "N120_n0_R1_dr0/magnetics_N120_n0_R1_dr0")
-    results.PlotH()
+    # results = MagneticsAnalysis("SavedMagnetics", "N120_n0_R1_dr0/magnetics_N120_n0_R1_dr0")
+    # results.PlotH()
 
 if __name__ == "__main__":
     # test()

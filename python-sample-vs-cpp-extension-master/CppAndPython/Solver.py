@@ -3,7 +3,7 @@ from pytools import delta
 from Scripts.MeshReader import ReadRaw, ReadSaved
 from math import atan2, exp, sqrt
 import matplotlib.tri as tri
-from Scripts.ResultAnalysis import MagneticsAnalysis, PlotElements, PlotMesh, PlotNodes, PlotScatter 
+from Scripts.ResultAnalysis import DynamycsAnalysis, MagneticsAnalysis, PlotElements, PlotMesh, PlotNodes, PlotScatter, ResultAnalysis 
 import Scripts.ResultFileHandling as files
 import matplotlib as matplot
 
@@ -70,10 +70,10 @@ def solve(*args, **kwargs):
     T_outer = 0
 
     # Cycles
-    N_CYCLIES_MAX = kwargs.get("N_CYCLIES_MAX", 2000)
+    N_CYCLIES_MAX = kwargs.get("N_CYCLIES_MAX", 3000)
     MAX_DELTA_ERROR = kwargs.get("MAX_DELTA_ERROR", 1e-5)
 
-    PRINT_LOG_EVERY_N_CYCLES = 10
+    PRINT_LOG_EVERY_N_CYCLES = 20
 
     # Unused, wall velocity
     Vx = 0 
@@ -93,7 +93,6 @@ def solve(*args, **kwargs):
 
     H_nodes = magnetics_result.GetH_Nodes()
     H_triangles = magnetics_result.GetH()
-    mu_triangles = magnetics_result.GetMu()
 
     dHdx_triangles = np.zeros(N_trigs)
     dHdy_triangles = np.zeros(N_trigs)
@@ -132,10 +131,12 @@ def solve(*args, **kwargs):
         x21, y12 = x2-x1, y1-y2
         x02, y20 = x0-x2, y2-y0
 
+        Delta = x10*y20-x02*y01
+
         H0, H1, H2 = H_nodes[n0], H_nodes[n1], H_nodes[n2]
 
-        AH = H0*y12 + H1*y20 + H2*y01
-        BH = H0*x21 + H1*x02 + H2*x10
+        AH = (H0*y12 + H1*y20 + H2*y01)/Delta
+        BH = (H0*x21 + H1*x02 + H2*x10)/Delta
         
         dHdx_triangles[n_trig] = AH
         dHdy_triangles[n_trig] = BH
@@ -337,11 +338,12 @@ def solve(*args, **kwargs):
                         k1T = (abT*(E0T-E2T)+acT*(E2T*Y0-E0T*Y2))/DT
                         k2T = (abT*(E1T-E0T)+acT*(E0T*Y1-E1T*Y0))/DT
 
-                    AT = T0*y12 + T1*y20 + T2*y01
-                    BT = T0*x21 + T1*x02 + T2*x10
+                    AT = (T0*y12 + T1*y20 + T2*y01)/Delta
+                    BT = (T0*x21 + T1*x02 + T2*x10)/Delta
 
                     c_mag = dHdx_triangles[n_trig_neigbor] * BT - dHdy_triangles[n_trig_neigbor] * AT
-                    source_integral += Ra*AT/6.0 + Ram*mu_triangles[n_trig_neigbor]*(c_mag)/6.0
+                    mu = chi0*H_triangles[n_trig_neigbor]/(1+chi0*H_triangles[n_trig_neigbor])
+                    source_integral += (Ra*AT + Ram*mu*c_mag)*Delta/6.0
                     
                     aT0 = aT0 + k0T
                     aTnb = aTnb + k1T*T1 + k2T*T2
@@ -425,19 +427,19 @@ def solve(*args, **kwargs):
     Saver.SaveResults("SavedResults", result_name)
     Saver.SaveResult("SavedResults", result_name, "nodes", W = W, Psi = Psi, T = T)
 
-    mask = [index != 2 for index in triangle_indeces]
-    triangulation.set_mask(mask)
+    results = DynamycsAnalysis.MakeExplicit(Psi, W, T, nodes, triangles, segment_indices, trig_neighbors, node_neighbours, triangle_indeces)
+    results.PlotT(show_plot = False, clear_plot = True, save_plot = True, path = f"SavedResults/{result_name}/T.png")
+    results.PlotPsi(show_plot = False, clear_plot = True,save_plot = True, path = f"SavedResults/{result_name}/Psi.png")
+    results.PlotW(show_plot = False, clear_plot = True,save_plot = True, path = f"SavedResults/{result_name}/W.png")
 
-    PlotNodes(triangulation, T)
-    PlotNodes(triangulation, Psi)
+    print("=============================================================== COMPLETED ===========================================================")
 
-    PlotNodes(triangulation, W)
 
 def main():
-    ram_range = [1, 100, 10000, 100000, 150000, 200000, 250000, 300000]
+    ram_range = [50000, 75000, 100000, 125000, 150000, 175000, 200000]
     mesh_name = "N120_n0_R1_dr0"
     for ram in ram_range:    
-        solve(Ram = ram, mesh_name = mesh_name, result_name = f"{mesh_name}/validation_ram_{ram}")
+        solve(Ram = ram, mesh_name = mesh_name, result_name = f"{mesh_name}/validationv2_ram_{ram}")
 
 if __name__ == "__main__":
     main()

@@ -28,28 +28,50 @@ def PlotMesh(points, triangles, segment_idex, index_nodes = False, scatted_nodes
 
     plt.show()
 
+def HandlePlotPresintation(**kwargs):   
+    save_plot = kwargs.get("save_plot", False)
+    if save_plot and "path" in kwargs:
+        plt.savefig(kwargs["path"])
+
+    show_plot = kwargs.get("show_plot", True)
+    if show_plot:
+        plt.show()
+    
+    clear_plot = kwargs.get("clear_plot", True)
+    if clear_plot:
+        plt.clf()
+                
+
 def PlotNodes(triangulation, Fi, **kwargs):
     fig, ax = plt.subplots()
     ax.set_aspect('equal')
     cf = ax.tricontourf(triangulation, Fi)
-    fig.colorbar(cf, ax=ax)
-    plt.show()
+    
+    plt.xlim(kwargs.get("xlim", (-10, 10)))
+    plt.ylim(kwargs.get("ylim", (-10, 10)))
 
-def PlotScatter(points, z):
+    fig.colorbar(cf, ax=ax)
+
+    HandlePlotPresintation(**kwargs)
+
+def PlotScatter(points, z, **kwargs):
     x, y = points[:, 0], points[:, 1]
 
     fig, ax = plt.subplots()
     ax.set_aspect('equal')
     sc = ax.scatter(x, y, s=100, c=z) 
     plt.colorbar(sc)
-    plt.show()
+
+    HandlePlotPresintation(**kwargs)
+
 
 def PlotElements(triang, z, **kwargs):
     fig1, ax1 = plt.subplots()
     ax1.set_aspect('equal')
     tpc = ax1.tripcolor(triang, z, shading='flat', **kwargs)
     fig1.colorbar(tpc)
-    plt.show()
+
+    HandlePlotPresintation(**kwargs)
 
 
 class CoolPlots:
@@ -216,6 +238,18 @@ class DynamycsAnalysis(ResultAnalysis):
     def __init__(self, folder, result_name):
         super().__init__(folder, result_name)
 
+    def MakeExplicit(Psi, W, T, nodes, triangles, segment_indices, trig_neighbors, node_neighbours, triangle_indeces):
+        res = DynamycsAnalysis("", "")
+        res.saved["nodes"] = {
+            "Psi" : Psi,
+            "W" : W,
+            "T" : T
+        }
+
+        res.loaded_mesh = (nodes, triangles, segment_indices, trig_neighbors, node_neighbours, triangle_indeces)
+        
+        return res
+
     def GetPsi(self):
         return self.GetSavedResults()["Psi"]
 
@@ -233,7 +267,7 @@ class DynamycsAnalysis(ResultAnalysis):
         
         CoolPlots.PlotLevel(x, y, self.GetPsi(), nlevels = 30, xrange = (-2,2), yrange = (-2,2), manual = True)
 
-    def PlotPsi(self):
+    def PlotPsi(self, **kwargs):
         nodes, triangles, segment_indices, trig_neighbors, node_neighbours, trianlge_indices = self.GetMesh()
 
         x, y = nodes[:,0], nodes[:,1]
@@ -241,22 +275,22 @@ class DynamycsAnalysis(ResultAnalysis):
         mask = [index != 2 for index in trianlge_indices]
         triangulation.set_mask(mask)
 
-        PlotNodes(triangulation, self.GetPsi())
+        PlotNodes(triangulation, self.GetPsi(), **kwargs, xlim=(-2, 2), ylim=(-2,2))
 
 
-    def PlotW(self):
+    def PlotW(self, **kwargs):
         nodes, triangles, segment_indices, trig_neighbors, node_neighbours, trianlge_indices = self.GetMesh()
         x, y = nodes[:,0], nodes[:,1]
         triangulation = matplotlib.tri.Triangulation(x,y,triangles)
 
-        PlotNodes(triangulation, self.GetW())
+        PlotNodes(triangulation, self.GetW(), **kwargs, xlim=(-2, 2), ylim=(-2,2))
 
-    def PlotT(self):
+    def PlotT(self, **kwargs):
         nodes, triangles, segment_indices, trig_neighbors, node_neighbours, trianlge_indices = self.GetMesh()
         x, y = nodes[:,0], nodes[:,1]
         triangulation = matplotlib.tri.Triangulation(x,y,triangles)
 
-        PlotNodes(triangulation, self.GetT())
+        PlotNodes(triangulation, self.GetT(), **kwargs, xlim=(-2, 2), ylim=(-2,2))
 
     def CalculateLocalNulselt(self):
         nodes, triangles, segment_indices, trig_neighbors, node_neighbours, trianlge_indices = self.GetMesh()
