@@ -1,10 +1,8 @@
-import matplotlib
-from matplotlib.pyplot import title
 import numpy as np
-from Scripts.MeshReader import ReadRaw, ReadSaved
-import Scripts.ResultAnalysis as ResultAnalysis
-from math import exp, sqrt
-import matplotlib.tri as tri
+from Scripts.MeshReader import ReadSaved
+import Scripts.Plotters as plt
+from math import sqrt
+from Scripts.ResultAnalysis import MagneticsAnalysis, ResultAnalysis
 import Scripts.ResultFileHandling as files
 
 Saver = files.ResultSaving("Fi")
@@ -12,7 +10,7 @@ Saver = files.ResultSaving("Fi")
 # Mesh data #
 # ========= #
 mesh_name = f"N120_n0_R1_dr0"
-result_name = f"N120_n0_R1_dr0/magnetics_{mesh_name}"
+result_name = f"SavedMagnetics/{mesh_name}/magnetics_stronger_{mesh_name}"
 
 nodes, triangles, segment_indices, trig_neighbors, node_neighbours, trianlge_indices = ReadSaved(f"SavedMeshes/{mesh_name}.dat")
 
@@ -38,11 +36,11 @@ QF = 1.0
 
 #Field
 chi0 = 3.0
-H0 = 1.0
-mu0 = 1000
+H0 = 1000.0
+mu0 = 10000
 
 # Cycles
-N_CYCLIES_MAX = 2000
+N_CYCLIES_MAX = 5000
 MAX_DELTA_ERROR = 1e-5
 
 
@@ -194,13 +192,21 @@ for n_node in range(N_nodes):
     H_nodes[n_node] = numerator_sum / denominator_sum
 
 
-Saver.SaveResults("SavedMagnetics", result_name)
-Saver.SaveResult("SavedMagnetics", result_name, "triangles",  H = H, Mu = Mu)
-Saver.SaveResult("SavedMagnetics", result_name, "nodes", Fi = Fi, H_nodes = H_nodes)
+Saver.SaveResults(result_name)
+Saver.SaveResult(result_name, "triangles",  H = H, Mu = Mu)
+Saver.SaveResult( result_name, "nodes", Fi = Fi, H_nodes = H_nodes)
 
-x, y = nodes[:, 0], nodes[:, 1]
-triangulation = tri.Triangulation(x, y, triangles) 
+results = MagneticsAnalysis.MakeExplicit(H, H_nodes, Fi, Mu, nodes, triangles, segment_indices, trig_neighbors, node_neighbours, trianlge_indices)
+plotter = plt.MagneticsPlot(results)
 
-ResultAnalysis.PlotNodes(triangulation, Fi)
-ResultAnalysis.PlotElements(triangulation, H)
-ResultAnalysis.PlotElements(triangulation, Mu)
+plotter.PlotFi()
+plt.SavePlot(f"{result_name}/Fi.png")
+
+plotter.PlotH()
+plt.SavePlot(f"{result_name}/H_triangles.png")
+
+plotter.PlotH_Nodes()
+plt.SavePlot(f"{result_name}/H_nodes.png")
+
+plotter.PlotMu()
+plt.SavePlot(f"{result_name}/Mu.png")

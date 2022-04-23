@@ -1,6 +1,5 @@
 from matplotlib import pyplot as plt
 import matplotlib
-
 from Scripts.ResultAnalysis import DynamycsAnalysis, MagneticsAnalysis
 
 
@@ -143,36 +142,16 @@ class MagneticsPlot:
         self.triangulation = triangulation
 
     def PlotFi(self, **kwargs):
-        nodes, triangles, segment_indices, trig_neighbors, node_neighbours, trianlge_indices = self.GetMesh()
-
-        x, y = nodes[:,0], nodes[:,1]
-        triangulation = matplotlib.tri.Triangulation(x,y,triangles)
-
-        PlotNodes(triangulation, self.GetFi(), **kwargs)
+        PlotNodes(self.triangulation, self.analysis.GetFi(), **kwargs)
 
     def PlotH(self, **kwargs):
-        nodes, triangles, segment_indices, trig_neighbors, node_neighbours, trianlge_indices = self.GetMesh()
-
-        x, y = nodes[:,0], nodes[:,1]
-        triangulation = matplotlib.tri.Triangulation(x,y,triangles)
-
-        PlotElements(triangulation, self.GetH(), **kwargs)
+        PlotElements(self.triangulation, self.analysis.GetH(), **kwargs)
 
     def PlotH_Nodes(self, **kwargs):
-        nodes, triangles, segment_indices, trig_neighbors, node_neighbours, trianlge_indices = self.GetMesh()
-
-        x, y = nodes[:,0], nodes[:,1]
-        triangulation = matplotlib.tri.Triangulation(x,y,triangles)
-
-        PlotNodes(triangulation, self.GetH_Nodes(), **kwargs)
+        PlotNodes(self.triangulation, self.analysis.GetH_Nodes(), **kwargs)
 
     def PlotMu(self, **kwargs):
-        nodes, triangles, segment_indices, trig_neighbors, node_neighbours, trianlge_indices = self.GetMesh()
-
-        x, y = nodes[:,0], nodes[:,1]
-        triangulation = matplotlib.tri.Triangulation(x,y,triangles)
-
-        PlotElements(triangulation, self.GetMu(), **kwargs)
+        PlotElements(self.triangulation, self.analysis.GetMu(), **kwargs)
 
 
 class DynamycsPlot:

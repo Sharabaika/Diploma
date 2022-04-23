@@ -3,8 +3,8 @@ from pytools import delta
 from Scripts.MeshReader import ReadRaw, ReadSaved
 from math import atan2, exp, sqrt
 import matplotlib.tri as tri
-from Scripts.Plotters import DynamycsPlot, SavePlot
-from Scripts.ResultAnalysis import DynamycsAnalysis, MagneticsAnalysis, PlotElements, PlotMesh, PlotNodes, PlotScatter, ResultAnalysis 
+from Scripts.Plotters import DynamycsPlot, PlotElements, PlotNodes, SavePlot, ShowPlot
+from Scripts.ResultAnalysis import DynamycsAnalysis, MagneticsAnalysis, ResultAnalysis 
 import Scripts.ResultFileHandling as files
 import matplotlib as matplot
 
@@ -20,14 +20,16 @@ def solve(*args, **kwargs):
     result_name =  kwargs.get("result_name", f"saved_result_fluid_and_magneticsV0_{mesh_name}")
 
     nodes, triangles, segment_indices, trig_neighbors, node_neighbours, triangle_indeces = ReadSaved(f"SavedMeshes/{mesh_name}.dat")
-
-    x_coords, y_coords = nodes[:,0], nodes[:,1]
-    triangulation = matplot.tri.Triangulation(x_coords, y_coords, triangles)
+    x = nodes[:,0]
+    y = nodes[:,1]
+    mask = [index != 2 for index in triangle_indeces]
+    triangulation = tri.Triangulation(x,y,triangles)
+    triangulation.set_mask(mask)
 
     N_nodes = len(nodes)
     N_trigs = len(triangles)
 
-    magnetics_result_name = f"{mesh_name}\magnetics_{mesh_name}"
+    magnetics_result_name = f"{mesh_name}\magnetics_stronger_{mesh_name}"
     magnetics_result = MagneticsAnalysis("SavedMagnetics", magnetics_result_name)
 
     magnetics_result_mesh_name = magnetics_result.GetMeshName()
@@ -71,18 +73,19 @@ def solve(*args, **kwargs):
     T_outer = 0
 
     # Cycles
-    N_CYCLIES_MAX = kwargs.get("N_CYCLIES_MAX", 3000)
+    N_CYCLIES_MAX = kwargs.get("N_CYCLIES_MAX", 5000)
     MAX_DELTA_ERROR = kwargs.get("MAX_DELTA_ERROR", 1e-5)
 
     PRINT_LOG_EVERY_N_CYCLES = 20
+    PLOT_LOG_EVERY_N_CYCLES = 25
 
     # Unused, wall velocity
     Vx = 0 
 
     # Relaxation
-    QW = kwargs.get("QW", 0.7)
-    QPsi = kwargs.get("QPsi", 1.2)
-    QT = kwargs.get("QT", 1.2)
+    QPsi = kwargs.get("QPsi", 0.9)
+    QW = kwargs.get("QW", 0.35)
+    QT = kwargs.get("QT", 0.35)
 
     Saver.AddParams(mesh_name = mesh_name, Ra = Ra, Ram=Ram, magnetics_result_name = magnetics_result_name, chi0=chi0, Pr = Pr, QPsi = QPsi, QW = QW, QT = QT)
 
@@ -99,26 +102,34 @@ def solve(*args, **kwargs):
     dHdy_triangles = np.zeros(N_trigs)
 
     # Init
-    for n_node in range(N_nodes):
-        if is_a_fluid_region_array[n_node]:
-            tag = segment_indices[n_node]
-            x, y = nodes[n_node]
-            r = sqrt(x*x+y*y)
+    initial_conditions_result_name = kwargs.get("initials", "")
+    if initial_conditions_result_name:
+        prev_results = DynamycsAnalysis("SavedResults", initial_conditions_result_name)
+        Psi = np.array(prev_results.GetPsi())
+        W = np.array(prev_results.GetW())
+        T = np.array(prev_results.GetT())
+    else:
+        for n_node in range(N_nodes):
+            if is_a_fluid_region_array[n_node]:
+                tag = segment_indices[n_node]
+                x, y = nodes[n_node]
+                r = sqrt(x*x+y*y)
+                r_local = (r-1.0)*np.pi
 
-            W[n_node] = np.random.rand(1)*0.01+0.01 
-            Psi[n_node] = 0.0001*np.sin(3*x*np.pi)*np.sin(3*y*np.pi)
-            T[n_node] = T_inner + (T_outer-T_inner)*(r-1.0)
+                W[n_node] = np.random.rand(1)*0.01+0.01 
+                Psi[n_node] = 1*np.sin(r_local)*np.sin(r_local)
+                T[n_node] = T_inner + (T_outer-T_inner)*(r-1.0)
 
-            if tag == CONDUCTOR_BORDER_INDEX:
-                Psi[n_node] = 0
-                T[n_node] = T_inner
-            elif tag == MEDIUM_OUTER_BORDER_INDEX:
-                Psi[n_node] = 0
-                T[n_node] = T_outer
-        else:
-            Psi[n_node] = 0.0
-            W[n_node] = 0.0
-            T[n_node] = 0.0
+                if tag == CONDUCTOR_BORDER_INDEX:
+                    Psi[n_node] = 0
+                    T[n_node] = T_inner
+                elif tag == MEDIUM_OUTER_BORDER_INDEX:
+                    Psi[n_node] = 0
+                    T[n_node] = T_outer
+            else:
+                Psi[n_node] = 0.0
+                W[n_node] = 0.0
+                T[n_node] = 0.0
 
 
     for n_trig in range(N_trigs):
@@ -424,6 +435,17 @@ def solve(*args, **kwargs):
             last_displayed_w_error = Delta_Ws_Error
             last_displayed_t_error = Delta_Ts_Error
 
+        if n_cycle % PLOT_LOG_EVERY_N_CYCLES == 0:
+            PlotNodes(triangulation, Psi, xlim = (-2, 2), ylim = (-2, 2))
+            SavePlot(f"{result_name}/log_plots/Psi_{n_cycle}.png")
+
+            PlotNodes(triangulation, W, xlim = (-2, 2), ylim = (-2, 2))
+            SavePlot(f"{result_name}/log_plots/W_{n_cycle}.png")
+
+            PlotNodes(triangulation, T, xlim = (-2, 2), ylim = (-2, 2))
+            SavePlot(f"{result_name}/log_plots/T_{n_cycle}.png")
+
+
         Saver.logger.LogErrors(Psi = (Delta_Psi_Error), W = (Delta_Ws_Error), T = (Delta_Ts_Error))
 
         # NEXT STEP #
@@ -454,12 +476,12 @@ def solve(*args, **kwargs):
 
 
 def main():
-    # ram_range = [50000, 75000, 100000, 125000, 150000, 175000, 200000]
-    ram_range = [325000, 350000, 375000, 400000]
+    ram_range = np.arange(60000, 130001, 10000)
+    ram_range = [90000]
 
-    mesh_name = "N120_n4_R1_dr0.3"
+    mesh_name = "N120_n0_R1_dr0"
     for ram in ram_range:    
-        solve(Ram = ram, mesh_name = mesh_name, result_name = f"SavedResults/{mesh_name}/validationv2_ram_{ram}")
+        solve(Ra = 0, Ram = ram, mesh_name = mesh_name, result_name = f"SavedResults/{mesh_name}/validationv4_ra_0_strongerField_ram_{ram}", initials = f"N120_n0_R1_dr0/validationv3_ra_0_ram_{ram}")
 
 if __name__ == "__main__":
     main()

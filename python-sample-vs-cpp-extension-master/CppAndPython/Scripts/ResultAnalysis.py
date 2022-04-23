@@ -7,131 +7,6 @@ import pandas as pd
 
 from Scripts.MeshReader import ReadSaved
 
-def PlotMesh(points, triangles, segment_idex, index_nodes = False, scatted_nodes = False, index_regions = False):
-    x, y = points[:, 0], points[:, 1]
-
-    fig, ax = plt.subplots()
-    
-    ax.triplot(x, y, triangles, color='green')
-    ax.set_aspect('equal')
-    
-    if scatted_nodes:
-        ax.scatter(x, y, s=100, c=segment_idex)     
-
-    if index_nodes:
-        for point_index in range(len(x)):
-            ax.text(x=x[point_index], y=y[point_index], s = point_index, color='red', fontsize=10)
-
-    if index_regions:
-        for point_index in range(len(x)):
-            ax.text(x=x[point_index], y=y[point_index], s = segment_idex[point_index], color='red', fontsize=8)
-
-    plt.show()
-
-def HandlePlotPresintation(**kwargs):   
-    save_plot = kwargs.get("save_plot", False)
-    if save_plot and "path" in kwargs:
-        plt.savefig(kwargs["path"])
-
-    show_plot = kwargs.get("show_plot", True)
-    if show_plot:
-        plt.show()
-    
-    clear_plot = kwargs.get("clear_plot", True)
-    if clear_plot:
-        plt.clf()
-                
-
-def PlotNodes(triangulation, Fi, **kwargs):
-    fig, ax = plt.subplots()
-    ax.set_aspect('equal')
-    cf = ax.tricontourf(triangulation, Fi)
-    
-    plt.xlim(kwargs.get("xlim", (-10, 10)))
-    plt.ylim(kwargs.get("ylim", (-10, 10)))
-
-    fig.colorbar(cf, ax=ax)
-
-    HandlePlotPresintation(**kwargs)
-
-def PlotScatter(points, z, **kwargs):
-    x, y = points[:, 0], points[:, 1]
-
-    fig, ax = plt.subplots()
-    ax.set_aspect('equal')
-    sc = ax.scatter(x, y, s=100, c=z) 
-    plt.colorbar(sc)
-
-    HandlePlotPresintation(**kwargs)
-
-
-def PlotElements(triang, z, **kwargs):
-    fig1, ax1 = plt.subplots()
-    ax1.set_aspect('equal')
-    tpc = ax1.tripcolor(triang, z, shading='flat', **kwargs)
-    fig1.colorbar(tpc)
-
-    HandlePlotPresintation(**kwargs)
-
-
-class CoolPlots:
-    def PlotLevel(x, y, F, **kwargs):
-        import numpy as np
-        import matplotlib.pyplot as plot
-        import pylab
-
-        title = kwargs.get("title", "")
-        xrange =  kwargs.get("xrange", (-10,10))
-        yrange =  kwargs.get("yrange", (-10,10))
-
-        manual = kwargs.get("manual", False)
-
-        levels = []
-        if "nlevels" in kwargs:
-            nlevels = kwargs["nlevels"]
-            indecies = list(filter(lambda i: xrange[0]<=x[i]<=xrange[1] and yrange[0]<=y[i]<=yrange[1], range(len(F))))
-            maxF = max(F[indecies])
-            minF = min(F[indecies])
-
-            step = (maxF-minF)/nlevels
-            levels = np.arange(minF, maxF + step/2, step)
-            
-
-        fig, ax = plt.subplots()
-        ax.set_aspect('equal')
-
-        plot.title(title)
-
-        pylab.xlim(xrange)
-        pylab.ylim(yrange)
-
-        plot.xlabel('X')
-        plot.ylabel('Y')
-
-
-        if len(levels):
-            contours = plot.tricontour(x, y, F, levels = levels)
-        else:
-            contours = plot.tricontour(x, y, F)
-
-        plot.clabel(contours, inline=1, fontsize=10, manual = manual)
-
-        plot.show()
-
-    def PlotLevelNodes(nodes, F, **kwargs):
-        x, y = nodes[:,0], nodes[:,1]
-        CoolPlots.PlotLevel(x,y,F, **kwargs)
-
-    def PlotLevelTriangles(nodes, triangles, F, **kwargs):
-        XPoints, YPoints = [], []
-        for triangle in triangles:
-            points = [nodes[node] for node in triangle]
-            x, y = sum(points)
-            XPoints.append(x/3)
-            YPoints.append(y/3)
-        
-        CoolPlots.PlotLevel(XPoints, YPoints, F, **kwargs)
-
 
 class ResultAnalysis:
     def __init__(self, folder, result_name):
@@ -189,6 +64,23 @@ class MagneticsAnalysis(ResultAnalysis):
     def __init__(self, folder, result_name):
         super().__init__(folder, result_name)
 
+    def MakeExplicit(H_triangles, H_nodes, Fi, Mu, nodes, triangles, segment_indices, trig_neighbors, node_neighbours, triangle_indeces):
+        res = MagneticsAnalysis("")
+
+        res.saved["nodes"] = {
+            "H_nodes" : H_nodes,
+            "Fi" : Fi
+        }
+
+        res.saved["triangles"] = {
+            "H" : H_triangles,
+            "Mu" : Mu
+        }
+
+        res.loaded_mesh = (nodes, triangles, segment_indices, trig_neighbors, node_neighbours, triangle_indeces)
+        
+        return res
+
     def GetFi(self):
         return np.array(self.GetSavedResults("nodes")["Fi"])
 
@@ -200,38 +92,6 @@ class MagneticsAnalysis(ResultAnalysis):
 
     def GetMu(self):
         return np.array(self.GetSavedResults("triangles")["Mu"])
-
-    def PlotFi(self, **kwargs):
-        nodes, triangles, segment_indices, trig_neighbors, node_neighbours, trianlge_indices = self.GetMesh()
-
-        x, y = nodes[:,0], nodes[:,1]
-        triangulation = matplotlib.tri.Triangulation(x,y,triangles)
-
-        PlotNodes(triangulation, self.GetFi(), **kwargs)
-
-    def PlotH(self, **kwargs):
-        nodes, triangles, segment_indices, trig_neighbors, node_neighbours, trianlge_indices = self.GetMesh()
-
-        x, y = nodes[:,0], nodes[:,1]
-        triangulation = matplotlib.tri.Triangulation(x,y,triangles)
-
-        PlotElements(triangulation, self.GetH(), **kwargs)
-
-    def PlotH_Nodes(self, **kwargs):
-        nodes, triangles, segment_indices, trig_neighbors, node_neighbours, trianlge_indices = self.GetMesh()
-
-        x, y = nodes[:,0], nodes[:,1]
-        triangulation = matplotlib.tri.Triangulation(x,y,triangles)
-
-        PlotNodes(triangulation, self.GetH_Nodes(), **kwargs)
-
-    def PlotMu(self, **kwargs):
-        nodes, triangles, segment_indices, trig_neighbors, node_neighbours, trianlge_indices = self.GetMesh()
-
-        x, y = nodes[:,0], nodes[:,1]
-        triangulation = matplotlib.tri.Triangulation(x,y,triangles)
-
-        PlotElements(triangulation, self.GetMu(), **kwargs)
 
 
 class DynamycsAnalysis(ResultAnalysis):
@@ -259,38 +119,6 @@ class DynamycsAnalysis(ResultAnalysis):
     def GetT(self):
         return self.GetSavedResults()["T"]
 
-    def PlotPsiLevel(self):
-        nodes, triangles, segment_indices, trig_neighbors, node_neighbours, trianlge_indices = self.GetMesh()
-
-        x, y = nodes[:,0], nodes[:,1]
-        triangulation = matplotlib.tri.Triangulation(x,y,triangles)
-        
-        CoolPlots.PlotLevel(x, y, self.GetPsi(), nlevels = 30, xrange = (-2,2), yrange = (-2,2), manual = True)
-
-    def PlotPsi(self, **kwargs):
-        nodes, triangles, segment_indices, trig_neighbors, node_neighbours, trianlge_indices = self.GetMesh()
-
-        x, y = nodes[:,0], nodes[:,1]
-        triangulation = matplotlib.tri.Triangulation(x,y,triangles)
-        mask = [index != 2 for index in trianlge_indices]
-        triangulation.set_mask(mask)
-
-        PlotNodes(triangulation, self.GetPsi(), **kwargs, xlim=(-2, 2), ylim=(-2,2))
-
-
-    def PlotW(self, **kwargs):
-        nodes, triangles, segment_indices, trig_neighbors, node_neighbours, trianlge_indices = self.GetMesh()
-        x, y = nodes[:,0], nodes[:,1]
-        triangulation = matplotlib.tri.Triangulation(x,y,triangles)
-
-        PlotNodes(triangulation, self.GetW(), **kwargs, xlim=(-2, 2), ylim=(-2,2))
-
-    def PlotT(self, **kwargs):
-        nodes, triangles, segment_indices, trig_neighbors, node_neighbours, trianlge_indices = self.GetMesh()
-        x, y = nodes[:,0], nodes[:,1]
-        triangulation = matplotlib.tri.Triangulation(x,y,triangles)
-
-        PlotNodes(triangulation, self.GetT(), **kwargs, xlim=(-2, 2), ylim=(-2,2))
 
     def CalculateLocalNulselt(self):
         nodes, triangles, segment_indices, trig_neighbors, node_neighbours, trianlge_indices = self.GetMesh()
