@@ -138,44 +138,45 @@ def PlotSavedMesh(name):
     PlotMesh(nodes, triangles, segment_indices, False, True, False)
     
 def main():
-    # nus0 = []
-    # ram0_range = [50000, 75000, 100000, 125000, 150000, 175000, 200000]
-    # for ram in ram0_range:    
-    #     nus0.append(Nulselt(f"N120_n0_R1_dr0\\validationv2_ram_{ram}"))
+    nus0 = []
+    ram0_range = [1000, 5000, 20000, 30000, 40000, 50000, 60000, 70000, 80000]
+    for ram in ram0_range:    
+        result_name = f"N120_n0_R1_dr0/validation_final/ra_0_H_5_ram_{ram}"
+        nus0.append(Nulselt(result_name))
 
-    # nus4 = []
+    nus4 = []
     # for ram in range(50000, 300001, 25000):
     #     nus4.append(Nulselt(f"N120_n4_R1_dr0.3\\validationv2_ram_{ram}"))
 
-    # plt.scatter(ram0_range, nus0)
-    # plt.plot(ram0_range, nus0, label="n = 0")
+    plt.scatter(ram0_range, nus0)
+    plt.plot(ram0_range, nus0, label="n = 0")
 
     # plt.scatter( range(50000, 300001, 25000), nus4,  label="n = 4")
     # plt.plot( range(50000, 300001, 25000), nus4)
 
-    # plt.legend()
+    plt.legend()
 
-    # plt.savefig("meme.png")
-    # plt.show()
+    plt.savefig("validation.png")
+    plt.show()
 
-    mesh_name = "N120_n0_R1_dr0"
-    result_name = f"{mesh_name}/magnetics_stronger_{mesh_name}"
-    path = f"SavedMagnetics/{result_name}"
+    # mesh_name = "N120_n0_R1_dr0"
+    # result_name = f"{mesh_name}/magnetics_H_5_{mesh_name}"
+    # path = f"SavedMagnetics/{result_name}"
 
-    results = MagneticsAnalysis("SavedMagnetics", result_name)
-    plotter = MagneticsPlot(results)
+    # results = MagneticsAnalysis("SavedMagnetics", result_name)
+    # plotter = MagneticsPlot(results)
     
-    plotter.PlotFi()
-    SavePlot(f"{path}/Fi.png")
+    # plotter.PlotFi()
+    # SavePlot(f"{path}/Fi.png")
 
-    plotter.PlotH()
-    SavePlot(f"{path}/H_triangles.png")
+    # plotter.PlotH()
+    # SavePlot(f"{path}/H_triangles.png")
 
-    plotter.PlotH_Nodes()
-    SavePlot(f"{path}/H_nodes.png")
+    # plotter.PlotH_Nodes()
+    # SavePlot(f"{path}/H_nodes.png")
 
-    plotter.PlotMu()
-    SavePlot(f"{path}/Mu.png")
+    # plotter.PlotMu()
+    # SavePlot(f"{path}/Mu.png")
     
 
 if __name__ == "__main__":

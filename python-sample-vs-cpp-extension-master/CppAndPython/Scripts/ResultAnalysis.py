@@ -65,7 +65,7 @@ class MagneticsAnalysis(ResultAnalysis):
         super().__init__(folder, result_name)
 
     def MakeExplicit(H_triangles, H_nodes, Fi, Mu, nodes, triangles, segment_indices, trig_neighbors, node_neighbours, triangle_indeces):
-        res = MagneticsAnalysis("")
+        res = MagneticsAnalysis("", "")
 
         res.saved["nodes"] = {
             "H_nodes" : H_nodes,
@@ -222,7 +222,7 @@ class DynamycsAnalysis(ResultAnalysis):
                 integral += dtdy*ab
                 border_length += ab
 
-        return integral/border_length
+        return integral
                 
 
             

@@ -29,7 +29,7 @@ def solve(*args, **kwargs):
     N_nodes = len(nodes)
     N_trigs = len(triangles)
 
-    magnetics_result_name = f"{mesh_name}\magnetics_stronger_{mesh_name}"
+    magnetics_result_name = f"{mesh_name}\magnetics_H_5_{mesh_name}"
     magnetics_result = MagneticsAnalysis("SavedMagnetics", magnetics_result_name)
 
     magnetics_result_mesh_name = magnetics_result.GetMeshName()
@@ -77,15 +77,15 @@ def solve(*args, **kwargs):
     MAX_DELTA_ERROR = kwargs.get("MAX_DELTA_ERROR", 1e-5)
 
     PRINT_LOG_EVERY_N_CYCLES = 20
-    PLOT_LOG_EVERY_N_CYCLES = 25
+    PLOT_LOG_EVERY_N_CYCLES = 0
 
     # Unused, wall velocity
     Vx = 0 
 
     # Relaxation
-    QPsi = kwargs.get("QPsi", 0.9)
-    QW = kwargs.get("QW", 0.35)
-    QT = kwargs.get("QT", 0.35)
+    QPsi = kwargs.get("QPsi", 1.2)
+    QW = kwargs.get("QW", 0.05)
+    QT = kwargs.get("QT", 1.2)
 
     Saver.AddParams(mesh_name = mesh_name, Ra = Ra, Ram=Ram, magnetics_result_name = magnetics_result_name, chi0=chi0, Pr = Pr, QPsi = QPsi, QW = QW, QT = QT)
 
@@ -435,7 +435,7 @@ def solve(*args, **kwargs):
             last_displayed_w_error = Delta_Ws_Error
             last_displayed_t_error = Delta_Ts_Error
 
-        if n_cycle % PLOT_LOG_EVERY_N_CYCLES == 0:
+        if PLOT_LOG_EVERY_N_CYCLES and n_cycle % PLOT_LOG_EVERY_N_CYCLES == 0:
             PlotNodes(triangulation, Psi, xlim = (-2, 2), ylim = (-2, 2))
             SavePlot(f"{result_name}/log_plots/Psi_{n_cycle}.png")
 
@@ -476,12 +476,15 @@ def solve(*args, **kwargs):
 
 
 def main():
-    ram_range = np.arange(60000, 130001, 10000)
-    ram_range = [90000]
+    ram_range = np.arange(80000, 120001, 10000)
+    last_ram = 70000
 
     mesh_name = "N120_n0_R1_dr0"
     for ram in ram_range:    
-        solve(Ra = 0, Ram = ram, mesh_name = mesh_name, result_name = f"SavedResults/{mesh_name}/validationv4_ra_0_strongerField_ram_{ram}", initials = f"N120_n0_R1_dr0/validationv3_ra_0_ram_{ram}")
+        result_name = f"SavedResults/{mesh_name}/validation_final/ra_0_H_5_ram_{ram}"
+        initials = f"{mesh_name}/validation_final/ra_0_H_5_ram_{last_ram}"
+        solve(Ra = 0, Ram = ram, mesh_name = mesh_name, result_name = result_name, initials = initials)
+        last_ram = ram
 
 if __name__ == "__main__":
     main()
