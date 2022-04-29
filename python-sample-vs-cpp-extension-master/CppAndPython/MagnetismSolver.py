@@ -10,7 +10,7 @@ Saver = files.ResultSaving("Fi")
 # Mesh data #
 # ========= #
 mesh_name = f"N120_n0_R1_dr0"
-result_name = f"SavedMagnetics/{mesh_name}/magnetics_H_5_{mesh_name}"
+result_name = f"SavedMagnetics/{mesh_name}/magnetics_H_5_chi0_2_{mesh_name}"
 
 nodes, triangles, segment_indices, trig_neighbors, node_neighbours, trianlge_indices = ReadSaved(f"SavedMeshes/{mesh_name}.dat")
 
@@ -35,7 +35,7 @@ VOID_OUTER_BORDER_INDEX = 5
 QF = 1.0
 
 #Field
-chi0 = 3.0
+chi0 = 2.0
 H0 = 5.0
 mu0 = 10000
 

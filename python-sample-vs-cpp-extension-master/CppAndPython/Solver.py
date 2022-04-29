@@ -29,7 +29,7 @@ def solve(*args, **kwargs):
     N_nodes = len(nodes)
     N_trigs = len(triangles)
 
-    magnetics_result_name = f"{mesh_name}\magnetics_H_5_{mesh_name}"
+    magnetics_result_name = f"{mesh_name}\magnetics_H_5_chi0_2_{mesh_name}"
     magnetics_result = MagneticsAnalysis("SavedMagnetics", magnetics_result_name)
 
     magnetics_result_mesh_name = magnetics_result.GetMeshName()
@@ -59,7 +59,7 @@ def solve(*args, **kwargs):
     # PARAMS #
     # ====== #
     # Dynamics
-    Pr = kwargs.get("Pr", 10)
+    Pr = kwargs.get("Pr", 700)
     Ra = kwargs.get("Ra", 30000)
     Ram = kwargs.get("Ram", 1)
     chi0 = magnetics_result.GetParam("chi0")
@@ -73,7 +73,7 @@ def solve(*args, **kwargs):
     T_outer = 0
 
     # Cycles
-    N_CYCLIES_MAX = kwargs.get("N_CYCLIES_MAX", 5000)
+    N_CYCLIES_MAX = kwargs.get("N_CYCLIES_MAX", 5555)
     MAX_DELTA_ERROR = kwargs.get("MAX_DELTA_ERROR", 1e-5)
 
     PRINT_LOG_EVERY_N_CYCLES = 20
@@ -86,8 +86,6 @@ def solve(*args, **kwargs):
     QPsi = kwargs.get("QPsi", 1.2)
     QW = kwargs.get("QW", 0.05)
     QT = kwargs.get("QT", 1.2)
-
-    Saver.AddParams(mesh_name = mesh_name, Ra = Ra, Ram=Ram, magnetics_result_name = magnetics_result_name, chi0=chi0, Pr = Pr, QPsi = QPsi, QW = QW, QT = QT)
 
     # Arrays #
     # ====== #
@@ -108,6 +106,10 @@ def solve(*args, **kwargs):
         Psi = np.array(prev_results.GetPsi())
         W = np.array(prev_results.GetW())
         T = np.array(prev_results.GetT())
+
+        QPsi = prev_results.GetParam("QPsi")
+        QW = prev_results.GetParam("QW")
+        QT = prev_results.GetParam("QT")
     else:
         for n_node in range(N_nodes):
             if is_a_fluid_region_array[n_node]:
@@ -153,6 +155,11 @@ def solve(*args, **kwargs):
         dHdx_triangles[n_trig] = AH
         dHdy_triangles[n_trig] = BH
 
+    normal_x = np.zeros(N_nodes)
+    normal_y = np.zeros(N_nodes)
+    for n_node in fluid_domain_nodes_indeces_array:
+        pass
+
 
     Psi_new = np.array(Psi)
     W_new = np.array(W)
@@ -161,6 +168,10 @@ def solve(*args, **kwargs):
     Psi_errors = np.zeros(N_nodes)
     W_errors = np.zeros(N_nodes)
     T_errors = np.zeros(N_nodes)
+
+
+    Saver.AddParams(mesh_name = mesh_name, Ra = Ra, Ram=Ram, magnetics_result_name = magnetics_result_name, chi0=chi0, Pr = Pr, QPsi = QPsi, QW = QW, QT = QT)
+
 
     # Cycles #
     # ====== #
@@ -476,13 +487,13 @@ def solve(*args, **kwargs):
 
 
 def main():
-    ram_range = np.arange(80000, 120001, 10000)
+    ram_range = [1000, 5000, 20000, 30000, 40000, 50000, 60000, 70000, 80000]
     last_ram = 70000
 
     mesh_name = "N120_n0_R1_dr0"
     for ram in ram_range:    
-        result_name = f"SavedResults/{mesh_name}/validation_final/ra_0_H_5_ram_{ram}"
-        initials = f"{mesh_name}/validation_final/ra_0_H_5_ram_{last_ram}"
+        result_name = f"SavedResults/{mesh_name}/validation_finalV3/ra_0_H_5_chi0_2_Pr_700_ram_{ram}"
+        initials = f"{mesh_name}/validation_final/ra_0_H_5_ram_{ram}"
         solve(Ra = 0, Ram = ram, mesh_name = mesh_name, result_name = result_name, initials = initials)
         last_ram = ram
 
