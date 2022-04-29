@@ -13,6 +13,10 @@ using std::endl;
 
 const double ONE_THIRD = 1.0 / 3.0;
 
+const int CONDUCTOR_BORDER_INDEX = 1;
+const int MEDIUM_REGION_INDEX = 2;
+const int MEDIUM_OUTER_BORDER_INDEX = 3;
+
 bool containts_index(const ArrInt& indecies, const int& index) 
 {
     return find(indecies.begin(), indecies.end(), index) != indecies.end();
@@ -393,7 +397,7 @@ void SolveFluid_Implementation(const Arr x,const Arr y,const JaggedArr triangles
     printf("time spent = %f \n", float(end_time - begin_time) / CLOCKS_PER_SEC);
 }
 
-void Solve_Implementation(const Arr& x, const Arr& y, const JaggedArr& triangles, const ArrInt& segment_indices, const JaggedArr& trig_neighbors, const JaggedArr& node_neighbours, const ArrInt& triangle_indeces, const ArrInt& fluid_domain_nodes_indeces_array, const ArrInt& is_a_fluid_region_array, const ArrInt& is_a_wall_array, const double Pr, const double Ra, const double Ram, const double chi0, const double QPsi, const double QW, const double QT, const double max_error, const int max_cycles, Arr& Psi, Arr& W, Arr& T, const Arr& H_triangles, Arr& dHdx, Arr& dHdy, const Arr& normal_x, const Arr& normal_y, Arr& Delta_Psi, Arr& Delta_W, Arr& Delta_T)
+void SolveFast_Implementation(const Arr& x, const Arr& y, const JaggedArr& triangles, const ArrInt& segment_indices, const JaggedArr& trig_neighbors, const JaggedArr& node_neighbours, const ArrInt& triangle_indeces, const ArrInt& fluid_domain_nodes_indeces_array, const ArrInt& is_a_fluid_region_array, const ArrInt& is_a_wall_array, const double Pr, const double Ra, const double Ram, const double chi0, const double QPsi, const double QW, const double QT, const double max_error, const int max_cycles, Arr& Psi, Arr& W, Arr& T, const Arr& H_triangles, Arr& dHdx, Arr& dHdy, const Arr& normal_x, const Arr& normal_y, Arr& Delta_Psi, Arr& Delta_W, Arr& Delta_T)
 {
     const int N_NODES = x.size();
     const int N_TRIANGLES = triangles.size();
@@ -409,6 +413,9 @@ void Solve_Implementation(const Arr& x, const Arr& y, const JaggedArr& triangles
     int n_cycle = 0;
     double error = max_error * 2.0;
 
+    Arr Psi_err(N_NODES);
+    Arr W_err(N_NODES);
+    Arr T_err(N_NODES);
 
     while (n_cycle < max_cycles && error >= max_error)
     {
@@ -643,7 +650,74 @@ void Solve_Implementation(const Arr& x, const Arr& y, const JaggedArr& triangles
                     aW0 = aW0 + k0W;
                     aWnb = aWnb + k1W * W1 + k2W * W2;
                 }
+
+                // Advance //
+                // ======= //
+
+                if (!is_a_wall_array[n_node]) 
+                {
+                    // Medium //
+                    // ====== //
+
+                    Psi_new[n_node] = (-aPsinb + S) / aPsi0;
+                    W_new[n_node] = -(aWnb + source_integral) / aW0;
+                    T_new[n_node] = -aTnb / aT0;
+                }
+                else
+                {
+                    // Wall //
+                    // ==== //
+
+                    Psi_new[n_node] = 0;
+                    W_new[n_node] = -(I + aWnb) / aW0;
+                    if (segment_index == CONDUCTOR_BORDER_INDEX)
+                    {
+                        T_new[n_node] = 1;
+                    }
+                    else
+                    {
+                        T_new[n_node] = 0;
+                    }
+                }
+
+                Psi_err[n_node] = (Psi[n_node] - Psi_new[n_node]);
+                W_err[n_node] = (W_new[n_node] - W[n_node]);
+                T_err[n_node] = (T_new[n_node] - T[n_node]);
             }
         }
+
+        double Psi_sum = 0, W_sum = 0, T_sum = 0;
+        double Psi_errors = 0, W_errors = 0, T_errors = 0;
+        for (int n_node = 0; n_node < N_NODES; n_node++)
+        {
+            Psi_sum += Psi_new[n_node] * Psi_new[n_node];
+            Psi_errors += Psi_err[n_node] * Psi_err[n_node];
+            Psi[n_node] = Psi[n_node] * (1.0 - QPsi) + Psi_new[n_node] * QPsi;
+
+            W_sum += W_new[n_node] * W_new[n_node];
+            W_errors += W_err[n_node] * W_err[n_node];
+            W[n_node] = W[n_node] * (1.0 - QW) + W_new[n_node] * QW;
+
+            T_sum += T_new[n_node] * T_new[n_node];
+            T_errors += T_err[n_node] * T_err[n_node];
+            T[n_node] = T[n_node] * (1.0 - QT) + T_new[n_node] * QT;
+        }
+
+        const double Delta_Psi_Error = sqrt(Psi_errors / Psi_sum) / QPsi;
+        const double Delta_W_Error = sqrt(W_errors / W_sum) / QW;
+        const double Delta_T_Error = sqrt(T_errors / T_sum) / QT;
+
+        if (n_cycle % 50 == 0)
+        {
+            printf("n cycle = %06i, dw = %.5e, dpsi = %.5e, dt = %.5e\n", n_cycle, Delta_W_Error, Delta_Psi_Error, Delta_T_Error);
+        }
+
+        Delta_Psi.push_back(Delta_Psi_Error);
+        Delta_W.push_back(Delta_W_Error);
+        Delta_T.push_back(Delta_T_Error);
+
+        error = max({ Delta_Psi_Error, Delta_W_Error, Delta_T_Error});
+
+        n_cycle++;
     }
 }

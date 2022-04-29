@@ -485,6 +485,169 @@ def solve(*args, **kwargs):
 
     print("=============================================================== COMPLETED ===========================================================")
 
+def solve_fast(*args, **kwargs):
+    Saver = files.ResultSaving("W", "Psi", "T")
+
+    # Mesh data #
+    # ========= #
+    mesh_name = kwargs.get("mesh_name", "N120_n4_R1_dr0.3_extended")
+    result_name =  kwargs.get("result_name", f"saved_result_fluid_and_magneticsV0_{mesh_name}")
+
+    nodes, triangles, segment_indices, trig_neighbors, node_neighbours, triangle_indeces = ReadSaved(f"SavedMeshes/{mesh_name}.dat")
+    x = nodes[:,0]
+    y = nodes[:,1]
+    mask = [index != 2 for index in triangle_indeces]
+    triangulation = tri.Triangulation(x,y,triangles)
+    triangulation.set_mask(mask)
+
+    N_nodes = len(nodes)
+    N_trigs = len(triangles)
+
+    magnetics_result_name = f"{mesh_name}\magnetics_H_5_chi0_2_{mesh_name}"
+    magnetics_result = MagneticsAnalysis("SavedMagnetics", magnetics_result_name)
+
+    magnetics_result_mesh_name = magnetics_result.GetMeshName()
+    if (magnetics_result_mesh_name != mesh_name):
+        raise Exception("magnetics results are made for different mesh")
+
+
+    # Regions #
+    # ======= #
+    CONDUCTOR_REGION_INDEX = 0
+    CONDUCTOR_BORDER_INDEX = 1
+    MEDIUM_REGION_INDEX = 2
+    MEDIUM_OUTER_BORDER_INDEX = 3
+    VOID_REGION_INDEX = 4
+    VOID_OUTER_BORDER_INDEX = 5
+    # 5 444 3 222 1 000 1 222 3 444 5
+
+    # TODO replace ?
+    is_a_fluid_region = lambda node_index : segment_indices[node_index] in [CONDUCTOR_BORDER_INDEX, MEDIUM_REGION_INDEX, MEDIUM_OUTER_BORDER_INDEX]
+    is_a_wall = lambda node_index : segment_indices[node_index] in [CONDUCTOR_BORDER_INDEX, MEDIUM_OUTER_BORDER_INDEX]
+
+    is_a_fluid_region_array = [is_a_fluid_region(n_node) for n_node in range(N_nodes)]
+    is_a_wall_array = [is_a_wall(n_node) for n_node in range(N_nodes)]
+    
+    fluid_domain_nodes_indeces_array = list(filter(is_a_fluid_region, range(N_nodes)))
+
+    # PARAMS #
+    # ====== #
+    # Dynamics
+    Pr = kwargs.get("Pr", 700)
+    Ra = kwargs.get("Ra", 30000)
+    Ram = kwargs.get("Ram", 1)
+    chi0 = magnetics_result.GetParam("chi0")
+
+    # Temperature
+    Re_T = 1
+    Pr_T = 1 # ?
+    Vc_T = 1 
+
+    T_inner = 1
+    T_outer = 0
+
+    # Cycles
+    N_CYCLIES_MAX = kwargs.get("N_CYCLIES_MAX", 5555)
+    MAX_DELTA_ERROR = kwargs.get("MAX_DELTA_ERROR", 1e-5)
+
+    PRINT_LOG_EVERY_N_CYCLES = 20
+    PLOT_LOG_EVERY_N_CYCLES = 0
+
+    # Unused, wall velocity
+    Vx = 0 
+
+    # Relaxation
+    QPsi = kwargs.get("QPsi", 1.2)
+    QW = kwargs.get("QW", 0.05)
+    QT = kwargs.get("QT", 1.2)
+
+    # Arrays #
+    # ====== #
+    Psi = np.zeros(N_nodes)
+    W = np.zeros(N_nodes)
+    T = np.zeros(N_nodes)
+
+    H_nodes = magnetics_result.GetH_Nodes()
+    H_triangles = magnetics_result.GetH()
+
+    dHdx_triangles = np.zeros(N_trigs)
+    dHdy_triangles = np.zeros(N_trigs)
+
+    # Init
+    initial_conditions_result_name = kwargs.get("initials", "")
+    if initial_conditions_result_name:
+        prev_results = DynamycsAnalysis("SavedResults", initial_conditions_result_name)
+        Psi = np.array(prev_results.GetPsi())
+        W = np.array(prev_results.GetW())
+        T = np.array(prev_results.GetT())
+
+        QPsi = prev_results.GetParam("QPsi")
+        QW = prev_results.GetParam("QW")
+        QT = prev_results.GetParam("QT")
+    else:
+        for n_node in range(N_nodes):
+            if is_a_fluid_region_array[n_node]:
+                tag = segment_indices[n_node]
+                x, y = nodes[n_node]
+                r = sqrt(x*x+y*y)
+                r_local = (r-1.0)*np.pi
+
+                W[n_node] = np.random.rand(1)*0.01+0.01 
+                Psi[n_node] = 1*np.sin(r_local)*np.sin(r_local)
+                T[n_node] = T_inner + (T_outer-T_inner)*(r-1.0)
+
+                if tag == CONDUCTOR_BORDER_INDEX:
+                    Psi[n_node] = 0
+                    T[n_node] = T_inner
+                elif tag == MEDIUM_OUTER_BORDER_INDEX:
+                    Psi[n_node] = 0
+                    T[n_node] = T_outer
+            else:
+                Psi[n_node] = 0.0
+                W[n_node] = 0.0
+                T[n_node] = 0.0
+
+
+    for n_trig in range(N_trigs):
+        n0, n1, n2 = triangles[n_trig]
+
+        x0, y0 = nodes[n0]
+        x1, y1 = nodes[n1]
+        x2, y2 = nodes[n2]
+
+        x10, y01 = x1-x0, y0-y1
+        x21, y12 = x2-x1, y1-y2
+        x02, y20 = x0-x2, y2-y0
+
+        Delta = x10*y20-x02*y01
+
+        H0, H1, H2 = H_nodes[n0], H_nodes[n1], H_nodes[n2]
+
+        AH = (H0*y12 + H1*y20 + H2*y01)/Delta
+        BH = (H0*x21 + H1*x02 + H2*x10)/Delta
+        
+        dHdx_triangles[n_trig] = AH
+        dHdy_triangles[n_trig] = BH
+
+    normal_x = np.zeros(N_nodes)
+    normal_y = np.zeros(N_nodes)
+    for n_node in fluid_domain_nodes_indeces_array:
+        pass
+
+
+    Psi_new = np.array(Psi)
+    W_new = np.array(W)
+    T_new = np.array(T)
+
+    Psi_errors = np.zeros(N_nodes)
+    W_errors = np.zeros(N_nodes)
+    T_errors = np.zeros(N_nodes)
+
+
+    Saver.AddParams(mesh_name = mesh_name, Ra = Ra, Ram=Ram, magnetics_result_name = magnetics_result_name, chi0=chi0, Pr = Pr, QPsi = QPsi, QW = QW, QT = QT)
+
+    
+
 
 def main():
     ram_range = [1000, 5000, 20000, 30000, 40000, 50000, 60000, 70000, 80000]

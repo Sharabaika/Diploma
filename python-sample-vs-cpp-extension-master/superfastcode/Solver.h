@@ -18,7 +18,7 @@ void SolveFluid_Implementation(const Arr x, const Arr y, const JaggedArr triangl
 	Arr& Psi, Arr& W,
 	Arr& Delta_Psi, Arr& Delta_W);
 
-void Solve_Implementation(
+void SolveFast_Implementation(
 	const Arr& x, const Arr& y, const JaggedArr& triangles, const ArrInt& segment_indices, const JaggedArr& trig_neighbors, const JaggedArr& node_neighbours, const ArrInt& triangle_indeces,
 	const ArrInt& fluid_domain_nodes_indeces_array, const ArrInt& is_a_fluid_region_array, const ArrInt& is_a_wall_array,
 	const double Pr, const double Ra, const double Ram, const double chi0,
