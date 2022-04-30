@@ -48,7 +48,7 @@ PyObject* FluidSolver_Wrapper(PyObject* _, PyObject* args)
 
 PyObject* SolveFast_Wrapper(PyObject* _, PyObject* args)
 {
-	PyObject* x, * y, * triangles, * segment_indices, * trig_neighbours, * node_neighbours, *triangle_indeces;
+	PyObject* x, * y, * triangles, * segment_indices, * trig_neighbours;
 	PyObject* fluid_domain_nodes_indeces_array, * is_a_fluid_region_array, * is_a_wall_array;
 	PyObject* pr, * ra, * ram, * chi0;
 
@@ -62,8 +62,8 @@ PyObject* SolveFast_Wrapper(PyObject* _, PyObject* args)
 
 	PyObject* normal_x, * normal_y;
 
-	PyArg_UnpackTuple(args, "ref", 1, 27,
-		&x, &y, &triangles, &segment_indices, &trig_neighbours, &node_neighbours, &triangle_indeces,
+	PyArg_UnpackTuple(args, "ref", 1, 30,
+		&x, &y, &triangles, &segment_indices, &trig_neighbours,
 		&fluid_domain_nodes_indeces_array, &is_a_fluid_region_array, &is_a_wall_array,
 		&pr, &ra, &ram, &chi0,
 		&qPsi, &qW, &qT,
@@ -78,8 +78,6 @@ PyObject* SolveFast_Wrapper(PyObject* _, PyObject* args)
 	JaggedArr Triangles_arr = listListToVector_Int(triangles);
 	ArrInt Segments = listTupleToVector_Int(segment_indices);
 	JaggedArr Trig_neighbours = listListToVector_Int(trig_neighbours);
-	JaggedArr Node_neighbours = listListToVector_Int(node_neighbours);
-	ArrInt Triangle_indeces = listTupleToVector_Int(triangle_indeces);
 
 	ArrInt Fluid_domain_nodes_indeces_array = listTupleToVector_Int(fluid_domain_nodes_indeces_array);
 	ArrInt Is_a_fluid_region_array = listTupleToVector_Int(is_a_fluid_region_array);
@@ -108,15 +106,27 @@ PyObject* SolveFast_Wrapper(PyObject* _, PyObject* args)
 	Arr Normal_x = listTupleToVector_Double(normal_x);
 	Arr Normal_y = listTupleToVector_Double(normal_y);
 
-	SolveFast_Implementation(
-		X_arr, Y_arr, Triangles_arr, Segments, Trig_neighbours, Node_neighbours, triangle_indeces,
-		Re, Vx, QPsi, QW, Max_error, Max_cycles, PsiRes, WRes, Psi_Error, W_Error);
+	Arr Delta_Psi, Delta_W, Delta_T;
 
-	PyObject* res = PyTuple_New(4);
-	PyTuple_SetItem(res, 0, vectorToList_Double(PsiRes));
-	PyTuple_SetItem(res, 1, vectorToList_Double(WRes));
-	PyTuple_SetItem(res, 2, vectorToList_Double(Psi_Error));
-	PyTuple_SetItem(res, 3, vectorToList_Double(W_Error));
+	SolveFast_Implementation(
+		X_arr, Y_arr, Triangles_arr, Segments, Trig_neighbours,
+		Fluid_domain_nodes_indeces_array, Is_a_fluid_region_array, Is_a_wall_array,
+		Pr, Ra, Ram, Chi0,
+		QPsi, QW, QT,
+		Max_error, Max_cycles,
+		Psi, W, T,
+		H_triangles,
+		DHdx, DHdy,
+		Normal_x, Normal_y,
+		Delta_Psi, Delta_W, Delta_T);
+
+	PyObject* res = PyTuple_New(6);
+	PyTuple_SetItem(res, 0, vectorToList_Double(Psi));
+	PyTuple_SetItem(res, 1, vectorToList_Double(W));
+	PyTuple_SetItem(res, 2, vectorToList_Double(T));
+	PyTuple_SetItem(res, 3, vectorToList_Double(Delta_Psi));
+	PyTuple_SetItem(res, 4, vectorToList_Double(Delta_W));
+	PyTuple_SetItem(res, 5, vectorToList_Double(Delta_T));
 
 	return res;
 }

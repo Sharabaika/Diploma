@@ -629,22 +629,79 @@ def solve_fast(*args, **kwargs):
         dHdx_triangles[n_trig] = AH
         dHdy_triangles[n_trig] = BH
 
-    normal_x = np.zeros(N_nodes)
-    normal_y = np.zeros(N_nodes)
+    normal_x = [ 0.0 for _ in range(N_nodes)]
+    normal_y = [ 0.0 for _ in range(N_nodes)]
     for n_node in fluid_domain_nodes_indeces_array:
-        pass
 
+        if not is_a_wall_array[n_node]:
+            continue
+        
+        border_neighbours = []
+        for neighbour in node_neighbours[n_node]:
+            if is_a_wall_array[neighbour]:
+                border_neighbours.append(neighbour)
 
-    Psi_new = np.array(Psi)
-    W_new = np.array(W)
-    T_new = np.array(T)
+        l, r = border_neighbours
+        xl, yl = nodes[l]
+        xr, yr = nodes[r]
+        
+        fl = atan2(yl, xl)
+        fr = atan2(yr, xr)
 
-    Psi_errors = np.zeros(N_nodes)
-    W_errors = np.zeros(N_nodes)
-    T_errors = np.zeros(N_nodes)
+        if fl >= fr:
+            fl, fr = fr, fl
+            xl, yl, xr, yr = xr, yr, xl, yl
 
+        if fl*fr < 0 and abs(fr > 1):
+            fl, fr = fr, fl
+            xl, yl, xr, yr = xr, yr, xl, yl  
+
+        dx, dy = xr-xl, yr-yl
+        dr = sqrt(dx*dx + dy*dy)
+        dx, dy = dx/dr, dy/dr
+
+        normalX, normalY = dy, -dx
+
+        if segment_indices[n_node] == MEDIUM_OUTER_BORDER_INDEX:
+            normalX, normalY = -normalX, -normalY
+
+        normal_x[n_node] = normalX
+        normal_y[n_node] = normalY
 
     Saver.AddParams(mesh_name = mesh_name, Ra = Ra, Ram=Ram, magnetics_result_name = magnetics_result_name, chi0=chi0, Pr = Pr, QPsi = QPsi, QW = QW, QT = QT)
+
+    from superfastcode import SolveFast
+    res = SolveFast((
+        list(x), list(y), triangles, segment_indices, trig_neighbors,
+        fluid_domain_nodes_indeces_array, is_a_fluid_region_array, is_a_wall_array,
+        Pr, Ra, Ram, chi0,
+        QPsi, QW, QT,
+        MAX_DELTA_ERROR, N_CYCLIES_MAX,
+        list(Psi), list(W), list(T),
+        list(H_triangles), 
+        list(dHdx_triangles), list(dHdy_triangles),
+        list(normal_x), list(normal_y)
+        ))
+
+    Psi, W, T, Delta_Psi, Delta_W, Delta_T = res
+
+    Saver.SaveResults(result_name)
+    Saver.SaveResult(result_name, "nodes", W = W, Psi = Psi, T = T)
+    Saver.logger.LogErrorsList(Psi = Delta_Psi, W = Delta_W, T = Delta_T)
+
+    results = DynamycsAnalysis.MakeExplicit(Psi, W, T, nodes, triangles, segment_indices, trig_neighbors, node_neighbours, triangle_indeces)
+    plotter = DynamycsPlot(results)
+
+    plotter.PlotT()
+    SavePlot(f"{result_name}/T.png")
+
+    plotter.PlotPsi()
+    SavePlot(f"{result_name}/Psi.png")
+    
+    plotter.PlotW()
+    SavePlot(f"{result_name}/W.png")
+
+    print(f"=============================================================== COMPLETED ===== {result_name}")
 
     
 
