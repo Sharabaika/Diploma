@@ -160,8 +160,8 @@ def main():
     #plt.savefig("validation.png")
     #plt.show()
 
-    #ram_range = [1000, 5000, 20000, 30000, 40000, 50000, 60000, 70000, 80000]
-    ram_range = [5000, 20000, 30000, 40000, 50000, 60000, 70000, 80000]
+    #ram_range = [1000, 5000, 20000, 30000, 40000, 50000, 60000, 70000, 80000, 90000]
+    ram_range = [90000]
 
     mesh_name = "N120_n0_R1_dr0"
     for ram in ram_range:    
