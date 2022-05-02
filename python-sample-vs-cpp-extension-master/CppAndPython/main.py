@@ -144,14 +144,14 @@ def Nulselt(result_name):
 
 def PlotSavedMesh(name):
     nodes, triangles, segment_indices, trig_neighbors, node_neighbours, triangle_indeces = ReadSaved(f"SavedMeshes/{name}.dat")
-    PlotMesh(nodes, triangles, segment_indices, False, True, False)
+    PlotMesh(nodes, triangles, segment_indices, False, False, True)
     
-def PlotNuselt():
+def PlotNuselt(folder):
     mesh_name = "N120_n0_R1_dr0"
     nus0 = []
     ram0_range = np.array([1000, 5000, 20000, 30000, 40000, 50000, 60000, 70000, 80000])
     for ram in ram0_range:    
-       result_name = f"{mesh_name}/validation_final_cpp/ra_0_H_5_chi0_2_Pr_700_ram_{ram}"
+       result_name = f"{folder}_{ram}"
        nus0.append(Nulselt(result_name))
 
     from scipy.optimize import curve_fit
@@ -164,29 +164,46 @@ def PlotNuselt():
 
     popt, pcov = curve_fit(fit_funct, xdata, ydata)
 
-    plt.plot(xdata, fit_funct(xdata, *popt), 'r-',
+    x_fit = np.arange(1000, 100000, 1000)
+    plt.plot(x_fit, fit_funct(x_fit, *popt), 'r-',
          label='fit: mult=%5.3f, pow=%5.3f' % tuple(popt))
 
     plt.scatter(ram0_range, nus0, label="cpp")
 
-    plt.legend()
-    plt.show()
+
     #plt.show()
 
 def main():
-    ram_range = [70000, 80000, 90000]
+    # ram_range = [70000, 80000, 90000]
 
-    last_result = f"Computations/n0/n0_N100-500-500-100_Ram_{60000}"
-    mesh_name = "n0_N100-500-500-100"
-    mesh_name_full = "Computational/n0_N100-500-500-100"
-    for ram in ram_range:    
-        result_name = f"Computations/n0/n0_N100-500-500-100_Ram_{ram}"
-        result_name_save = f"SavedResults/{result_name}"
-        initials = last_result
-        solve_fast(Ra = 0, Ram = ram, mesh_name = mesh_name_full, result_name = result_name_save, initials = initials)
-        last_result = result_name
+    # last_result = f"Computations/n0/n0_N100-500-500-100_Ram_{60000}"
+    # mesh_name = "n0_N100-500-500-100"
+    # mesh_name_full = "Computational/n0_N100-500-500-100"
+    # for ram in ram_range:    
+    #     result_name = f"Computations/n0/n0_N100-500-500-100_Ram_{ram}"
+    #     result_name_save = f"SavedResults/{result_name}"
+    #     initials = last_result
+    #     solve_fast(Ra = 0, Ram = ram, mesh_name = mesh_name_full, result_name = result_name_save, initials = initials)
+    #     last_result = result_name
     
     # PlotSavedMesh("Computational/n0_N100-500-500-100")
+    # PlotNuselt(f"Computations/n0/n0_N100-500-500-100_Ram")
+    # PlotNuselt("N120_n0_R1_dr0/validation_final_cpp/ra_0_H_5_chi0_2_Pr_700_ram")
+    # plt.legend()
+    # plt.savefig("disaster")
+    # plt.show()
+
+    
+
+    # results = MagneticsAnalysis("SavedMagnetics", f"Computational/n0_N100-500-500-100/magnetics_H_5_chi0_2_mu_1000")
+    results = MagneticsAnalysis("SavedMagnetics", f"N120_n0_R1_dr0/magnetics_H_5_chi0_2_N120_n0_R1_dr0")
+
+    plotter = MagneticsPlot(results)
+    # plotter.PlotMu()
+    # ShowPlot()
+
+    plotter.PlotH()
+    ShowPlot()
 
 if __name__ == "__main__":
     # test()

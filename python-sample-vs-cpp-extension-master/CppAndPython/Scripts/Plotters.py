@@ -64,7 +64,7 @@ def PlotScatter(points, z, **kwargs):
 def PlotElements(triang, z, **kwargs):
     fig1, ax1 = plt.subplots()
     ax1.set_aspect('equal')
-    tpc = ax1.tripcolor(triang, z, shading='flat', **kwargs)
+    tpc = ax1.tripcolor(triang, z, shading='flat')
     
     ax1.set(
         xlim = kwargs.get("xlim", (-16, 16)),
@@ -142,17 +142,31 @@ class MagneticsPlot:
         triangulation = matplotlib.tri.Triangulation(self.x,self.y,triangles)
         self.triangulation = triangulation
 
-    def PlotFi(self, **kwargs):
-        PlotNodes(self.triangulation, self.analysis.GetFi(), **kwargs)
+        mask = [index != 2 for index in trianlge_indices]
+        tri = self.triangulation
+        tri.set_mask(mask)
+        self.inner_triangulation = tri
 
-    def PlotH(self, **kwargs):
-        PlotElements(self.triangulation, self.analysis.GetH(), **kwargs)
+    def PlotFi(self, b_inner_only = True, **kwargs):
+        if b_inner_only:
+            PlotNodes(self.inner_triangulation, self.analysis.GetFi(), **kwargs, xlim = (-2,2), ylim=(-2,2))
+        else:
+            PlotNodes(self.triangulation, self.analysis.GetFi(), **kwargs)
 
-    def PlotH_Nodes(self, **kwargs):
-        PlotNodes(self.triangulation, self.analysis.GetH_Nodes(), **kwargs)
+    def PlotH(self, b_inner_only = True, **kwargs):
+        if b_inner_only:
+            PlotElements(self.inner_triangulation, self.analysis.GetH(), **kwargs, xlim = (-2,2), ylim=(-2,2))
+        else:
+            PlotElements(self.triangulation, self.analysis.GetH(), **kwargs)
+
+    def PlotH_Nodes(self, b_inner_only = True, **kwargs):
+        if b_inner_only:
+            PlotNodes(self.inner_triangulation, self.analysis.GetH_Nodes(), **kwargs, xlim = (-2,2), ylim=(-2,2))
+        else:
+            PlotNodes(self.triangulation, self.analysis.GetH_Nodes(), **kwargs)
 
     def PlotMu(self, **kwargs):
-        PlotElements(self.triangulation, self.analysis.GetMu(), **kwargs)
+        PlotElements(self.inner_triangulation, self.analysis.GetMu(), **kwargs, xlim = (-2,2), ylim=(-2,2))
 
 
 class DynamycsPlot:
