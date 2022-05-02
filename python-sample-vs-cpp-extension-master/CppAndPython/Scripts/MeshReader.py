@@ -9,30 +9,46 @@ def ReadRaw(mesh, default_tags, *segment_files):
         x, y, z = np.asfarray(mesh.readline().split(), dtype = float)
         points[i] = x,y
 
+        if i % 1000 == 0:
+            print(f"{i:06d} points are red, {points_len-i:06d} remaining")
+
+    print("points are red")
+
+
     for  bordet_segment, segment_tags in segment_files:
         is_complete = False
         border_len = int(bordet_segment.readline())
 
+        print(f"starting segment {segment_tags}")
+
         while not is_complete:
-            for _ in range(border_len):
+            for n_node_ in range(border_len):
                 line = np.asfarray(bordet_segment.readline().split(), dtype = float)
                 if len(line) == 3:
                     x, y, z = line
                     for point_index in [i for i in range(points_len) if points[i][0]==x and points[i][1]==y]:
                         region_tags[point_index] = segment_tags
+
+                if i % 1000 == 0:
+                    print(f"{n_node_:06d} points with tag {segment_tags} are red, {n_node_-border_len:06d} remaining")
+                        
             
             last_line = bordet_segment.readline()
             if last_line:
                 border_len = int(last_line)
             else:
                 is_complete = True
-            
+
+    print("segments are red")        
 
     triangles = []
     triangles_len = int(mesh.readline())
     for i in range(triangles_len):
         a, b, c, _ = mesh.readline().split()
         triangles.append([int(a)-1, int(b)-1, int(c)-1])
+
+        if i % 1000 == 0:
+            print(f"{i:06d} triangles are red, {triangles_len-i:06d} remaining")
 
     trig_neighbours = [[] for _ in range(points_len)]
     node_neighbours = [[] for _ in range(points_len)]
@@ -48,6 +64,10 @@ def ReadRaw(mesh, default_tags, *segment_files):
         if point_index in node_neighbours[point_index]:
             node_neighbours[point_index].remove(point_index)
 
+        if i % 1000 == 0:
+            print(f"{point_index:06d} triangle neighbours are red, {point_index-points_len:06d} remaining")
+
+
 
     def most_common(lst):
         return max(set(lst), key=lst.count)
@@ -56,6 +76,10 @@ def ReadRaw(mesh, default_tags, *segment_files):
     triangle_indecies = [-1 for _ in range(N_triangles)]
     for n_triangle in range(N_triangles):
         indices = [region_tags[i] for i in triangles[n_triangle]]
+
+        if i % 1000 == 0:
+            print(f"{n_triangle:06d} triangle tags are red, {n_triangle-N_triangles:06d} remaining")
+
 
         bConductor = any([index == 0 for index in indices])
         if bConductor:

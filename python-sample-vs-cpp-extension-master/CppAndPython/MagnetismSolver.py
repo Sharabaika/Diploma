@@ -9,8 +9,8 @@ Saver = files.ResultSaving("Fi")
 
 # Mesh data #
 # ========= #
-mesh_name = f"N120_n0_R1_dr0"
-result_name = f"SavedMagnetics/{mesh_name}/magnetics_H_5_chi0_2_{mesh_name}"
+mesh_name = f"Computational/n0_N100-500-500-100"
+result_name = f"SavedMagnetics/{mesh_name}/magnetics_H_5_chi0_2_mu_1000"
 
 nodes, triangles, segment_indices, trig_neighbors, node_neighbours, trianlge_indices = ReadSaved(f"SavedMeshes/{mesh_name}.dat")
 
@@ -40,7 +40,7 @@ H0 = 5.0
 mu0 = 10000
 
 # Cycles
-N_CYCLIES_MAX = 5000
+N_CYCLIES_MAX = 1500
 MAX_DELTA_ERROR = 1e-5
 
 

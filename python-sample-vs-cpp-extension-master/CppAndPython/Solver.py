@@ -494,16 +494,13 @@ def solve_fast(*args, **kwargs):
     result_name =  kwargs.get("result_name", f"saved_result_fluid_and_magneticsV0_{mesh_name}")
 
     nodes, triangles, segment_indices, trig_neighbors, node_neighbours, triangle_indeces = ReadSaved(f"SavedMeshes/{mesh_name}.dat")
-    x = nodes[:,0]
-    y = nodes[:,1]
-    mask = [index != 2 for index in triangle_indeces]
-    triangulation = tri.Triangulation(x,y,triangles)
-    triangulation.set_mask(mask)
+    x_nodes = nodes[:,0]
+    y_nodes = nodes[:,1]
 
     N_nodes = len(nodes)
     N_trigs = len(triangles)
 
-    magnetics_result_name = f"{mesh_name}\magnetics_H_5_chi0_2_{mesh_name}"
+    magnetics_result_name = f"Computational/n0_N100-500-500-100/magnetics_H_5_chi0_2_mu_1000"
     magnetics_result = MagneticsAnalysis("SavedMagnetics", magnetics_result_name)
 
     magnetics_result_mesh_name = magnetics_result.GetMeshName()
@@ -547,7 +544,7 @@ def solve_fast(*args, **kwargs):
     T_outer = 0
 
     # Cycles
-    N_CYCLIES_MAX = kwargs.get("N_CYCLIES_MAX", 5555)
+    N_CYCLIES_MAX = kwargs.get("N_CYCLIES_MAX", 100000)
     MAX_DELTA_ERROR = kwargs.get("MAX_DELTA_ERROR", 1e-5)
 
     PRINT_LOG_EVERY_N_CYCLES = 20
@@ -557,9 +554,9 @@ def solve_fast(*args, **kwargs):
     Vx = 0 
 
     # Relaxation
-    QPsi = kwargs.get("QPsi", 1.2)
-    QW = kwargs.get("QW", 0.05)
-    QT = kwargs.get("QT", 1.2)
+    QPsi = kwargs.get("QPsi", 1.0)
+    QW = kwargs.get("QW", 0.025)
+    QT = kwargs.get("QT", 0.65)
 
     # Arrays #
     # ====== #
@@ -581,9 +578,9 @@ def solve_fast(*args, **kwargs):
         W = np.array(prev_results.GetW())
         T = np.array(prev_results.GetT())
 
-        QPsi = prev_results.GetParam("QPsi")
-        QW = prev_results.GetParam("QW")
-        QT = prev_results.GetParam("QT")
+        # QPsi = prev_results.GetParam("QPsi")
+        # QW = prev_results.GetParam("QW")
+        # QT = prev_results.GetParam("QT")
     else:
         for n_node in range(N_nodes):
             if is_a_fluid_region_array[n_node]:
@@ -592,8 +589,8 @@ def solve_fast(*args, **kwargs):
                 r = sqrt(x*x+y*y)
                 r_local = (r-1.0)*np.pi
 
-                W[n_node] = np.random.rand(1)*0.01+0.01 
-                Psi[n_node] = 1*np.sin(r_local)*np.sin(r_local)
+                W[n_node] = np.random.rand(1)*0.001+0.001 
+                Psi[n_node] = 0.1*np.sin(r_local)*np.sin(r_local)
                 T[n_node] = T_inner + (T_outer-T_inner)*(r-1.0)
 
                 if tag == CONDUCTOR_BORDER_INDEX:
@@ -672,7 +669,7 @@ def solve_fast(*args, **kwargs):
 
     from superfastcode import SolveFast
     res = SolveFast((
-        list(x), list(y), triangles, segment_indices, trig_neighbors,
+        list(x_nodes), list(y_nodes), triangles, segment_indices, trig_neighbors,
         fluid_domain_nodes_indeces_array, is_a_fluid_region_array, is_a_wall_array,
         Pr, Ra, Ram, chi0,
         QPsi, QW, QT,

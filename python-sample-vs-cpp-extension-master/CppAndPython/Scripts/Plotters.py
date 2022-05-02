@@ -12,7 +12,8 @@ def PlotMesh(points, triangles, segment_idex, index_nodes = False, scatted_nodes
     ax.set_aspect('equal')
     
     if scatted_nodes:
-        ax.scatter(x, y, s=100, c=segment_idex)     
+        colors = [c/5.0 for c in segment_idex]
+        ax.scatter(x, y, s=100, c=colors, cmap='hsv')     
 
     if index_nodes:
         for point_index in range(len(x)):
@@ -39,8 +40,8 @@ def PlotNodes(triangulation, Fi, **kwargs):
     cf = ax.tricontourf(triangulation, Fi)
     
     ax.set(
-        xlim = kwargs.get("xlim", (-10, 10)),
-        ylim = kwargs.get("ylim", (-10, 10))
+        xlim = kwargs.get("xlim", (-16, 16)),
+        ylim = kwargs.get("ylim", (-16, 16))
     )
 
     fig.colorbar(cf, ax=ax)
@@ -53,8 +54,8 @@ def PlotScatter(points, z, **kwargs):
     sc = ax.scatter(x, y, s=100, c=z) 
 
     ax.set(
-        xlim = kwargs.get("xlim", (-10, 10)),
-        ylim = kwargs.get("ylim", (-10, 10))
+        xlim = kwargs.get("xlim", (-16, 16)),
+        ylim = kwargs.get("ylim", (-16, 16))
     )
 
     plt.colorbar(sc)
@@ -66,8 +67,8 @@ def PlotElements(triang, z, **kwargs):
     tpc = ax1.tripcolor(triang, z, shading='flat', **kwargs)
     
     ax1.set(
-        xlim = kwargs.get("xlim", (-10, 10)),
-        ylim = kwargs.get("ylim", (-10, 10))
+        xlim = kwargs.get("xlim", (-16, 16)),
+        ylim = kwargs.get("ylim", (-16, 16))
     )    
     
     fig1.colorbar(tpc)
