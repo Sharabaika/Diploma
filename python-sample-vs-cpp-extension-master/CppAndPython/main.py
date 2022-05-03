@@ -175,26 +175,25 @@ def PlotNuselt(folder):
     #plt.show()
 
 def main():
-    # ram_range = [70000, 80000, 90000]
+    ram_range = [1000, 5000, 20000, 30000, 40000, 50000, 60000, 70000, 80000, 90000]
 
-    # last_result = f"Computations/n0/n0_N100-500-500-100_Ram_{60000}"
-    # mesh_name = "n0_N100-500-500-100"
-    # mesh_name_full = "Computational/n0_N100-500-500-100"
-    # for ram in ram_range:    
-    #     result_name = f"Computations/n0/n0_N100-500-500-100_Ram_{ram}"
-    #     result_name_save = f"SavedResults/{result_name}"
-    #     initials = last_result
-    #     solve_fast(Ra = 0, Ram = ram, mesh_name = mesh_name_full, result_name = result_name_save, initials = initials)
-    #     last_result = result_name
+    last_result = f"Computations/n0/n0_N100-500-500-100_Ram_{60000}"
+    mesh_name = "n0_N100-500-500-100"
+    mesh_name_full = "Computational/n0_N100-500-500-100"
+    for ram in ram_range:    
+        result_name = f"Computations/n0/n0_N100-500-500-100_Ram_{ram}"
+        result_name_save = f"SavedResults/{result_name}"
+        initials =  f"Computations/n0/n0_N100-500-500-100_Ram_{ram}"
+        solve_fast(Ra = 0, Ram = ram, mesh_name = mesh_name_full, result_name = result_name_save, initials = initials)
+        last_result = result_name
     
-    # PlotSavedMesh("Computational/n0_N100-500-500-100")
-    # PlotNuselt(f"Computations/n0/n0_N100-500-500-100_Ram")
-    # PlotNuselt("N120_n0_R1_dr0/validation_final_cpp/ra_0_H_5_chi0_2_Pr_700_ram")
-    # plt.legend()
-    # plt.savefig("disaster")
-    # plt.show()
+    PlotSavedMesh("Computational/n0_N100-500-500-100")
+    PlotNuselt(f"Computations/n0/n0_N100-500-500-100_Ram")
+    PlotNuselt("N120_n0_R1_dr0/validation_final_cpp/ra_0_H_5_chi0_2_Pr_700_ram")
+    plt.legend()
+    plt.savefig("disaster")
+    plt.show()
 
-    SolveMagnetics()
     
 
     # results = MagneticsAnalysis("SavedMagnetics", f"Computational/n0_N100-500-500-100/magnetics_H_5_chi0_2_mu_1000")
