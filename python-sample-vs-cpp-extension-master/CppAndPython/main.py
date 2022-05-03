@@ -2,6 +2,7 @@ from turtle import title
 from unittest import result
 import matplotlib
 import numpy as np
+from MagnetismSolver import SolveMagnetics
 from Scripts.MeshReader import ReadRaw, ReadSaved
 from Scripts.MeshWriter import SaveMesh
 import pandas as pd
@@ -193,17 +194,18 @@ def main():
     # plt.savefig("disaster")
     # plt.show()
 
+    SolveMagnetics()
     
 
     # results = MagneticsAnalysis("SavedMagnetics", f"Computational/n0_N100-500-500-100/magnetics_H_5_chi0_2_mu_1000")
-    results = MagneticsAnalysis("SavedMagnetics", f"N120_n0_R1_dr0/magnetics_H_5_chi0_2_N120_n0_R1_dr0")
+    # results = MagneticsAnalysis("SavedMagnetics", f"N120_n0_R1_dr0/magnetics_H_5_chi0_2_N120_n0_R1_dr0")
 
-    plotter = MagneticsPlot(results)
+    # plotter = MagneticsPlot(results)
     # plotter.PlotMu()
     # ShowPlot()
 
-    plotter.PlotH()
-    ShowPlot()
+    # plotter.PlotH()
+    # ShowPlot()
 
 if __name__ == "__main__":
     # test()

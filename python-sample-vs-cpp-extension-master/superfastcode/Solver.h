@@ -30,3 +30,12 @@ void SolveFast_Implementation(
 	const Arr& normal_x, const Arr& normal_y,
 	Arr& Delta_Psi, Arr& Delta_W, Arr& Delta_T
 );
+
+void SolveMagnetics_fast(
+	const Arr& x, const Arr& y, const JaggedArr& triangles, const ArrInt& segment_indices, const JaggedArr& trig_neighbors, const ArrInt& trianlge_indices,
+	const double chi0, const double H0, const double mu0,
+	const double QFi,
+	const double max_error, const int max_cycles,
+	Arr& H, Arr& Mu, Arr& Fi, Arr& H_nodes,
+	Arr& Delta_Fi
+);

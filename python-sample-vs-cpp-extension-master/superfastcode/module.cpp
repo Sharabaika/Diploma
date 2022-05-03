@@ -131,6 +131,63 @@ PyObject* SolveFast_Wrapper(PyObject* _, PyObject* args)
 	return res;
 }
 
+PyObject* SolveMagnetics_Wrapper(PyObject* _, PyObject* args)
+{
+	PyObject* x, * y, * triangles, * segment_indices, * trig_neighbours, * trianlge_indices;
+	PyObject* chi0, * h0, *mu0;
+	PyObject* qFi;
+	PyObject* max_error, * max_cycles;
+
+	PyObject* h, *mu, *fi;
+
+	PyArg_UnpackTuple(args, "ref", 2, 15,
+		&x, &y, &triangles, &segment_indices, &trig_neighbours, &trianlge_indices,
+		&chi0, &h0, &mu0,
+		&qFi,
+		&max_error, &max_cycles,
+		&h, &mu, &fi);
+
+	Arr X_arr = listTupleToVector_Double(x);
+	Arr Y_arr = listTupleToVector_Double(y);
+	JaggedArr Triangles_arr = listListToVector_Int(triangles);
+	ArrInt Segments = listTupleToVector_Int(segment_indices);
+	JaggedArr Trig_neighbours = listListToVector_Int(trig_neighbours);
+	ArrInt Trianlge_indices = listTupleToVector_Int(trianlge_indices);
+
+	double Chi0 = PyFloat_AsDouble(chi0);
+	double H0 = PyFloat_AsDouble(h0);
+	double Mu0 = PyFloat_AsDouble(mu0);
+
+	double QFi= PyFloat_AsDouble(qFi);
+
+	double Max_error = PyFloat_AsDouble(max_error);
+	int Max_cycles = PyFloat_AsDouble(max_cycles);
+
+	Arr H = listTupleToVector_Double(h);
+	Arr Mu = listTupleToVector_Double(mu);
+	Arr Fi = listTupleToVector_Double(fi);
+	Arr H_nodes;
+
+	Arr Delta_Fi;
+
+	SolveMagnetics_fast(
+		X_arr, Y_arr, Triangles_arr, Segments, Trig_neighbours, Trianlge_indices, 
+		Chi0, H0, Mu0,
+		QFi,
+		Max_error, Max_cycles,
+		H, Mu, Fi, H_nodes,
+		Delta_Fi
+	);
+
+	PyObject* res = PyTuple_New(5);
+	PyTuple_SetItem(res, 0, vectorToList_Double(Fi));
+	PyTuple_SetItem(res, 1, vectorToList_Double(H));
+	PyTuple_SetItem(res, 2, vectorToList_Double(H_nodes));
+	PyTuple_SetItem(res, 3, vectorToList_Double(Mu));
+	PyTuple_SetItem(res, 4, vectorToList_Double(Delta_Fi));
+
+	return res;
+}
 
 PyObject* test_fun_impl(PyObject*, PyObject* args) 
 {
@@ -156,6 +213,7 @@ static PyMethodDef superfastcode_methods[] = {
 	{ "test_fun", (PyCFunction)test_fun_impl, METH_O, nullptr},
 	{ "SolveFluids", (PyCFunction)FluidSolver_Wrapper, METH_O, nullptr},
 	{ "SolveFast", (PyCFunction)SolveFast_Wrapper, METH_O, nullptr},
+	{"SolveMagnetics_fast", (PyCFunction)SolveMagnetics_Wrapper, METH_O, nullptr},
 	// Terminate the array with an object containing nulls.
 	{ nullptr, nullptr, 0, nullptr }
 };

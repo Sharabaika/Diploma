@@ -435,7 +435,6 @@ void SolveFast_Implementation(const Arr& x, const Arr& y, const JaggedArr& trian
 
             for (const int& n_trig_neighbour : trig_neighbors[n_node])
             {
-
                 const ArrInt Triangle = triangles[n_trig_neighbour];
 
                 int n0 = n_node;
@@ -720,4 +719,194 @@ void SolveFast_Implementation(const Arr& x, const Arr& y, const JaggedArr& trian
 
         n_cycle++;
     }
+}
+
+void SolveMagnetics_fast(const Arr& x, const Arr& y, const JaggedArr& triangles, const ArrInt& segment_indices, const JaggedArr& trig_neighbors, const ArrInt& trianlge_indices, const double chi0, const double H0, const double mu0, const double QFi, const double max_error, const int max_cycles, Arr& H, Arr& Mu, Arr& Fi, Arr& H_nodes, Arr& Delta_Fi)
+{
+    const int N_NODES = x.size();
+    const int N_TRIANGLES = triangles.size();
+
+    Delta_Fi = Arr();
+
+    Arr Fi_new(N_NODES);
+    Arr H_new(N_TRIANGLES);
+    Arr Mu_new(N_TRIANGLES);
+    
+    H_nodes = Arr(N_NODES);
+
+    Arr Fi_err(N_NODES);
+    
+    double error = 2.0 * max_error;
+    int n_cycle = 0;
+    while (n_cycle < max_cycles && error >= max_error)
+    {
+        for (int n_node = 0; n_node < N_NODES; n_node++)
+        {
+            double a0F = 0.0;
+            double anbF = 0.0;
+
+
+            for (int n_trig_neighbour : trig_neighbors[n_node])
+            {
+                const ArrInt Triangle = triangles[n_trig_neighbour];
+
+                int n0 = Triangle[0];
+                int n1 = Triangle[1];
+                int n2 = Triangle[2];
+                if (n_node == n1)
+                {
+                    n0 = n_node;
+                    n1 = Triangle[2];
+                    n2 = Triangle[0];
+                }
+                else if (n_node == n2)
+                {
+                    n0 = n_node;
+                    n1 = Triangle[0];
+                    n2 = Triangle[1];
+                }
+
+                const double& x0 = x[n0]; const double& y0 = y[n0];
+                const double& x1 = x[n1]; const double& y1 = y[n1];
+                const double& x2 = x[n2]; const double& y2 = y[n2];
+
+                const double x10 = x1 - x0; const double y01 = y0 - y1;
+                const double x21 = x2 - x1; const double y12 = y1 - y2;
+                const double x02 = x0 - x2; const double y20 = y2 - y0;
+                const double Delta = x10 * y20 - x02 * y01;
+
+
+                // Fi //
+                // == //
+
+                a0F = a0F + Mu[n_trig_neighbour] * 0.5 / Delta * (y12 * y12 + x21 * x21);
+                anbF = anbF + Mu[n_trig_neighbour] * 0.5 / Delta * (Fi[n1] * (y12 * y20 + x21 * x02) + Fi[n2] * (y12 * y01 + x21 * x10));
+            }
+
+            const int segment_index = segment_indices[n_node];
+            const bool bInfinity = segment_index == 5;
+            if (!bInfinity) {
+                if (abs(a0F) > 0)
+                {
+                    Fi_new[n_node] = -anbF / a0F;
+                }
+            }
+            else
+            {
+                Fi_new[n_node] = H0 * y[n_node];
+            }
+
+            Fi_err[n_node] = Fi_new[n_node] - Fi[n_node];
+        }
+
+        for (int n_triangle = 0; n_triangle < N_TRIANGLES; n_triangle++)
+        {
+            const auto& Triangle = triangles[n_triangle];
+            int n0 = Triangle[0];
+            int n1 = Triangle[1];
+            int n2 = Triangle[2];
+
+            const double& x0 = x[n0]; const double& y0 = y[n0];
+            const double& x1 = x[n1]; const double& y1 = y[n1];
+            const double& x2 = x[n2]; const double& y2 = y[n2];
+
+            const double x10 = x1 - x0; const double y01 = y0 - y1;
+            const double x21 = x2 - x1; const double y12 = y1 - y2;
+            const double x02 = x0 - x2; const double y20 = y2 - y0;
+            const double Delta = x10 * y20 - x02 * y01;
+
+
+            const double DeltaA = Fi[n0] * y12 + Fi[n1] * y20 + Fi[n2] * y01;
+            const double DeltaB = Fi[n0] * x21 + Fi[n1] * x02 + Fi[n2] * x10;
+
+            // H //
+            // = //
+            const double Hx = DeltaA / Delta;
+            const double Hy = DeltaB / Delta;
+            H_new[n_triangle] = sqrt(Hx * Hx + Hy * Hy);
+
+
+            // Mu //
+            // == //
+            const int segment_index = trianlge_indices[n_triangle];
+            if (segment_index == 0)
+            {
+                Mu_new[n_triangle] = mu0;
+            }
+            else if (segment_index == 2)
+            {
+                Mu_new[n_triangle] = 1.0 + chi0 * H_new[n_triangle] / (1.0 + chi0 * H_new[n_triangle]);
+            }
+            else if (segment_index == 4)
+            {
+                Mu_new[n_triangle] = 1.0;
+            }
+        }
+
+        Mu = Mu_new;
+        H = H_new;
+
+        double numerator = 0.0;
+        double denomenator = 0.0;
+        for (int n_node = 0; n_node < N_NODES; n_node++)
+        {
+            numerator += Fi_err[n_node] * Fi_err[n_node];
+            denomenator += Fi[n_node] * Fi[n_node];
+
+            Fi[n_node] = Fi[n_node] * (1.0 - QFi) + Fi_new[n_node] * QFi;
+        }
+        error = sqrt(numerator / denomenator) / QFi;
+
+        if (n_cycle % 50 == 0)
+        {
+            printf("n cycle = %06i, dFi = %.5e \n", n_cycle, error);
+        }
+
+        Delta_Fi.push_back(error);
+        n_cycle++;
+    }
+
+
+    for (size_t n_node = 0; n_node < N_NODES; n_node++)
+    {
+        double numerator = 0.0;
+        double denomenator = 0.0;
+        for (int n_trig_neighbour : trig_neighbors[n_node])
+        {
+            const ArrInt Triangle = triangles[n_trig_neighbour];
+
+            int n0 = Triangle[0];
+            int n1 = Triangle[1];
+            int n2 = Triangle[2];
+            if (n_node == n1)
+            {
+                n1 = Triangle[2];
+                n2 = Triangle[0];
+            }
+            else if (n_node == n2)
+            {
+                n1 = Triangle[0];
+                n2 = Triangle[1];
+            }
+
+            const double& x0 = x[n0]; const double& y0 = y[n0];
+            const double& x1 = x[n1]; const double& y1 = y[n1];
+            const double& x2 = x[n2]; const double& y2 = y[n2];
+
+            const double Mx = (x1 + x2) * 0.5;
+            const double My = (y1 + y2) * 0.5;
+
+            const double dx = Mx - x0;
+            const double dy = My - y0;
+            const double mr = sqrt(dx * dx + dy * dy);
+            const double r = 2.0 * mr / 3.0;
+
+            numerator += H[n_trig_neighbour] / r;
+            denomenator += 1.0 / r;
+        }
+        
+        H_nodes[n_node] = numerator / denomenator;
+       
+    }
+
 }
