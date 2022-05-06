@@ -1,2 +1,2 @@
 ,mesh_name,Ra,Ram,magnetics_result_name,chi0,Pr,QPsi,QW,QT
-0,Computational/n0_N100-500-500-100,0,60000,Computational/n0_N100-500-500-100/magnetics_H_5_chi0_2_mu_1000,2.00000,700,1.00000,0.01000,0.65000
+0,Computational/n0_N100-500-500-100,0,60000,Computational/n0_N100-500-500-100/magnetics_H_5_chi0_2_mu_1000,2.00000,700,1.00000,0.05000,0.65000

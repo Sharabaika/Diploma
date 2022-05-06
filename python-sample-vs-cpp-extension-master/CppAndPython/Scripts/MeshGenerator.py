@@ -15,13 +15,14 @@ def GenerateCurvyMesh(N, n, R, dr):
 def main():
     import matplotlib.pyplot as plt
     
-    points = GenerateCurvyMesh(120, 0, 1, 0.3)
+    points = GenerateCurvyMesh(500, 2, 1, 0.3)
 
     x,y = points[:,0], points[:,1]
 
     fig, ax = plt.subplots()
     ax.set_aspect('equal')
 
+    
     plt.scatter(x, y)
     plt.show()
 

@@ -555,7 +555,7 @@ def solve_fast(*args, **kwargs):
 
     # Relaxation
     QPsi = kwargs.get("QPsi", 1.0)
-    QW = kwargs.get("QW", 0.025)
+    QW = kwargs.get("QW", 0.0025)
     QT = kwargs.get("QT", 0.65)
 
     # Arrays #
@@ -578,9 +578,9 @@ def solve_fast(*args, **kwargs):
         W = np.array(prev_results.GetW())
         T = np.array(prev_results.GetT())
 
-        QPsi = prev_results.GetParam("QPsi")
-        QW = prev_results.GetParam("QW")
-        QT = prev_results.GetParam("QT")
+        # QPsi = prev_results.GetParam("QPsi")
+        # QW = prev_results.GetParam("QW")
+        # QT = prev_results.GetParam("QT")
     else:
         for n_node in range(N_nodes):
             if is_a_fluid_region_array[n_node]:
