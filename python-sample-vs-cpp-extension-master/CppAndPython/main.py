@@ -146,7 +146,7 @@ def Nulselt(result_name):
 
 def PlotSavedMesh(name):
     nodes, triangles, segment_indices, trig_neighbors, node_neighbours, triangle_indeces = ReadSaved(f"SavedMeshes/{name}.dat")
-    PlotMesh(nodes, triangles, segment_indices, False, True, False)
+    PlotMesh(nodes, triangles, segment_indices, False, False, True)
     
 def PlotNuselt(folder):
     mesh_name = "N120_n0_R1_dr0"
@@ -177,8 +177,8 @@ def PlotNuselt(folder):
 
 def main():
     ram_range = ParamsSettings.ram_range
-    mesh_name_full = MeshNames.n_2_dr_03_r
-    last_result = ResultName.MakeName(mesh_name_full, 5000)
+    mesh_name_full = MeshNames.n_3_dr_03
+    last_result = ""
     for ram in ram_range:    
         result_name = ResultName.MakeName(mesh_name_full, ram)
         initials =  last_result
@@ -186,8 +186,8 @@ def main():
         last_result = result_name
     
 
-    # SaveRawMesh("n2/N100-500-500-100_rotated", MeshNames.n_2_dr_03_r)
-    # PlotSavedMesh(MeshNames.n_2_dr_03_r)
+    # SaveRawMesh("n3/n3_50-250-250-50", MeshNames.n_3_dr_03)
+    # PlotSavedMesh(MeshNames.n_3_dr_03)
     # PlotNuselt(f"Computations/n0/n0_N100-500-500-100_Ram")
     # PlotNuselt("N120_n0_R1_dr0/validation_final_cpp/ra_0_H_5_chi0_2_Pr_700_ram")
     # plt.legend()

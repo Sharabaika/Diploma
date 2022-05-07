@@ -685,9 +685,9 @@ def solve_fast(*args, **kwargs):
     Psi, W, T, Delta_Psi, Delta_W, Delta_T = res
 
     result_name = f"SavedResults/{result_name}"
+    Saver.logger.LogErrorsList(Psi = Delta_Psi, W = Delta_W, T = Delta_T)
     Saver.SaveResults(result_name)
     Saver.SaveResult(result_name, "nodes", W = W, Psi = Psi, T = T)
-    Saver.logger.LogErrorsList(Psi = Delta_Psi, W = Delta_W, T = Delta_T)
 
     results = DynamycsAnalysis.MakeExplicit(Psi, W, T, nodes, triangles, segment_indices, trig_neighbors, node_neighbours, triangle_indeces)
     plotter = DynamycsPlot(results)

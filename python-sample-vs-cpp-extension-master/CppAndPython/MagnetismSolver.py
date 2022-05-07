@@ -226,7 +226,7 @@ def SolveMagnetics(**kwargs):
 
     # Mesh data #
     # ========= #
-    mesh_name = MeshNames.n_2_dr_03_r
+    mesh_name = MeshNames.n_3_dr_03
     result_name = f"SavedMagnetics/{MagneticsResultName.MakeName(mesh_name)}"
 
     nodes, triangles, segment_indices, trig_neighbors, node_neighbours, trianlge_indices = ReadSaved(f"SavedMeshes/{mesh_name}.dat")
@@ -259,8 +259,8 @@ def SolveMagnetics(**kwargs):
     mu0 = 10000
 
     # Cycles
-    N_CYCLIES_MAX = 10000
-    MAX_DELTA_ERROR = 1e-7
+    N_CYCLIES_MAX = 100000
+    MAX_DELTA_ERROR = 1e-6
 
 
     Saver.AddParams(mesh_name = mesh_name, chi0 = chi0, H0 = H0, mu0 = mu0, QF = QF)
@@ -274,7 +274,6 @@ def SolveMagnetics(**kwargs):
     H_nodes = np.zeros(N_nodes)
 
     # Init
-    initial_conditions_result_name = "Computational/n0_N100-500-500-100/magnetics_H_5_chi0_2_mu_1000_V5"
     initial_conditions_result_name = ""
     if initial_conditions_result_name:
         prev_results = MagneticsAnalysis("SavedMagnetics", initial_conditions_result_name)
@@ -305,10 +304,10 @@ def SolveMagnetics(**kwargs):
 
     Fi, H, H_nodes, Mu, Delta_Fi = res
 
+    Saver.logger.LogErrorsList(Fi = Delta_Fi)
     Saver.SaveResults(result_name)
     Saver.SaveResult(result_name, "triangles",  H = H, Mu = Mu)
     Saver.SaveResult( result_name, "nodes", Fi = Fi, H_nodes = H_nodes)
-    Saver.logger.LogErrorsList(Fi = Delta_Fi)
 
     results = MagneticsAnalysis.MakeExplicit(H, H_nodes, Fi, Mu, nodes, triangles, segment_indices, trig_neighbors, node_neighbours, trianlge_indices)
     plotter = plt.MagneticsPlot(results)

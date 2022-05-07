@@ -6,6 +6,7 @@ class MeshNames:
     n0 = "Computational/n0_N100-500-500-100"
     n_2_dr_03 = "Computational/n_2_dr_0.3"
     n_2_dr_03_r = "Computational/n_2_dr_0.3_r"
+    n_3_dr_03 = "Computational/n_3_dr_0.3"
 
 class ResultName:
     def MakeName(mesh_name, ram):
