@@ -57,6 +57,7 @@ def Solve(**kwargs):
 
     # Init
     initial_conditions_result_name = "Computational/n0_N100-500-500-100/magnetics_H_5_chi0_2_mu_1000_V4"
+    initial_conditions_result_name = ""
     if initial_conditions_result_name:
         prev_results = MagneticsAnalysis("SavedMagnetics", initial_conditions_result_name)
         H = np.array(prev_results.GetH())
@@ -224,7 +225,7 @@ def SolveMagnetics(**kwargs):
 
     # Mesh data #
     # ========= #
-    mesh_name = f"Computational/n0_N100-500-500-100"
+    mesh_name = f"Computational/n_2_dr_0.3"
     result_name = f"SavedMagnetics/{mesh_name}/magnetics_H_5_chi0_2_mu_1000"
 
     nodes, triangles, segment_indices, trig_neighbors, node_neighbours, trianlge_indices = ReadSaved(f"SavedMeshes/{mesh_name}.dat")
@@ -273,6 +274,7 @@ def SolveMagnetics(**kwargs):
 
     # Init
     initial_conditions_result_name = "Computational/n0_N100-500-500-100/magnetics_H_5_chi0_2_mu_1000_V5"
+    initial_conditions_result_name = ""
     if initial_conditions_result_name:
         prev_results = MagneticsAnalysis("SavedMagnetics", initial_conditions_result_name)
         H = np.array(prev_results.GetH())

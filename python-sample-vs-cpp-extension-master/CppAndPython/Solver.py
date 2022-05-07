@@ -8,6 +8,8 @@ from Scripts.ResultAnalysis import DynamycsAnalysis, MagneticsAnalysis, ResultAn
 import Scripts.ResultFileHandling as files
 import matplotlib as matplot
 
+from Scripts.settings import ResultName
+
 ONE_THIRD = 1.0 / 3.0
 ELEVEN_OVER_108 = 11.0 / 108.0
 
@@ -500,7 +502,7 @@ def solve_fast(*args, **kwargs):
     N_nodes = len(nodes)
     N_trigs = len(triangles)
 
-    magnetics_result_name = f"Computational/n0_N100-500-500-100/magnetics_H_5_chi0_2_mu_1000"
+    magnetics_result_name = f"Computational/n_2_dr_0.3/magnetics_H_5_chi0_2_mu_1000"
     magnetics_result = MagneticsAnalysis("SavedMagnetics", magnetics_result_name)
 
     magnetics_result_mesh_name = magnetics_result.GetMeshName()
@@ -555,7 +557,7 @@ def solve_fast(*args, **kwargs):
 
     # Relaxation
     QPsi = kwargs.get("QPsi", 1.0)
-    QW = kwargs.get("QW", 0.0025)
+    QW = kwargs.get("QW", 0.05)
     QT = kwargs.get("QT", 0.65)
 
     # Arrays #
@@ -682,6 +684,7 @@ def solve_fast(*args, **kwargs):
 
     Psi, W, T, Delta_Psi, Delta_W, Delta_T = res
 
+    result_name = f"SavedResults/{result_name}"
     Saver.SaveResults(result_name)
     Saver.SaveResult(result_name, "nodes", W = W, Psi = Psi, T = T)
     Saver.logger.LogErrorsList(Psi = Delta_Psi, W = Delta_W, T = Delta_T)
@@ -704,7 +707,8 @@ def solve_fast(*args, **kwargs):
 
 
 def main():
-    ram_range = [1000, 5000, 20000, 30000, 40000, 50000, 60000, 70000, 80000]
+    # ram_range = [1000, 5000, 20000, 30000, 40000, 50000, 60000, 70000, 80000]
+    ram_range = [10000]
     last_ram = 70000
 
     mesh_name = "N120_n0_R1_dr0"
