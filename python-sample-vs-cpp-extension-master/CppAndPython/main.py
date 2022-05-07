@@ -9,7 +9,7 @@ import pandas as pd
 import matplotlib.tri as tri
 import sys
 from Scripts.Plotters import MagneticsPlot, PlotMesh, SavePlot, ShowPlot
-from Scripts.ResultAnalysis import DynamycsAnalysis, MagneticsAnalysis
+from Scripts.ResultAnalysis import DynamycsAnalysis, MagneticsAnalysis, NuseltTable
 from math import atan2, exp, sqrt
 import matplotlib.pyplot as plt
 
@@ -148,46 +148,51 @@ def PlotSavedMesh(name):
     nodes, triangles, segment_indices, trig_neighbors, node_neighbours, triangle_indeces = ReadSaved(f"SavedMeshes/{name}.dat")
     PlotMesh(nodes, triangles, segment_indices, False, False, True)
     
-def PlotNuselt(folder):
-    mesh_name = "N120_n0_R1_dr0"
-    nus0 = []
-    ram0_range = np.array([1000, 5000, 20000, 30000, 40000, 50000, 60000, 70000, 80000, 90000, 200000, 300000])
-    for ram in ram0_range:    
-       result_name = f"{folder}_{ram}"
-       nus0.append(Nulselt(result_name))
-
-    from scipy.optimize import curve_fit
-
+def PlotNuselt():
     def fit_funct(x, mult_coef, exp_coef):
         return mult_coef*x**exp_coef
+        
+    ram_range = ParamsSettings.ram_range
+    x_fit = np.arange(1000, 100000, 1000)
+    xdata = ram_range
 
-    xdata = ram0_range
-    ydata = np.array(nus0)
+    for mesh in MeshNames.mesh_list:
+        nus = []
+        for ram in ram_range:    
+            result_name = ResultName.MakeName(mesh, ram)
+            nus.append(Nulselt(result_name))
+        
+        ydata = np.array(nus)
 
-    popt, pcov = curve_fit(fit_funct, xdata, ydata)
+        from scipy.optimize import curve_fit
+        popt, pcov = curve_fit(fit_funct, xdata, ydata)
 
-    x_fit = np.arange(1000, 300000, 1000)
-    plt.plot(x_fit, fit_funct(x_fit, *popt), 'r-',
-         label='fit: mult=%5.3f, pow=%5.3f' % tuple(popt))
+        plt.plot(x_fit, fit_funct(x_fit, *popt),
+            label=f"{MeshNames.GetShortName(mesh)}: mult=%5.3f, pow=%5.3f" % tuple(popt))
 
-    plt.scatter(ram0_range, nus0, label="cpp")
+        plt.scatter(ram_range, nus)
     plt.legend()
 
-    #plt.show()
+    plt.show()
 
 def main():
-    ram_range = ParamsSettings.ram_range
-    mesh_name_full = MeshNames.n_3_dr_03
-    last_result = ""
-    for ram in ram_range:    
-        result_name = ResultName.MakeName(mesh_name_full, ram)
-        initials =  last_result
-        solve_fast(Ra = 0, Ram = ram, mesh_name = mesh_name_full, result_name = result_name, initials = initials)
-        last_result = result_name
-    
+    # ram_range = ParamsSettings.ram_range
+    # mesh_name_full = MeshNames.n_3_dr_03_r
+    # last_result = ""
+    # for ram in ram_range:    
+    #     result_name = ResultName.MakeName(mesh_name_full, ram)
+    #     initials =  last_result
+    #     solve_fast(Ra = 0, Ram = ram, mesh_name = mesh_name_full, result_name = result_name, initials = initials)
+    #     last_result = result_name
+    # PlotNuselt()
 
-    # SaveRawMesh("n3/n3_50-250-250-50", MeshNames.n_3_dr_03)
-    # PlotSavedMesh(MeshNames.n_3_dr_03)
+    table = NuseltTable.LoadFromCSV()
+    for mesh in MeshNames.mesh_list:
+        for ram in ParamsSettings.ram_range:    
+            nus = table.GetNuselt(ResultName.MakeName(mesh, ram))
+
+    # SaveRawMesh("n3/n3_50-250-250-50_r", MeshNames.n_3_dr_03_r)
+    # PlotSavedMesh(MeshNames.n_3_dr_03_r)
     # PlotNuselt(f"Computations/n0/n0_N100-500-500-100_Ram")
     # PlotNuselt("N120_n0_R1_dr0/validation_final_cpp/ra_0_H_5_chi0_2_Pr_700_ram")
     # plt.legend()

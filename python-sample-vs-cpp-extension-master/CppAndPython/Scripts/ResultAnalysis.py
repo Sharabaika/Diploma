@@ -1,3 +1,4 @@
+from cmath import nan
 from math import atan2
 import os
 import matplotlib.pyplot as plt
@@ -6,6 +7,7 @@ import numpy as np
 import pandas as pd
 
 from Scripts.MeshReader import ReadSaved
+from Scripts.settings import MeshNames
 
 
 class ResultAnalysis:
@@ -225,14 +227,52 @@ class DynamycsAnalysis(ResultAnalysis):
         return integral
                 
 
-            
+class NuseltTable:
+    path_to_table = "Nus.csv"
+    result_name_literal = "result_name"
+    nuselt_result_literal = "nu"
+    # index | result_name | nu
+    # 0     | "aboa"      | 40
+
+
+    def __init__(self, table, path) -> None:
+        self.table = table
+        self.path = path
+    
+    def LoadFromCSV(table_path = path_to_table):
+        table = pd.read_csv(table_path)
+        return NuseltTable(table, table_path)
+
+    def SaveToCSV(self):
+        self.table.to_csv(self.path, index=False)
+
+    def GetNuselt(self, result_name, b_calculate_if_missing = True, b_resafe = True):
+        results = self.table.loc[self.table[NuseltTable.result_name_literal] == result_name]
+        lres = len(results)
+        if lres > 0:
+            if lres > 1:
+                print(f"more than 1 result for {result_name}")
+            return results.iloc[0][NuseltTable.nuselt_result_literal]
+
+        if b_calculate_if_missing:
+            nuselt = DynamycsAnalysis("SavedResults", result_name).CalculateNulselt()
+            df = pd.DataFrame({
+                NuseltTable.result_name_literal : [result_name],
+                NuseltTable.nuselt_result_literal : [nuselt]
+            })
+
+            self.table = pd.concat([self.table, df])
+
+            if b_resafe:
+                self.SaveToCSV()
+
+            return nuselt
+
+        return np.NaN
 
 
         
+        
+            
 
-def main():
-    pass
-
-if __name__ == "__main__":
-    main()
 

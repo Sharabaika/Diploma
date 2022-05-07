@@ -7,6 +7,15 @@ class MeshNames:
     n_2_dr_03 = "Computational/n_2_dr_0.3"
     n_2_dr_03_r = "Computational/n_2_dr_0.3_r"
     n_3_dr_03 = "Computational/n_3_dr_0.3"
+    n_3_dr_03_r = "Computational/n_3_dr_0.3_r"
+
+    mesh_list = [n0, n_2_dr_03, n_2_dr_03_r, n_3_dr_03]
+    
+    def GetShortName(mesh):
+        prefix = "Computational/"
+        if mesh.startswith(prefix):
+            return mesh[len(prefix):]
+        return mesh
 
 class ResultName:
     def MakeName(mesh_name, ram):
