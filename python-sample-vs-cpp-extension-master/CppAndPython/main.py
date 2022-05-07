@@ -14,7 +14,7 @@ from math import atan2, exp, sqrt
 import matplotlib.pyplot as plt
 
 from Scripts.ResultFileHandling import ResultSaving
-from Scripts.settings import MeshNames, ParamsSettings
+from Scripts.settings import MeshNames, ParamsSettings, ResultName
 from Solver import solve_fast
 
 
@@ -146,7 +146,7 @@ def Nulselt(result_name):
 
 def PlotSavedMesh(name):
     nodes, triangles, segment_indices, trig_neighbors, node_neighbours, triangle_indeces = ReadSaved(f"SavedMeshes/{name}.dat")
-    PlotMesh(nodes, triangles, segment_indices, False, False, False)
+    PlotMesh(nodes, triangles, segment_indices, False, True, False)
     
 def PlotNuselt(folder):
     mesh_name = "N120_n0_R1_dr0"
@@ -176,39 +176,23 @@ def PlotNuselt(folder):
     #plt.show()
 
 def main():
-    # ram_range = [1000, 5000, 20000, 30000, 40000, 50000, 60000, 70000, 80000, 90000]
-    # ram_range = [100000]
-    # last_result = f"Computations/n2/n2_dr_0.3_Ram_{90000}"
-    # mesh_name = "n0_N100-500-500-100"
-    # mesh_name_full = "Computational/n_2_dr_0.3"
-    # for ram in ram_range:    
-    #     result_name = f"Computations/n2/n2_dr_0.3_Ram_{ram}"
-    #     result_name_save = f"SavedResults/{result_name}"
-    #     initials =  last_result
-    #     solve_fast(Ra = 0, Ram = ram, mesh_name = mesh_name_full, result_name = result_name_save, initials = initials)
-    #     last_result = result_name
-
     ram_range = ParamsSettings.ram_range
-    ram_range = [10000]
-    mesh_name_full = MeshNames.n0
-    
-    last_result = f"Computations/n2/n2_dr_0.3_Ram_{90000}"
+    mesh_name_full = MeshNames.n_2_dr_03_r
+    last_result = ResultName.MakeName(mesh_name_full, 5000)
     for ram in ram_range:    
-        result_name = f"Computations/n2/n2_dr_0.3_Ram_{ram}"
-        result_name_save = f"SavedResults/{result_name}"
+        result_name = ResultName.MakeName(mesh_name_full, ram)
         initials =  last_result
-        solve_fast(Ra = 0, Ram = ram, mesh_name = mesh_name_full, result_name = result_name_save, initials = initials)
+        solve_fast(Ra = 0, Ram = ram, mesh_name = mesh_name_full, result_name = result_name, initials = initials)
         last_result = result_name
     
-    # PlotNuselt("Computations/n0/n0_N100-500-500-100_Ram")
-    # SavePlot("nuselt plz")
 
-    # PlotSavedMesh("Computational/n_2_dr_0.3")
-    #PlotNuselt(f"Computations/n0/n0_N100-500-500-100_Ram")
-    #PlotNuselt("N120_n0_R1_dr0/validation_final_cpp/ra_0_H_5_chi0_2_Pr_700_ram")
-    #plt.legend()
-    #plt.savefig("disaster")
-    #plt.show()
+    # SaveRawMesh("n2/N100-500-500-100_rotated", MeshNames.n_2_dr_03_r)
+    # PlotSavedMesh(MeshNames.n_2_dr_03_r)
+    # PlotNuselt(f"Computations/n0/n0_N100-500-500-100_Ram")
+    # PlotNuselt("N120_n0_R1_dr0/validation_final_cpp/ra_0_H_5_chi0_2_Pr_700_ram")
+    # plt.legend()
+    # plt.savefig("disaster")
+    # plt.show()
 
     
 

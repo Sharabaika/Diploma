@@ -5,7 +5,7 @@
     <ProjectGuid>2b5c8505-3d84-4e5d-9a30-42d81be799d5</ProjectGuid>
     <ProjectHome>
     </ProjectHome>
-    <StartupFile>main.py</StartupFile>
+    <StartupFile>MagnetismSolver.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>

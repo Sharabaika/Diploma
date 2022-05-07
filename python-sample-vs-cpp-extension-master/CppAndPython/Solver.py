@@ -8,7 +8,7 @@ from Scripts.ResultAnalysis import DynamycsAnalysis, MagneticsAnalysis, ResultAn
 import Scripts.ResultFileHandling as files
 import matplotlib as matplot
 
-from Scripts.settings import ResultName
+from Scripts.settings import MagneticsResultName, ResultName
 
 ONE_THIRD = 1.0 / 3.0
 ELEVEN_OVER_108 = 11.0 / 108.0
@@ -502,7 +502,7 @@ def solve_fast(*args, **kwargs):
     N_nodes = len(nodes)
     N_trigs = len(triangles)
 
-    magnetics_result_name = f"Computational/n_2_dr_0.3/magnetics_H_5_chi0_2_mu_1000"
+    magnetics_result_name = MagneticsResultName.MakeName(mesh_name)
     magnetics_result = MagneticsAnalysis("SavedMagnetics", magnetics_result_name)
 
     magnetics_result_mesh_name = magnetics_result.GetMeshName()

@@ -4,14 +4,15 @@ import Scripts.Plotters as plt
 from math import sqrt
 from Scripts.ResultAnalysis import MagneticsAnalysis, ResultAnalysis
 import Scripts.ResultFileHandling as files
+from Scripts.settings import MagneticsResultName, MeshNames
 
 def Solve(**kwargs):
     Saver = files.ResultSaving("Fi")
 
     # Mesh data #
     # ========= #
-    mesh_name = f"Computational/n0_N100-500-500-100"
-    result_name = f"SavedMagnetics/{mesh_name}/magnetics_H_5_chi0_2_mu_1000_V5"
+    mesh_name = MeshNames.n_2_dr_03_r
+    result_name = f"SavedMagnetics/{MagneticsResultName.MakeName(mesh_name)}"
 
     nodes, triangles, segment_indices, trig_neighbors, node_neighbours, trianlge_indices = ReadSaved(f"SavedMeshes/{mesh_name}.dat")
 
@@ -225,8 +226,8 @@ def SolveMagnetics(**kwargs):
 
     # Mesh data #
     # ========= #
-    mesh_name = f"Computational/n_2_dr_0.3"
-    result_name = f"SavedMagnetics/{mesh_name}/magnetics_H_5_chi0_2_mu_1000"
+    mesh_name = MeshNames.n_2_dr_03_r
+    result_name = f"SavedMagnetics/{MagneticsResultName.MakeName(mesh_name)}"
 
     nodes, triangles, segment_indices, trig_neighbors, node_neighbours, trianlge_indices = ReadSaved(f"SavedMeshes/{mesh_name}.dat")
     x_nodes = nodes[:,0]
