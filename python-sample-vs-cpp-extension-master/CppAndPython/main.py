@@ -152,28 +152,32 @@ def PlotNuselt():
     def fit_funct(x, mult_coef, exp_coef):
         return mult_coef*x**exp_coef
         
+    w, h = matplotlib.rcParams["figure.figsize"] 
+    fig, ax = plt.subplots(figsize=(w*2.5, h))
+
     ram_range = ParamsSettings.ram_range
-    x_fit = np.arange(1000, 100000, 1000)
+    x_fit = np.arange(100, 110000, 1000)
     xdata = ram_range
+
+    table = NuseltTable.LoadFromCSV()
 
     for mesh in MeshNames.mesh_list:
         nus = []
         for ram in ram_range:    
-            result_name = ResultName.MakeName(mesh, ram)
-            nus.append(Nulselt(result_name))
-        
+            nu = table.GetNuselt(ResultName.MakeName(mesh, ram))
+            nus.append(nu)
         ydata = np.array(nus)
 
         from scipy.optimize import curve_fit
         popt, pcov = curve_fit(fit_funct, xdata, ydata)
 
-        plt.plot(x_fit, fit_funct(x_fit, *popt),
-            label=f"{MeshNames.GetShortName(mesh)}: mult=%5.3f, pow=%5.3f" % tuple(popt))
+        ax.plot(x_fit, fit_funct(x_fit, *popt),
+            label=f"{MeshNames.GetShortName(mesh)}: mult=%5.4f, pow=%5.4f" % tuple(popt))
 
-        plt.scatter(ram_range, nus)
-    plt.legend()
-
-    plt.show()
+        ax.scatter(ram_range, nus)
+    ax.legend()
+    fig.savefig("nus_plot.png", dpi = 1000)
+    fig.show()
 
 def main():
     # ram_range = ParamsSettings.ram_range
@@ -186,10 +190,7 @@ def main():
     #     last_result = result_name
     # PlotNuselt()
 
-    table = NuseltTable.LoadFromCSV()
-    for mesh in MeshNames.mesh_list:
-        for ram in ParamsSettings.ram_range:    
-            nus = table.GetNuselt(ResultName.MakeName(mesh, ram))
+    PlotNuselt()    
 
     # SaveRawMesh("n3/n3_50-250-250-50_r", MeshNames.n_3_dr_03_r)
     # PlotSavedMesh(MeshNames.n_3_dr_03_r)

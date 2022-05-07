@@ -230,9 +230,10 @@ class DynamycsAnalysis(ResultAnalysis):
 class NuseltTable:
     path_to_table = "Nus.csv"
     result_name_literal = "result_name"
+    mesh_name_literal = "mesh_name"
     nuselt_result_literal = "nu"
-    # index | result_name | nu
-    # 0     | "aboa"      | 40
+    # index | result_name | mesh_name |nu
+    # 0     | "aboa"      | "n0"      |40
 
 
     def __init__(self, table, path) -> None:
@@ -255,9 +256,11 @@ class NuseltTable:
             return results.iloc[0][NuseltTable.nuselt_result_literal]
 
         if b_calculate_if_missing:
-            nuselt = DynamycsAnalysis("SavedResults", result_name).CalculateNulselt()
+            analysis = DynamycsAnalysis("SavedResults", result_name) 
+            nuselt = analysis.CalculateNulselt()
             df = pd.DataFrame({
                 NuseltTable.result_name_literal : [result_name],
+                NuseltTable.mesh_name_literal : [analysis.GetMeshName()],
                 NuseltTable.nuselt_result_literal : [nuselt]
             })
 
@@ -270,8 +273,25 @@ class NuseltTable:
 
         return np.NaN
 
+class NuseltFitTable:
+    path_to_table = "Nus_fit.csv"
+    mesh_name_literal = "mesh_name"
+    mult_literal = "mult"
+    pow_literal = "pow"
 
-        
+    def __init__(self, table, path) -> None:
+        self.table = table
+        self.path = path
+    
+    def LoadFromCSV(table_path = path_to_table):
+        table = pd.read_csv(table_path)
+        return NuseltTable(table, table_path)
+
+    def SaveToCSV(self):
+        self.table.to_csv(self.path, index=False)
+
+    
+
         
             
 
