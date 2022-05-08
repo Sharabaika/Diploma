@@ -48,7 +48,7 @@ Computational/n_3_dr_0.3/Ram_80000,Computational/n_3_dr_0.3,41.59633051924417
 Computational/n_3_dr_0.3/Ram_90000,Computational/n_3_dr_0.3,42.5888182968959
 Computational/n_3_dr_0.3/Ram_100000,Computational/n_3_dr_0.3,43.51029799464575
 Computational/n_3_dr_0.3_r/Ram_1000,Computational/n_3_dr_0.3_r,12.098615908039037
-Computational/n_3_dr_0.3_r/Ram_5000,Computational/n_3_dr_0.3_r,20.708827282334802
+Computational/n_3_dr_0.3_r/Ram_5000,Computational/n_3_dr_0.3_r,20.7088272823348
 Computational/n_3_dr_0.3_r/Ram_10000,Computational/n_3_dr_0.3_r,25.60718500334106
 Computational/n_3_dr_0.3_r/Ram_20000,Computational/n_3_dr_0.3_r,30.69153130395642
 Computational/n_3_dr_0.3_r/Ram_30000,Computational/n_3_dr_0.3_r,33.80681874877665
@@ -59,3 +59,7 @@ Computational/n_3_dr_0.3_r/Ram_70000,Computational/n_3_dr_0.3_r,40.6119604415624
 Computational/n_3_dr_0.3_r/Ram_80000,Computational/n_3_dr_0.3_r,41.71301965549895
 Computational/n_3_dr_0.3_r/Ram_90000,Computational/n_3_dr_0.3_r,42.70747588335137
 Computational/n_3_dr_0.3_r/Ram_100000,Computational/n_3_dr_0.3_r,43.627385157238585
+Computational/n_3_dr_0.3_N_500/Ram_1000,Computational/n_3_dr_0.3_N_500,11.850442620904282
+Computational/n_3_dr_0.3_N_500/Ram_20000,Computational/n_3_dr_0.3_N_500,29.23069703867822
+Computational/n_3_dr_0.3_N_500/Ram_50000,Computational/n_3_dr_0.3_N_500,35.92655779231673
+Computational/n_3_dr_0.3_N_500/Ram_100000,Computational/n_3_dr_0.3_N_500,41.30744089988664

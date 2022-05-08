@@ -155,13 +155,13 @@ def PlotNuselt():
     w, h = matplotlib.rcParams["figure.figsize"] 
     fig, ax = plt.subplots(figsize=(w*2.5, h))
 
-    ram_range = ParamsSettings.ram_range
+    ram_range = ParamsSettings.ram_range_short
     x_fit = np.arange(100, 110000, 1000)
     xdata = ram_range
 
     table = NuseltTable.LoadFromCSV()
 
-    for mesh in MeshNames.mesh_list:
+    for mesh in [MeshNames.n_3_dr_03_N_500]:
         nus = []
         for ram in ram_range:    
             nu = table.GetNuselt(ResultName.MakeName(mesh, ram))
@@ -176,24 +176,26 @@ def PlotNuselt():
 
         ax.scatter(ram_range, nus)
     ax.legend()
-    fig.savefig("nus_plot.png", dpi = 1000)
+    # fig.savefig("nus_plot.png", dpi = 1000)
     fig.show()
 
 def main():
     # ram_range = ParamsSettings.ram_range
-    # mesh_name_full = MeshNames.n_3_dr_03_r
-    # last_result = ""
+    # mesh_name_full = MeshNames.n_3_dr_03_N_500
+    # last_result = ResultName.MakeName(mesh_name_full, 1000)
     # for ram in ram_range:    
+    #     if ram in ParamsSettings.ram_range_short:
+    #         continue
+
     #     result_name = ResultName.MakeName(mesh_name_full, ram)
     #     initials =  last_result
     #     solve_fast(Ra = 0, Ram = ram, mesh_name = mesh_name_full, result_name = result_name, initials = initials)
     #     last_result = result_name
-    # PlotNuselt()
 
-    PlotNuselt()    
+    # PlotNuselt()    
 
-    # SaveRawMesh("n3/n3_50-250-250-50_r", MeshNames.n_3_dr_03_r)
-    # PlotSavedMesh(MeshNames.n_3_dr_03_r)
+    SaveRawMesh("n0/N200-1000-1000-200", MeshNames.n0_N1000)
+    PlotSavedMesh(MeshNames.n0_N1000)
     # PlotNuselt(f"Computations/n0/n0_N100-500-500-100_Ram")
     # PlotNuselt("N120_n0_R1_dr0/validation_final_cpp/ra_0_H_5_chi0_2_Pr_700_ram")
     # plt.legend()

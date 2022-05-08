@@ -29,7 +29,7 @@ def ReadRaw(mesh, default_tags, *segment_files):
                     for point_index in [i for i in range(points_len) if points[i][0]==x and points[i][1]==y]:
                         region_tags[point_index] = segment_tags
 
-                if i % 1000 == 0:
+                if n_node_ % 1000 == 0:
                     print(f"{n_node_:06d} points with tag {segment_tags} are red, {n_node_-border_len:06d} remaining")
                         
             
