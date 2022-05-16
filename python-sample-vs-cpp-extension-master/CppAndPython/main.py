@@ -3,7 +3,7 @@ from unittest import result
 import matplotlib
 import numpy as np
 from MagnetismSolver import Solve, SolveMagnetics
-from Scripts.MeshReader import ReadRaw, ReadSaved
+from Scripts.MeshReader import MeshAnalysis, ReadRaw, ReadSaved
 from Scripts.MeshWriter import SaveMesh
 import pandas as pd
 import matplotlib.tri as tri
@@ -179,19 +179,42 @@ def PlotNuselt():
     # fig.savefig("nus_plot.png", dpi = 1000)
     plt.show()
 
+def CompairNus():
+    w, h = matplotlib.rcParams["figure.figsize"] 
+    fig, ax = plt.subplots(figsize=(w*2.5, h))
+
+    ram = 100000
+    table = NuseltTable.LoadFromCSV()
+
+    nus = []
+    x = []
+
+    for mesh in MeshNames.mesh_list_n0:
+        nu = table.GetNuselt(ResultName.MakeName(mesh, ram))
+        nus.append(nu)
+        an = MeshAnalysis(mesh)
+        x.append(an.GetNodesNumber(2))
+
+    ax.plot(x, nus)
+    ax.set_xlabel("number of nodes in region 2")
+    ax.set_ylabel("Nu")
+    ax.set_title("Mesh size validation")
+    # fig.savefig("nus_plot.png", dpi = 1000)
+    plt.show()
+
 def main():
-    SolveMagnetics()
+    # SolveMagnetics()
 
-    ram_range = [100000]
-    mesh_name_full = MeshNames.n0_250
-    last_result = ""
-    for ram in ram_range:    
-        result_name = ResultName.MakeName(mesh_name_full, ram)
-        initials =  last_result
-        solve_fast(Ra = 0, Ram = ram, mesh_name = mesh_name_full, result_name = result_name, initials = initials)
-        last_result = result_name
+    # ram_range = [100000]
+    # mesh_name_full = MeshNames.n0_250
+    # last_result = ""
+    # for ram in ram_range:    
+    #     result_name = ResultName.MakeName(mesh_name_full, ram)
+    #     initials =  last_result
+    #     solve_fast(Ra = 0, Ram = ram, mesh_name = mesh_name_full, result_name = result_name, initials = initials)
+    #     last_result = result_name
 
-
+    CompairNus()
     # SaveRawMesh("n0/N75-375-375-75", MeshNames.n0_375)
     # PlotSavedMesh(MeshNames.n0_375)
 

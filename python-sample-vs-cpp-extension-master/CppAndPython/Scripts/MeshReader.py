@@ -142,3 +142,13 @@ def ReadSaved(filename):
     trianlge_indices = ReadInts()
 
     return nodes, triangles, tags, trig_neighbours, node_neighbours, trianlge_indices
+
+
+class MeshAnalysis:
+    def __init__(self, mesh_name):
+        self.mesh = ReadSaved(f"SavedMeshes/{mesh_name}.dat")
+    
+    def GetNodesNumber(self, region_index):
+        nodes, triangles, tags, trig_neighbours, node_neighbours, trianlge_indices = self.mesh
+
+        return tags.count(region_index)
