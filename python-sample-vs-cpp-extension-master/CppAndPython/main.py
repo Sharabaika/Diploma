@@ -2,7 +2,7 @@ from turtle import title
 from unittest import result
 import matplotlib
 import numpy as np
-from MagnetismSolver import SolveMagnetics
+from MagnetismSolver import Solve, SolveMagnetics
 from Scripts.MeshReader import ReadRaw, ReadSaved
 from Scripts.MeshWriter import SaveMesh
 import pandas as pd
@@ -146,7 +146,7 @@ def Nulselt(result_name):
 
 def PlotSavedMesh(name):
     nodes, triangles, segment_indices, trig_neighbors, node_neighbours, triangle_indeces = ReadSaved(f"SavedMeshes/{name}.dat")
-    PlotMesh(nodes, triangles, segment_indices, False, False, True)
+    PlotMesh(nodes, triangles, segment_indices, False, True, False)
     
 def PlotNuselt():
     def fit_funct(x, mult_coef, exp_coef):
@@ -161,7 +161,7 @@ def PlotNuselt():
 
     table = NuseltTable.LoadFromCSV()
 
-    for mesh in [MeshNames.n_3_dr_03_N_500]:
+    for mesh in MeshNames.mesh_list:
         nus = []
         for ram in ram_range:    
             nu = table.GetNuselt(ResultName.MakeName(mesh, ram))
@@ -177,42 +177,22 @@ def PlotNuselt():
         ax.scatter(ram_range, nus)
     ax.legend()
     # fig.savefig("nus_plot.png", dpi = 1000)
-    fig.show()
+    plt.show()
 
 def main():
-    # ram_range = ParamsSettings.ram_range
-    # mesh_name_full = MeshNames.n_3_dr_03_N_500
-    # last_result = ResultName.MakeName(mesh_name_full, 1000)
+    # ram_range = [100000]
+    # mesh_name_full = MeshNames.n0_500
+    # last_result = ""
     # for ram in ram_range:    
-    #     if ram in ParamsSettings.ram_range_short:
-    #         continue
-
     #     result_name = ResultName.MakeName(mesh_name_full, ram)
     #     initials =  last_result
     #     solve_fast(Ra = 0, Ram = ram, mesh_name = mesh_name_full, result_name = result_name, initials = initials)
     #     last_result = result_name
 
-    # PlotNuselt()    
 
-    SaveRawMesh("n0/N200-1000-1000-200", MeshNames.n0_N1000)
-    PlotSavedMesh(MeshNames.n0_N1000)
-    # PlotNuselt(f"Computations/n0/n0_N100-500-500-100_Ram")
-    # PlotNuselt("N120_n0_R1_dr0/validation_final_cpp/ra_0_H_5_chi0_2_Pr_700_ram")
-    # plt.legend()
-    # plt.savefig("disaster")
-    # plt.show()
-
-    
-
-    # results = MagneticsAnalysis("SavedMagnetics", f"Computational/n0_N100-500-500-100/magnetics_H_5_chi0_2_mu_1000")
-    # results = MagneticsAnalysis("SavedMagnetics", f"N120_n0_R1_dr0/magnetics_H_5_chi0_2_N120_n0_R1_dr0")
-
-    # plotter = MagneticsPlot(results)
-    # plotter.PlotMu()
-    # ShowPlot()
-
-    # plotter.PlotH()
-    # ShowPlot()
+    SaveRawMesh("n0/N75-375-375-75", MeshNames.n0_375)
+    PlotSavedMesh(MeshNames.n0_375)
+    # SolveMagnetics()
 
 if __name__ == "__main__":
     # test()

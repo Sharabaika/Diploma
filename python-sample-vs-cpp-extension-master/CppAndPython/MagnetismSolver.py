@@ -11,7 +11,7 @@ def Solve(**kwargs):
 
     # Mesh data #
     # ========= #
-    mesh_name = MeshNames.n_2_dr_03_r
+    mesh_name = MeshNames.n0
     result_name = f"SavedMagnetics/{MagneticsResultName.MakeName(mesh_name)}"
 
     nodes, triangles, segment_indices, trig_neighbors, node_neighbours, trianlge_indices = ReadSaved(f"SavedMeshes/{mesh_name}.dat")
@@ -57,8 +57,7 @@ def Solve(**kwargs):
     H_nodes = np.zeros(N_nodes)
 
     # Init
-    initial_conditions_result_name = "Computational/n0_N100-500-500-100/magnetics_H_5_chi0_2_mu_1000_V4"
-    initial_conditions_result_name = ""
+    initial_conditions_result_name = f"{MagneticsResultName.MakeName(mesh_name)}_legacy"
     if initial_conditions_result_name:
         prev_results = MagneticsAnalysis("SavedMagnetics", initial_conditions_result_name)
         H = np.array(prev_results.GetH())
@@ -86,9 +85,10 @@ def Solve(**kwargs):
     # Solve #
     # ===== #
     Error = 2*MAX_DELTA_ERROR
+    errors = []
 
     n_cycle = 0 
-    while n_cycle < N_CYCLIES_MAX and Error>=MAX_DELTA_ERROR:
+    while n_cycle < N_CYCLIES_MAX and Error>=MAX_DELTA_ERROR and n_cycle<3:
         for n_node in range(N_nodes):
 
             a0F = 0
@@ -152,7 +152,7 @@ def Solve(**kwargs):
             if segment_index == CONDUCTOR_REGION_INDEX:
                 Mu_new[n_triangle] = mu0
             elif segment_index == MEDIUM_REGION_INDEX:
-                Mu_new[n_triangle] = 1 + chi0*H_new[n_triangle]/(1+chi0*H_new[n_triangle])
+                Mu_new[n_triangle] = 1 + chi0/(1+chi0*H_new[n_triangle])
                 # Mu_new[n_triangle] = 1 
             elif segment_index == VOID_REGION_INDEX:
                 Mu_new[n_triangle] = 1
@@ -169,7 +169,8 @@ def Solve(**kwargs):
         if n_cycle % 50 == 0 or True:
             print(f"cycle n = {n_cycle}, dFi = {(Delta_Fi_Error):.2e}")
 
-        Saver.logger.LogErrors(Fi = (Delta_Fi_Error))
+        # Saver.logger.LogErrors(Fi = (Delta_Fi_Error))
+        errors.append(Delta_Fi_Error)
 
         n_cycle += 1
 
@@ -201,7 +202,7 @@ def Solve(**kwargs):
             
         H_nodes[n_node] = numerator_sum / denominator_sum
 
-
+    Saver.logger.LogErrorsList(Fi = errors)
     Saver.SaveResults(result_name)
     Saver.SaveResult(result_name, "triangles",  H = H, Mu = Mu)
     Saver.SaveResult( result_name, "nodes", Fi = Fi, H_nodes = H_nodes)
@@ -226,7 +227,7 @@ def SolveMagnetics(**kwargs):
 
     # Mesh data #
     # ========= #
-    mesh_name = MeshNames.n_3_dr_03_N_500
+    mesh_name = MeshNames.n0
     result_name = f"SavedMagnetics/{MagneticsResultName.MakeName(mesh_name)}"
 
     nodes, triangles, segment_indices, trig_neighbors, node_neighbours, trianlge_indices = ReadSaved(f"SavedMeshes/{mesh_name}.dat")
@@ -251,7 +252,7 @@ def SolveMagnetics(**kwargs):
     # PARAMS #
     # ====== #
     # Relaxation
-    QF = 1.0
+    QF = 0.9
 
     #Field
     chi0 = 2.0
@@ -275,6 +276,7 @@ def SolveMagnetics(**kwargs):
 
     # Init
     initial_conditions_result_name = ""
+    initial_conditions_result_name = f"{MagneticsResultName.MakeName(mesh_name)}_legacy"
     if initial_conditions_result_name:
         prev_results = MagneticsAnalysis("SavedMagnetics", initial_conditions_result_name)
         H = np.array(prev_results.GetH())
@@ -288,7 +290,7 @@ def SolveMagnetics(**kwargs):
             if segment_index == 0:
                 Mu[n_triangle] = mu0
             elif segment_index == 2:
-                Mu[n_triangle] = 1 + chi0*H[n_triangle]/(1+chi0*H[n_triangle])
+                Mu[n_triangle] = 1 + chi0/(1+chi0*H[n_triangle])
                 # Mu[n_triangle] = 1
             elif segment_index == 4:
                 Mu[n_triangle] = 1

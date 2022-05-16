@@ -21,7 +21,7 @@ class ResultSaving:
         df.to_csv(file_path, float_format=float_format)
 
     def SaveResults(self, path):
-        float_format = '{:.5f}'.format
+        float_format = '{:.7f}'.format
 
         if not os.path.exists(path):
             os.makedirs(path)

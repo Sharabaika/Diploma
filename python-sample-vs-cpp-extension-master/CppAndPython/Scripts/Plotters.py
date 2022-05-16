@@ -8,13 +8,14 @@ def PlotMesh(points, triangles, segment_idex, index_nodes = False, scatted_nodes
 
     fig, ax = plt.subplots()
     
-    ax.triplot(x, y, triangles, color='green')
-    ax.set_aspect('equal')
-    
-    if scatted_nodes:
-        colors = [c/5.0 for c in segment_idex]
-        ax.scatter(x, y, s=100, c=colors, cmap='hsv')     
 
+    if scatted_nodes:
+        m = ax.scatter(x, y, s=100, c=segment_idex, cmap='Dark2')   
+        plt.colorbar(m)
+    else:        
+        ax.triplot(x, y, triangles, color='green')
+        ax.set_aspect('equal')
+        
     if index_nodes:
         for point_index in range(len(x)):
             ax.text(x=x[point_index], y=y[point_index], s = point_index, color='red', fontsize=10)

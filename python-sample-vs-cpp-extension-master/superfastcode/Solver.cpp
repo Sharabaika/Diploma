@@ -738,7 +738,7 @@ void SolveMagnetics_fast(const Arr& x, const Arr& y, const JaggedArr& triangles,
     
     double error = 2.0 * max_error;
     int n_cycle = 0;
-    while (n_cycle < max_cycles && error >= max_error)
+    while (100 > n_cycle || (n_cycle < max_cycles && error >= max_error))
     {
         for (int n_node = 0; n_node < N_NODES; n_node++)
         {
@@ -835,7 +835,7 @@ void SolveMagnetics_fast(const Arr& x, const Arr& y, const JaggedArr& triangles,
             }
             else if (segment_index == 2)
             {
-                Mu_new[n_triangle] = 1.0 + chi0 * H_new[n_triangle] / (1.0 + chi0 * H_new[n_triangle]);
+                Mu_new[n_triangle] = 1.0 + chi0 / (1.0 + chi0 * H_new[n_triangle]);
             }
             else if (segment_index == 4)
             {

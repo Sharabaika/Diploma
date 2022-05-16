@@ -77,7 +77,7 @@ def ReadRaw(mesh, default_tags, *segment_files):
     for n_triangle in range(N_triangles):
         indices = [region_tags[i] for i in triangles[n_triangle]]
 
-        if i % 1000 == 0:
+        if n_triangle % 1000 == 0:
             print(f"{n_triangle:06d} triangle tags are red, {n_triangle-N_triangles:06d} remaining")
 
 
