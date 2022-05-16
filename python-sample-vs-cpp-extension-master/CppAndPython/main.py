@@ -196,6 +196,7 @@ def CompairNus():
         x.append(an.GetNodesNumber(2))
 
     ax.plot(x, nus)
+    ax.scatter(x,nus)
     ax.set_xlabel("number of nodes in region 2")
     ax.set_ylabel("Nu")
     ax.set_title("Mesh size validation")
@@ -206,7 +207,7 @@ def main():
     # SolveMagnetics()
 
     # ram_range = [100000]
-    # mesh_name_full = MeshNames.n0_250
+    # mesh_name_full = MeshNames.n0_600
     # last_result = ""
     # for ram in ram_range:    
     #     result_name = ResultName.MakeName(mesh_name_full, ram)
@@ -215,8 +216,8 @@ def main():
     #     last_result = result_name
 
     CompairNus()
-    # SaveRawMesh("n0/N75-375-375-75", MeshNames.n0_375)
-    # PlotSavedMesh(MeshNames.n0_375)
+    # SaveRawMesh("n0/N150-600-600-150", MeshNames.n0_600)
+    # PlotSavedMesh(MeshNames.n0_600)
 
 if __name__ == "__main__":
     # test()

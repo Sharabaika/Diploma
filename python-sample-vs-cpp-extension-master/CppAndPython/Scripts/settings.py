@@ -19,10 +19,8 @@ class MeshNames:
     n_3_dr_03_N_500 = "Computational/n_3_dr_0.3_N_500"
     n_3_dr_03_r = "Computational/n_3_dr_0.3_r"
 
-    # old
     mesh_list = [n0, n_2_dr_03, n_2_dr_03_r, n_3_dr_03, n_3_dr_03_r, n_3_dr_03_N_500]
-
-    mesh_list_n0 = [n0_250, n0_375, n0_500]
+    mesh_list_n0 = [n0_250, n0_375, n0_500, n0_600]
 
     def GetShortName(mesh):
         prefix = "Computational/"
