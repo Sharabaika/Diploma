@@ -180,19 +180,20 @@ def PlotNuselt():
     plt.show()
 
 def main():
-    # ram_range = [100000]
-    # mesh_name_full = MeshNames.n0_500
-    # last_result = ""
-    # for ram in ram_range:    
-    #     result_name = ResultName.MakeName(mesh_name_full, ram)
-    #     initials =  last_result
-    #     solve_fast(Ra = 0, Ram = ram, mesh_name = mesh_name_full, result_name = result_name, initials = initials)
-    #     last_result = result_name
+    SolveMagnetics()
+
+    ram_range = [100000]
+    mesh_name_full = MeshNames.n0_250
+    last_result = ""
+    for ram in ram_range:    
+        result_name = ResultName.MakeName(mesh_name_full, ram)
+        initials =  last_result
+        solve_fast(Ra = 0, Ram = ram, mesh_name = mesh_name_full, result_name = result_name, initials = initials)
+        last_result = result_name
 
 
-    SaveRawMesh("n0/N75-375-375-75", MeshNames.n0_375)
-    PlotSavedMesh(MeshNames.n0_375)
-    # SolveMagnetics()
+    # SaveRawMesh("n0/N75-375-375-75", MeshNames.n0_375)
+    # PlotSavedMesh(MeshNames.n0_375)
 
 if __name__ == "__main__":
     # test()
