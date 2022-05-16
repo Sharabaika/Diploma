@@ -200,7 +200,7 @@ def CompairNus():
     ax.set_xlabel("number of nodes in region 2")
     ax.set_ylabel("Nu")
     ax.set_title("Mesh size validation")
-    # fig.savefig("nus_plot.png", dpi = 1000)
+    fig.savefig("nus_validation.png")
     plt.show()
 
 def main():
