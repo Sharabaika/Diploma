@@ -207,7 +207,7 @@ def main():
     # SolveMagnetics()
 
     # ram_range = [100000]
-    # mesh_name_full = MeshNames.n0_600
+    # mesh_name_full = MeshNames.n0_700
     # last_result = ""
     # for ram in ram_range:    
     #     result_name = ResultName.MakeName(mesh_name_full, ram)
@@ -216,8 +216,9 @@ def main():
     #     last_result = result_name
 
     CompairNus()
-    # SaveRawMesh("n0/N150-600-600-150", MeshNames.n0_600)
-    # PlotSavedMesh(MeshNames.n0_600)
+
+    # SaveRawMesh("n0/N100-700-700-100", MeshNames.n0_700)
+    # PlotSavedMesh(MeshNames.n0_700)
 
 if __name__ == "__main__":
     # test()
