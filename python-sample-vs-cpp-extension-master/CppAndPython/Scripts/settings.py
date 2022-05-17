@@ -1,7 +1,7 @@
 
 class ParamsSettings:
     ram_range = [1000, 5000, 10000, 20000, 30000, 40000, 50000, 60000, 70000, 80000, 90000, 100000]
-    ram_range_short = [1000, 20000, 50000, 100000]
+    ram_range_short = [1000, 20000, 40000, 60000, 80000, 100000]
 
 class MeshNames:
     n0 = "Computational/n0_N100-500-500-100"
@@ -13,6 +13,9 @@ class MeshNames:
     n0_600 = "Computational/n0_N150-600-600-150"
     n0_700 = "Computational/n0_N100-700-700-100"
 
+    n2_600_dr_03 = "Computational/n2_N100-600-600-100_dr_03"
+
+#old
     n_2_dr_03 = "Computational/n_2_dr_0.3"
     n_2_dr_03_r = "Computational/n_2_dr_0.3_r"
 

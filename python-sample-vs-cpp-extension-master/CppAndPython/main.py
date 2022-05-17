@@ -204,21 +204,29 @@ def CompairNus():
     plt.show()
 
 def main():
-    # SolveMagnetics()
+    mesh_name_full = MeshNames.n2_600_dr_03
 
-    # ram_range = [100000]
-    # mesh_name_full = MeshNames.n0_700
-    # last_result = ""
-    # for ram in ram_range:    
-    #     result_name = ResultName.MakeName(mesh_name_full, ram)
-    #     initials =  last_result
-    #     solve_fast(Ra = 0, Ram = ram, mesh_name = mesh_name_full, result_name = result_name, initials = initials)
-    #     last_result = result_name
+    SolveMagnetics(mesh_name = mesh_name_full)
+    
+    table = NuseltTable.LoadFromCSV()
 
-    CompairNus()
+    ram_range = ParamsSettings.ram_range_short[::-1]
+    last_result = ""
+    for ram in ram_range:    
+        result_name = ResultName.MakeName(mesh_name_full, ram)
 
-    # SaveRawMesh("n0/N100-700-700-100", MeshNames.n0_700)
-    # PlotSavedMesh(MeshNames.n0_700)
+        nus = table.GetNuselt(result_name, False)
+        if nus is not np.NaN:
+            continue
+
+        initials =  last_result
+        solve_fast(Ra = 0, Ram = ram, mesh_name = mesh_name_full, result_name = result_name, initials = initials)
+        last_result = result_name
+
+    # CompairNus()
+
+    SaveRawMesh("n2/N100-600-600-100", MeshNames.n2_600_dr_03)
+    PlotSavedMesh(MeshNames.n2_600_dr_03)
 
 if __name__ == "__main__":
     # test()

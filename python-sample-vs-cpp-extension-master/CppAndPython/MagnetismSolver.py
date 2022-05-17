@@ -227,7 +227,7 @@ def SolveMagnetics(**kwargs):
 
     # Mesh data #
     # ========= #
-    mesh_name = MeshNames.n0_700
+    mesh_name = kwargs.get("mesh_name", "")
     result_name = f"SavedMagnetics/{MagneticsResultName.MakeName(mesh_name)}"
 
     nodes, triangles, segment_indices, trig_neighbors, node_neighbours, trianlge_indices = ReadSaved(f"SavedMeshes/{mesh_name}.dat")
