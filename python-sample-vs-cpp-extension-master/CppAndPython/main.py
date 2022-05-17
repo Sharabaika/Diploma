@@ -156,7 +156,7 @@ def PlotNuselt():
     fig, ax = plt.subplots(figsize=(w*2.5, h))
 
     ram_range = ParamsSettings.ram_range_short
-    x_fit = np.arange(100, 110000, 1000)
+    x_fit = np.arange(100, 101000, 1000)
     xdata = ram_range
 
     table = NuseltTable.LoadFromCSV()
@@ -176,7 +176,7 @@ def PlotNuselt():
 
         ax.scatter(ram_range, nus)
     ax.legend()
-    # fig.savefig("nus_plot.png", dpi = 1000)
+    fig.savefig("nus_plot.png", dpi = 1000)
     plt.show()
 
 def CompairNus():
@@ -204,29 +204,27 @@ def CompairNus():
     plt.show()
 
 def main():
-    mesh_name_full = MeshNames.n2_600_dr_03
+    # mesh_name_full = MeshNames.n2_600_dr_03
 
-    SolveMagnetics(mesh_name = mesh_name_full)
+    # SolveMagnetics(mesh_name = mesh_name_full)
     
-    table = NuseltTable.LoadFromCSV()
+    # table = NuseltTable.LoadFromCSV()
 
-    ram_range = ParamsSettings.ram_range_short[::-1]
-    last_result = ""
-    for ram in ram_range:    
-        result_name = ResultName.MakeName(mesh_name_full, ram)
+    # ram_range = ParamsSettings.ram_range_short[::-1]
+    # last_result = ""
+    # for ram in ram_range:    
+    #     result_name = ResultName.MakeName(mesh_name_full, ram)
 
-        nus = table.GetNuselt(result_name, False)
-        if nus is not np.NaN:
-            continue
+    #     nus = table.GetNuselt(result_name, False)
+    #     if nus is not np.NaN:
+    #         continue
 
-        initials =  last_result
-        solve_fast(Ra = 0, Ram = ram, mesh_name = mesh_name_full, result_name = result_name, initials = initials)
-        last_result = result_name
+    #     initials =  last_result
+    #     solve_fast(Ra = 0, Ram = ram, mesh_name = mesh_name_full, result_name = result_name, initials = initials)
+    #     last_result = result_name
 
+    PlotNuselt()
     # CompairNus()
-
-    SaveRawMesh("n2/N100-600-600-100", MeshNames.n2_600_dr_03)
-    PlotSavedMesh(MeshNames.n2_600_dr_03)
 
 if __name__ == "__main__":
     # test()
