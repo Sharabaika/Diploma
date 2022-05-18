@@ -546,7 +546,7 @@ def solve_fast(*args, **kwargs):
     T_outer = 0
 
     # Cycles
-    N_CYCLIES_MAX = kwargs.get("N_CYCLIES_MAX", 100000)
+    N_CYCLIES_MAX = kwargs.get("N_CYCLIES_MAX", 150000)
     MAX_DELTA_ERROR = kwargs.get("MAX_DELTA_ERROR", 1e-5)
 
     PRINT_LOG_EVERY_N_CYCLES = 20
@@ -556,8 +556,8 @@ def solve_fast(*args, **kwargs):
     Vx = 0 
 
     # Relaxation
-    QPsi = kwargs.get("QPsi", 1.0)
-    QW = kwargs.get("QW", 0.05)
+    QPsi = kwargs.get("QPsi", 0.9)
+    QW = kwargs.get("QW", 0.045)
     QT = kwargs.get("QT", 0.65)
 
     # Arrays #

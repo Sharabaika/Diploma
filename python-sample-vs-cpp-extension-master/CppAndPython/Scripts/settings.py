@@ -14,6 +14,7 @@ class MeshNames:
     n0_700 = "Computational/n0_N100-700-700-100"
 
     n2_600_dr_03 = "Computational/n2_N100-600-600-100_dr_03"
+    n2_600_dr_03_rot = "Computational/n2_N100-600-600-100_dr_03_rot"
 
 #old
     n_2_dr_03 = "Computational/n_2_dr_0.3"
@@ -23,7 +24,7 @@ class MeshNames:
     n_3_dr_03_N_500 = "Computational/n_3_dr_0.3_N_500"
     n_3_dr_03_r = "Computational/n_3_dr_0.3_r"
 
-    mesh_list = [n0_600, n2_600_dr_03]
+    mesh_list = [n0_600, n2_600_dr_03, n2_600_dr_03_rot]
     mesh_list_n0 = [n0_250, n0_375, n0_500, n0_600, n0_700]
 
     def GetShortName(mesh):
