@@ -200,7 +200,7 @@ def CompairNus():
     ax.set_xlabel("number of nodes in region 2")
     ax.set_ylabel("Nu")
     ax.set_title("Mesh size validation")
-    fig.savefig("nus_validation.png")
+    # fig.savefig("nus_validation.png")
     plt.show()
 
 def main():
@@ -208,24 +208,26 @@ def main():
 
     # SolveMagnetics(mesh_name = mesh_name_full)
     
-    # table = NuseltTable.LoadFromCSV()
+    table = NuseltTable.LoadFromCSV()
 
     # ram_range = ParamsSettings.ram_range_short
-    # last_result = ""
-    # for ram in ram_range:    
-    #     result_name = ResultName.MakeName(mesh_name_full, ram)
+    ram_range = [800, 600, 400, 200]
 
-    #     # if nus is not np.NaN:
-    #     #     continue
+    last_result = ResultName.MakeName(mesh_name_full, 1000)
+    for ram in ram_range:    
+        result_name = ResultName.MakeName(mesh_name_full, ram)
 
-    #     initials =  last_result
-    #     solve_fast(Ra = 0, Ram = ram, mesh_name = mesh_name_full, result_name = result_name, initials = initials)
-    #     last_result = result_name
+        # if nus is not np.NaN:
+        #     continue
 
-    #     nus = table.GetNuselt(result_name, True)
-    #     print(f"Ram = {ram} nu = {nus}")
+        initials =  last_result
+        solve_fast(Ra = 0, Ram = ram, mesh_name = mesh_name_full, result_name = result_name, initials = initials)
+        last_result = result_name
 
-    PlotNuselt()
+        nus = table.GetNuselt(result_name, True)
+        print(f"Ram = {ram} nu = {nus}")
+
+    # PlotNuselt()
     # CompairNus()
 
     # SaveRawMesh("n2/N100-600-600-100_rotated", MeshNames.n2_600_dr_03_rot)

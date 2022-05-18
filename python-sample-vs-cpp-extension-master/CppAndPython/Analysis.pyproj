@@ -16,6 +16,7 @@
     <InterpreterArguments>-i</InterpreterArguments>
     <EnableNativeCodeDebugging>True</EnableNativeCodeDebugging>
     <SuppressConfigureTestFrameworkPrompt>true</SuppressConfigureTestFrameworkPrompt>
+    <InterpreterId>Global|PythonCore|3.8-32</InterpreterId>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <DebugSymbols>true</DebugSymbols>
@@ -114,6 +115,22 @@
     <Content Include="Scripts\__pycache__\MeshWriter.cpython-38.pyc" />
     <Content Include="Scripts\__pycache__\Plotter.cpython-38.pyc" />
     <Content Include="Scripts\__pycache__\ResultFileHandling.cpython-38.pyc" />
+  </ItemGroup>
+  <ItemGroup>
+    <InterpreterReference Include="Global|PythonCore|3.10" />
+    <InterpreterReference Include="Global|PythonCore|3.8" />
+    <InterpreterReference Include="Global|PythonCore|3.8-32" />
+  </ItemGroup>
+  <ItemGroup>
+    <Interpreter Include="py32\">
+      <Id>py32</Id>
+      <Version>3.8</Version>
+      <Description>py32 (Python 3.8 (32-bit))</Description>
+      <InterpreterPath>Scripts\python.exe</InterpreterPath>
+      <WindowsInterpreterPath>Scripts\pythonw.exe</WindowsInterpreterPath>
+      <PathEnvironmentVariable>PYTHONPATH</PathEnvironmentVariable>
+      <Architecture>X86</Architecture>
+    </Interpreter>
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
   <!-- Uncomment the CoreCompile target to enable the Build command in

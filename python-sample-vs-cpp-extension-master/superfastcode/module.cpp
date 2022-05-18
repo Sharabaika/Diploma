@@ -3,7 +3,7 @@
 #include <vector>
 #include "Converters.h"
 #include "Solver.h"
-
+#pragma comment(lib,"Advapi32")
 using std::vector;
  
 PyObject* FluidSolver_Wrapper(PyObject* _, PyObject* args)
