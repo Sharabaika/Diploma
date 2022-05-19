@@ -557,7 +557,7 @@ def solve_fast(*args, **kwargs):
 
     # Relaxation
     QPsi = kwargs.get("QPsi", 0.9)
-    QW = kwargs.get("QW", 0.045)
+    QW = kwargs.get("QW", 0.07)
     QT = kwargs.get("QT", 0.65)
 
     # Arrays #

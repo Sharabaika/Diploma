@@ -204,14 +204,16 @@ def CompairNus():
     plt.show()
 
 def main():
-    mesh_name_full = MeshNames.n2_600_dr_03_rot
+    mesh_name_full = MeshNames.n3_600_dr_03
+    SaveRawMesh("n3/N100-600-600-100", mesh_name_full)
 
-    # SolveMagnetics(mesh_name = mesh_name_full)
+    return
+    SolveMagnetics(mesh_name = mesh_name_full)
     
     table = NuseltTable.LoadFromCSV()
 
     # ram_range = ParamsSettings.ram_range_short
-    ram_range = [800, 600, 400, 200]
+    ram_range = [2000, 6000, 12000]
 
     last_result = ResultName.MakeName(mesh_name_full, 1000)
     for ram in ram_range:    

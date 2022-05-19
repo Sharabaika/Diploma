@@ -16,6 +16,7 @@ class MeshNames:
     n2_600_dr_03 = "Computational/n2_N100-600-600-100_dr_03"
     n2_600_dr_03_rot = "Computational/n2_N100-600-600-100_dr_03_rot"
 
+    n3_600_dr_03 = "Computational/n3_N100-600-600-100_dr_03"
 #old
     n_2_dr_03 = "Computational/n_2_dr_0.3"
     n_2_dr_03_r = "Computational/n_2_dr_0.3_r"
