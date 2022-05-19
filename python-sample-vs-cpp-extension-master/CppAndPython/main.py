@@ -206,14 +206,30 @@ def CompairNus():
 def main():
     mesh_name_full = MeshNames.n3_600_dr_03
 
-    SolveMagnetics(mesh_name = mesh_name_full)
+    # SolveMagnetics(mesh_name = mesh_name_full)
     
     table = NuseltTable.LoadFromCSV()
 
     ram_range = ParamsSettings.ram_range_short
-    # ram_range = [2000, 6000, 12000]
+    ram_range = [12000]
 
-    last_result = ""
+    last_result = ResultName.MakeName(mesh_name_full, 6000)
+    for ram in ram_range:    
+        result_name = ResultName.MakeName(mesh_name_full, ram)
+
+        # if nus is not np.NaN:
+        #     continue
+
+        initials =  last_result
+        solve_fast(Ra = 0, Ram = ram, mesh_name = mesh_name_full, result_name = result_name, initials = initials)
+        last_result = result_name
+
+        nus = table.GetNuselt(result_name, True)
+        print(f"Ram = {ram} nu = {nus}")
+
+    ram_range = [800, 400, 100]
+
+    last_result = ResultName.MakeName(mesh_name_full, 1000)
     for ram in ram_range:    
         result_name = ResultName.MakeName(mesh_name_full, ram)
 
