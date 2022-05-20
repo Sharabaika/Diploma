@@ -69,8 +69,8 @@ def SaveMesh(path, filename, nodes, triangles, segment_tags, trig_neighbors, nod
 def main():
     from MeshGenerator import GenerateCurvyMesh
 
-    N = 250
-    n = 3
+    N = 600
+    n = 5
     R = 1
     dr = 0.3
 

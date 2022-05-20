@@ -1,3 +1,4 @@
+import math
 from turtle import title
 from unittest import result
 import matplotlib
@@ -8,7 +9,7 @@ from Scripts.MeshWriter import SaveMesh
 import pandas as pd
 import matplotlib.tri as tri
 import sys
-from Scripts.Plotters import MagneticsPlot, PlotMesh, SavePlot, ShowPlot
+from Scripts.Plotters import DynamycsPlot, MagneticsPlot, PlotMesh, SavePlot, ShowPlot
 from Scripts.ResultAnalysis import DynamycsAnalysis, MagneticsAnalysis, NuseltTable
 from math import atan2, exp, sqrt
 import matplotlib.pyplot as plt
@@ -204,17 +205,16 @@ def CompairNus():
     plt.show()
 
 def main():
-    mesh_name_full = MeshNames.n4_600_dr_03_rot
+    mesh_name_full = MeshNames.n5_600_dr_03
 
-    # SaveRawMesh("n4/N100-600-600-100_rotated", mesh_name_full)
+    # SaveRawMesh("n5/N100-600-600-100", mesh_name_full)
     # PlotSavedMesh(mesh_name_full)
-
-
     # SolveMagnetics(mesh_name = mesh_name_full)
-    
-    chunks = ParamsSettings.ram_chunks(4)
 
-    ram_range = chunks[0]
+    chunks = list(ParamsSettings.ram_chunks(3))
+    print(f"{len(chunks)} chunks")
+
+    ram_range = chunks[3]
 
     print(F"STARTING CHUNK {ram_range}")
 
@@ -223,11 +223,11 @@ def main():
         result_name = ResultName.MakeName(mesh_name_full, ram)
 
         table = NuseltTable.LoadFromCSV()
-        nus = table.GetNuselt(result_name)
-        if nus is not np.NaN:
+        nus = table.GetNuselt(result_name, True)
+        if not math.isnan(nus):
             continue
 
-        initials =  last_result
+        initials =  ""
         print(F"SOLVING {ram}")
         solve_fast(Ra = 0, Ram = ram, mesh_name = mesh_name_full, result_name = result_name, initials = initials)
         last_result = result_name

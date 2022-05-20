@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import matplotlib
 import numpy as np
 import pandas as pd
-
+from os import path
 from Scripts.MeshReader import ReadSaved
 from Scripts.settings import MeshNames
 
@@ -255,7 +255,7 @@ class NuseltTable:
                 print(f"more than 1 result for {result_name}")
             return results.iloc[0][NuseltTable.nuselt_result_literal]
 
-        if b_calculate_if_missing:
+        if b_calculate_if_missing and path.exists(f"{result_name}/nodes.csv"):
             analysis = DynamycsAnalysis("SavedResults", result_name) 
             nuselt = analysis.CalculateNulselt()
             df = pd.DataFrame({

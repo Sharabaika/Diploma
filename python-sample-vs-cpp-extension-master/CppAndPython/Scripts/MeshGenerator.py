@@ -15,7 +15,7 @@ def GenerateCurvyMesh(N, n, R, dr):
 def main():
     import matplotlib.pyplot as plt
     
-    points = GenerateCurvyMesh(250, 3, 1, 0.3)
+    points = GenerateCurvyMesh(600, 5, 1, 0.3)
 
     x,y = points[:,0], points[:,1]
 
