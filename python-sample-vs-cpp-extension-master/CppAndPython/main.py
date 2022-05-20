@@ -208,7 +208,7 @@ def walk():
     import os
     from os import path
 
-    table = NuseltTable(pd.DataFrame())
+    table = NuseltTable.LoadFromCSV()
 
     for current_path, subdirs, files in os.walk("SavedResults\\Computational"):
         if "nodes.csv" in files:
