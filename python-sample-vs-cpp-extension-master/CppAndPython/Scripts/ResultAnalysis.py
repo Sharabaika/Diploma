@@ -229,14 +229,32 @@ class DynamycsAnalysis(ResultAnalysis):
 
 class NuseltTable:
     path_to_table = "Nus.csv"
+
     result_name_literal = "result_name"
     mesh_name_literal = "mesh_name"
+    mesh_name_short_literal = "mesh_name_short"
+    ra_literal = "Ra"
+    ram_literal = "Ram"
+    h_literal = "H"
     nuselt_result_literal = "nu"
+
+    columns=[
+            result_name_literal,
+            mesh_name_literal,
+            mesh_name_short_literal,
+            ra_literal,
+            ram_literal, 
+            h_literal,
+            nuselt_result_literal
+        ]
     # index | result_name | mesh_name |nu
     # 0     | "aboa"      | "n0"      |40
 
+    # index | result_name | mesh_name                            | mesh_name_short | Ra | Ram | H | nu
+    # 0     | "aboa"      | "Computational/n0_N100-500-500-100"  | "n0"            | 0  | 100 | 5 | 40
 
-    def __init__(self, table, path) -> None:
+
+    def __init__(self, table, path = path_to_table) -> None:
         self.table = table
         self.path = path
     
@@ -247,22 +265,30 @@ class NuseltTable:
     def SaveToCSV(self):
         self.table.to_csv(self.path, index=False)
 
-    def GetNuselt(self, result_name, b_calculate_if_missing = True, b_resafe = True):
-        results = self.table.loc[self.table[NuseltTable.result_name_literal] == result_name]
-        lres = len(results)
-        if lres > 0:
-            if lres > 1:
-                print(f"more than 1 result for {result_name}")
-            return results.iloc[0][NuseltTable.nuselt_result_literal]
+    def MakeRow(result_name, nu):            
+            analysis = DynamycsAnalysis("SavedResults", result_name) 
+            magnetics = MagneticsAnalysis("SavedMagnetics", analysis.GetParam("magnetics_result_name"))
 
+            mesh_name = analysis.GetMeshName()
+            short_name = MeshNames.GetShortName(mesh_name)
+            ra = analysis.GetParam("Ra")
+            ram = analysis.GetParam("Ram")
+            H = magnetics.GetParam("H0")
+            
+            return [result_name, mesh_name, short_name, ra, ram, H, nu]
+
+    def GetNuselt(self, result_name, b_calculate_if_missing = True, b_resafe = True):
+        if NuseltTable.result_name_literal in self.table.columns.values.tolist():
+            results = self.table.loc[self.table[NuseltTable.result_name_literal] == result_name]
+            lres = len(results)
+            if lres > 0:
+                if lres > 1:
+                    print(f"more than 1 result for {result_name}")
+                return results.iloc[0][NuseltTable.nuselt_result_literal]
         if b_calculate_if_missing and path.exists(f"SavedResults/{result_name}/nodes.csv"):
             analysis = DynamycsAnalysis("SavedResults", result_name) 
             nuselt = analysis.CalculateNulselt()
-            df = pd.DataFrame({
-                NuseltTable.result_name_literal : [result_name],
-                NuseltTable.mesh_name_literal : [analysis.GetMeshName()],
-                NuseltTable.nuselt_result_literal : [nuselt]
-            })
+            df = pd.DataFrame([NuseltTable.MakeRow(result_name, nuselt)], columns=NuseltTable.columns)
             print(f"CALCULATING NUSELT = {nuselt} FOR {result_name}")
 
             self.table = pd.concat([self.table, df])
@@ -273,6 +299,21 @@ class NuseltTable:
             return nuselt
 
         return np.NaN
+
+    def RedoTable(self):
+        result_lst = []
+        for index, row in self.table.iterrows():
+            result_name = row[NuseltTable.result_name_literal]
+            nu = row[NuseltTable.nuselt_result_literal]
+
+            result_lst.append(NuseltTable.MakeRow(result_name, nu))
+        
+        result_df = pd.DataFrame(result_lst, columns=NuseltTable.columns)
+        print(result_df)
+
+        self.table = result_df
+        self.SaveToCSV()
+
 
 class NuseltFitTable:
     path_to_table = "Nus_fit.csv"

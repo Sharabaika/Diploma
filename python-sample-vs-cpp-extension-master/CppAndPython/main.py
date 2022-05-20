@@ -208,7 +208,7 @@ def walk():
     import os
     from os import path
 
-    table = NuseltTable.LoadFromCSV()
+    table = NuseltTable(pd.DataFrame())
 
     for current_path, subdirs, files in os.walk("SavedResults\\Computational"):
         if "nodes.csv" in files:
@@ -218,9 +218,14 @@ def walk():
             ram = result.GetParam("Ram")
             name = ResultName.MakeName(mesh_name_full, ram)
             table.GetNuselt(name)
+ 
+
 
 def main():
     walk()
+
+    # table = NuseltTable.LoadFromCSV()
+    # table.RedoTable()
     return
 
     mesh_name_full = MeshNames.n4_600_dr_03_rot
