@@ -204,8 +204,26 @@ def CompairNus():
     # fig.savefig("nus_validation.png")
     plt.show()
 
+def walk():
+    import os
+    from os import path
+
+    table = NuseltTable.LoadFromCSV()
+
+    for current_path, subdirs, files in os.walk("SavedResults\\Computational"):
+        if "nodes.csv" in files:
+            print(current_path)
+            result = DynamycsAnalysis("", os.path.join(current_path))
+            mesh_name_full = result.GetMeshName()
+            ram = result.GetParam("Ram")
+            name = ResultName.MakeName(mesh_name_full, ram)
+            table.GetNuselt(name)
+
 def main():
-    mesh_name_full = MeshNames.n5_600_dr_03
+    walk()
+    return
+
+    mesh_name_full = MeshNames.n4_600_dr_03_rot
 
     # SaveRawMesh("n5/N100-600-600-100", mesh_name_full)
     # PlotSavedMesh(mesh_name_full)
@@ -215,6 +233,7 @@ def main():
     print(f"{len(chunks)} chunks")
 
     ram_range = chunks[3]
+    ram_range = ParamsSettings.ram_range_long
 
     print(F"STARTING CHUNK {ram_range}")
 

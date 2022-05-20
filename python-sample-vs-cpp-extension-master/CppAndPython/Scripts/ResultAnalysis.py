@@ -255,7 +255,7 @@ class NuseltTable:
                 print(f"more than 1 result for {result_name}")
             return results.iloc[0][NuseltTable.nuselt_result_literal]
 
-        if b_calculate_if_missing and path.exists(f"{result_name}/nodes.csv"):
+        if b_calculate_if_missing and path.exists(f"SavedResults/{result_name}/nodes.csv"):
             analysis = DynamycsAnalysis("SavedResults", result_name) 
             nuselt = analysis.CalculateNulselt()
             df = pd.DataFrame({
@@ -263,6 +263,7 @@ class NuseltTable:
                 NuseltTable.mesh_name_literal : [analysis.GetMeshName()],
                 NuseltTable.nuselt_result_literal : [nuselt]
             })
+            print(f"CALCULATING NUSELT = {nuselt} FOR {result_name}")
 
             self.table = pd.concat([self.table, df])
 
