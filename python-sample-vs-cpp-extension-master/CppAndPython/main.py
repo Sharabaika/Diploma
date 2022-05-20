@@ -204,50 +204,42 @@ def CompairNus():
     plt.show()
 
 def main():
-    mesh_name_full = MeshNames.n3_600_dr_03
+    mesh_name_full = MeshNames.n4_600_dr_03_rot
+
+    # SaveRawMesh("n4/N100-600-600-100_rotated", mesh_name_full)
+    # PlotSavedMesh(mesh_name_full)
+
 
     # SolveMagnetics(mesh_name = mesh_name_full)
     
-    table = NuseltTable.LoadFromCSV()
+    chunks = ParamsSettings.ram_chunks(4)
 
-    ram_range = ParamsSettings.ram_range_short
-    ram_range = [12000]
+    ram_range = chunks[0]
 
-    last_result = ResultName.MakeName(mesh_name_full, 6000)
+    print(F"STARTING CHUNK {ram_range}")
+
+    last_result = ""
     for ram in ram_range:    
         result_name = ResultName.MakeName(mesh_name_full, ram)
 
-        # if nus is not np.NaN:
-        #     continue
+        table = NuseltTable.LoadFromCSV()
+        nus = table.GetNuselt(result_name)
+        if nus is not np.NaN:
+            continue
 
         initials =  last_result
+        print(F"SOLVING {ram}")
         solve_fast(Ra = 0, Ram = ram, mesh_name = mesh_name_full, result_name = result_name, initials = initials)
         last_result = result_name
 
-        nus = table.GetNuselt(result_name, True)
-        print(f"Ram = {ram} nu = {nus}")
-
-    ram_range = [800, 400, 100]
-
-    last_result = ResultName.MakeName(mesh_name_full, 1000)
-    for ram in ram_range:    
-        result_name = ResultName.MakeName(mesh_name_full, ram)
-
-        # if nus is not np.NaN:
-        #     continue
-
-        initials =  last_result
-        solve_fast(Ra = 0, Ram = ram, mesh_name = mesh_name_full, result_name = result_name, initials = initials)
-        last_result = result_name
-
+        table = NuseltTable.LoadFromCSV()
         nus = table.GetNuselt(result_name, True)
         print(f"Ram = {ram} nu = {nus}")
 
     # PlotNuselt()
     # CompairNus()
 
-    # SaveRawMesh("n2/N100-600-600-100_rotated", MeshNames.n2_600_dr_03_rot)
-    # PlotSavedMesh(MeshNames.n2_600_dr_03_rot)
+
 
 if __name__ == "__main__":
     # test()

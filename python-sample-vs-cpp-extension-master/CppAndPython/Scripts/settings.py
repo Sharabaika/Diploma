@@ -2,6 +2,12 @@
 class ParamsSettings:
     ram_range = [1000, 5000, 10000, 20000, 30000, 40000, 50000, 60000, 70000, 80000, 90000, 100000]
     ram_range_short = [1000, 20000, 40000, 60000, 80000, 100000]
+    ram_range_long = [100, 400, 800, 1000, 6000, 12000, 20000, 40000, 60000, 80000, 100000]
+
+    def ram_chunks(n):
+        lst = ParamsSettings.ram_range_long
+        for i in range(0, len(lst), n):
+            yield lst[i:i + n]
 
 class MeshNames:
     n0 = "Computational/n0_N100-500-500-100"
@@ -17,6 +23,9 @@ class MeshNames:
     n2_600_dr_03_rot = "Computational/n2_N100-600-600-100_dr_03_rot"
 
     n3_600_dr_03 = "Computational/n3_N100-600-600-100_dr_03"
+
+    n4_600_dr_03 = "Computational/n4_N100-600-600-100_dr_03"
+    n4_600_dr_03_rot = "Computational/n4_N100-600-600-100_dr_03_rot"
 #old
     n_2_dr_03 = "Computational/n_2_dr_0.3"
     n_2_dr_03_r = "Computational/n_2_dr_0.3_r"
