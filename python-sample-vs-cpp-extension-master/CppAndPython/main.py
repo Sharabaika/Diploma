@@ -233,7 +233,7 @@ def PLotNusPlotly():
 
     # fits
     meshes = set(df[NuseltTable.mesh_name_short_literal])
-    x_fit = np.arange(0, 100001, 25)
+    x_fit = np.arange(100, 100001, 25)
     for mesh in meshes:
         results = df.loc[df[NuseltTable.mesh_name_short_literal] == mesh]
 
@@ -255,13 +255,10 @@ def PLotNusPlotly():
     fig.show()
 
 def main():
-    PLotNusPlotly()
-
     # table = NuseltTable.LoadFromCSV()
     # table.RedoTable()
-    return
 
-    mesh_name_full = MeshNames.n4_600_dr_03_rot
+    mesh_name_full = MeshNames.n2_600_dr_03
 
     # SaveRawMesh("n5/N100-600-600-100", mesh_name_full)
     # PlotSavedMesh(mesh_name_full)
@@ -271,9 +268,9 @@ def main():
     print(f"{len(chunks)} chunks")
 
     ram_range = chunks[3]
-    ram_range = ParamsSettings.ram_range_long
+    ram_range = ParamsSettings.ram_range_long[::-1]
 
-    print(F"STARTING CHUNK {ram_range}")
+    print(F"STARTING MESH {mesh_name_full}")
 
     last_result = ""
     for ram in ram_range:    
@@ -282,6 +279,7 @@ def main():
         table = NuseltTable.LoadFromCSV()
         nus = table.GetNuselt(result_name, True)
         if not math.isnan(nus):
+            print(f"{ram} ALREADY HAS NU {nus}")
             continue
 
         initials =  ""
