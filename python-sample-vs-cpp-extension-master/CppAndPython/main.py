@@ -219,10 +219,43 @@ def walk():
             name = ResultName.MakeName(mesh_name_full, ram)
             table.GetNuselt(name)
  
+def PLotNusPlotly():
+    import plotly.express as px
+    from scipy.optimize import curve_fit
+    import plotly.graph_objects as go
+    def fit_funct(x, mult_coef, exp_coef):
+        return mult_coef*(x**exp_coef)
 
+    table = NuseltTable.LoadFromCSV()
+    df = table.table.sort_values(by='Ram', ascending=False)
+
+    fig = px.scatter(df, x="Ram", y="nu", color='mesh_name_short', symbol="mesh_name_short")
+
+    # fits
+    meshes = set(df[NuseltTable.mesh_name_short_literal])
+    x_fit = np.arange(0, 100001, 25)
+    for mesh in meshes:
+        results = df.loc[df[NuseltTable.mesh_name_short_literal] == mesh]
+
+        if (len(results) < 2):
+            continue
+        
+        rams = results[[NuseltTable.ram_literal]].to_numpy().flatten()
+        nus = results[[NuseltTable.nuselt_result_literal]].to_numpy().flatten()
+
+        popt, pcov = curve_fit(fit_funct, rams, nus)
+
+        # print(fit_funct(x_fit, *popt))
+        name = f"{mesh}, fit mult=%5.4f, pow=%5.4f" % tuple(popt)
+        hovertemplate = f"{mesh},<br> fit mult=%5.4f,<br> pow=%5.4f <extra></extra>" % tuple(popt)
+        fig.add_trace(go.Scatter(x=x_fit, y=fit_funct(x_fit, *popt), mode='lines', name=name, hovertemplate=hovertemplate))
+
+
+    fig.write_html("SavedPlots/Nus.html")
+    fig.show()
 
 def main():
-    walk()
+    PLotNusPlotly()
 
     # table = NuseltTable.LoadFromCSV()
     # table.RedoTable()
