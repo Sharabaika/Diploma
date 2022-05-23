@@ -6,7 +6,8 @@ from Scripts.ResultAnalysis import DynamycsAnalysis, MagneticsAnalysis
 def PlotMesh(points, triangles, segment_idex, index_nodes = False, scatted_nodes = False, index_regions = False):
     x, y = points[:, 0], points[:, 1]
 
-    fig, ax = plt.subplots()
+    w, h = matplotlib.rcParams["figure.figsize"] 
+    fig, ax = plt.subplots(figsize=(w*2.7, h*2.7))
     
 
     if scatted_nodes:
@@ -24,7 +25,30 @@ def PlotMesh(points, triangles, segment_idex, index_nodes = False, scatted_nodes
         for point_index in range(len(x)):
             ax.text(x=x[point_index], y=y[point_index], s = segment_idex[point_index], color='red', fontsize=8)
 
+    plt.xlim((-2.1,2.1))
+    plt.ylim((-2.1,2.1))
     plt.show()
+
+def CompairMeshes(*meshes):
+    w, h = matplotlib.rcParams["figure.figsize"] 
+    fig, axs = plt.subplots(1, 2, sharey = True, figsize=(w*2.5, h*1.25))
+
+    for n, mesh in enumerate(meshes):
+        nodes, triangles, segment_indices, trig_neighbors, node_neighbours, triangle_indeces = mesh
+
+        x, y = nodes[:, 0], nodes[:, 1]
+
+        axs[n].triplot(x, y, triangles, color='green')
+        axs[n].set_aspect('equal')
+        axs[n].set_xlim((-2.1,2.1))
+        axs[n].set_ylim((-2.1,2.1))
+    
+    axs[0].set_title("250 точек на границе, 6900 в области 2", fontsize=30)
+    axs[1].set_title("375 точек на границе, 14900 в области 2", fontsize=30)
+
+
+    plt.show()
+
 
 def SavePlot(path):
     plt.savefig(path)

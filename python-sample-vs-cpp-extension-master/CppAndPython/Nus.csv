@@ -89,3 +89,13 @@ Computational/n0_N150-600-600-150/Ram_6000,Computational/n0_N150-600-600-150,n0_
 Computational/n0_N150-600-600-150/Ram_12000,Computational/n0_N150-600-600-150,n0_N150-600-600-150,0,12000,5.0,25.11412974180485
 Computational/n3_N100-600-600-100_dr_03/Ram_600,Computational/n3_N100-600-600-100_dr_03,n3_N100-600-600-100_dr_03,0,600,5.0,11.679589528013874
 Computational/n4_N100-600-600-100_dr_03_rot/Ram_600,Computational/n4_N100-600-600-100_dr_03_rot,n4_N100-600-600-100_dr_03_rot,0,600,5.0,12.319691773185088
+Computational/n2_rotated/n2_N100-600-600-100_dr_03_rot_72/Ram_1000,Computational/n2_rotated/n2_N100-600-600-100_dr_03_rot_72,n2_rotated/n2_N100-600-600-100_dr_03_rot_72,0,1000,5.0,12.602824903732564
+Computational/n2_rotated/n2_N100-600-600-100_dr_03_rot_54/Ram_1000,Computational/n2_rotated/n2_N100-600-600-100_dr_03_rot_54,n2_rotated/n2_N100-600-600-100_dr_03_rot_54,0,1000,5.0,12.50445784093204
+Computational/n2_rotated/n2_N100-600-600-100_dr_03_rot_36/Ram_1000,Computational/n2_rotated/n2_N100-600-600-100_dr_03_rot_36,n2_rotated/n2_N100-600-600-100_dr_03_rot_36,0,1000,5.0,12.215921124461277
+Computational/n2_rotated/n2_N100-600-600-100_dr_03_rot_18/Ram_1000,Computational/n2_rotated/n2_N100-600-600-100_dr_03_rot_18,n2_rotated/n2_N100-600-600-100_dr_03_rot_18,0,1000,5.0,11.674861697817391
+Computational/n2_rotated/n2_N100-600-600-100_dr_03_rot_72/Ram_50000,Computational/n2_rotated/n2_N100-600-600-100_dr_03_rot_72,n2_rotated/n2_N100-600-600-100_dr_03_rot_72,0,50000,5.0,38.85412125694723
+Computational/n2_rotated/n2_N100-600-600-100_dr_03_rot_54/Ram_50000,Computational/n2_rotated/n2_N100-600-600-100_dr_03_rot_54,n2_rotated/n2_N100-600-600-100_dr_03_rot_54,0,50000,5.0,38.33542054349765
+Computational/n2_rotated/n2_N100-600-600-100_dr_03_rot_36/Ram_50000,Computational/n2_rotated/n2_N100-600-600-100_dr_03_rot_36,n2_rotated/n2_N100-600-600-100_dr_03_rot_36,0,50000,5.0,37.632586328568784
+Computational/n2_rotated/n2_N100-600-600-100_dr_03_rot_18/Ram_50000,Computational/n2_rotated/n2_N100-600-600-100_dr_03_rot_18,n2_rotated/n2_N100-600-600-100_dr_03_rot_18,0,50000,5.0,36.026841195589135
+Computational/n2_rotated/n2_N100-600-600-100_dr_03_rot_72/Ram_100000,Computational/n2_rotated/n2_N100-600-600-100_dr_03_rot_72,n2_rotated/n2_N100-600-600-100_dr_03_rot_72,0,100000,5.0,46.20846192490492
+Computational/n2_rotated/n2_N100-600-600-100_dr_03_rot_54/Ram_100000,Computational/n2_rotated/n2_N100-600-600-100_dr_03_rot_54,n2_rotated/n2_N100-600-600-100_dr_03_rot_54,0,100000,5.0,45.50194145921014

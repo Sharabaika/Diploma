@@ -4,12 +4,13 @@ from unittest import result
 import matplotlib
 import numpy as np
 from MagnetismSolver import Solve, SolveMagnetics
+from Scripts.MeshGenerator import RotateMeshByAngle
 from Scripts.MeshReader import MeshAnalysis, ReadRaw, ReadSaved
 from Scripts.MeshWriter import SaveMesh
 import pandas as pd
 import matplotlib.tri as tri
 import sys
-from Scripts.Plotters import DynamycsPlot, MagneticsPlot, PlotMesh, SavePlot, ShowPlot
+from Scripts.Plotters import CompairMeshes, DynamycsPlot, MagneticsPlot, PlotMesh, SavePlot, ShowPlot
 from Scripts.ResultAnalysis import DynamycsAnalysis, MagneticsAnalysis, NuseltTable
 from math import atan2, exp, sqrt
 import matplotlib.pyplot as plt
@@ -147,8 +148,12 @@ def Nulselt(result_name):
 
 def PlotSavedMesh(name):
     nodes, triangles, segment_indices, trig_neighbors, node_neighbours, triangle_indeces = ReadSaved(f"SavedMeshes/{name}.dat")
-    PlotMesh(nodes, triangles, segment_indices, False, True, False)
+    PlotMesh(nodes, triangles, segment_indices, False, False, False)
     
+def CompairSavedMeshes(*meshes):
+    loaded = [ReadSaved(f"SavedMeshes/{name}.dat") for name in meshes]
+    CompairMeshes(*loaded)
+
 def PlotNuselt():
     def fit_funct(x, mult_coef, exp_coef):
         return mult_coef*x**exp_coef
@@ -254,7 +259,63 @@ def PLotNusPlotly():
     fig.write_html("SavedPlots/Nus.html")
     fig.show()
 
+def RotateMeshAndSave(mesh_name_to_rotate, angle, result_mesh_name):
+    from os import path
+    if path.exists(f"SavedMeshes/{result_mesh_name}.dat"):
+        return 
+
+    mesh = ReadSaved(f"SavedMeshes/{mesh_name_to_rotate}.dat")
+    new_mesh = RotateMeshByAngle(mesh, angle)
+    SaveMesh("SavedMeshes", f"{result_mesh_name}", *new_mesh)
+
+    import os
+    try:
+        os.makedirs(f"SavedResults/{result_mesh_name}")
+    except FileExistsError:
+        print("results directory exists")
+
+    try:
+        os.makedirs(f"SavedMagnetics/{result_mesh_name}/magnetics_H_5_chi0_2_mu_1000")
+    except FileExistsError:
+        print("magnetics directory exists")
+
+
 def main():
+    CompairSavedMeshes(MeshNames.n0_250, MeshNames.n0_375)
+    return
+
+    starting = 0
+    angle = 18*1
+    new_mesh_name = MeshNames.n2_rotated_format.format(angle=angle)
+
+    print(f"STARTING MESH {new_mesh_name}")
+
+    RotateMeshAndSave(MeshNames.n2_rotated_format.format(angle=starting), angle, new_mesh_name)
+
+    print(f"MESH IS ROTATED")
+
+    # SolveMagnetics(mesh_name = new_mesh_name)
+
+    print("MAGNETICS ARE SOLVED")
+
+    for ram in [1000, 50000, 100000]:
+        result_name = ResultName.MakeName(new_mesh_name, ram)
+
+        table = NuseltTable.LoadFromCSV()
+        nus = table.GetNuselt(result_name, True)
+        if not math.isnan(nus):
+            print(f"{ram} ALREADY HAS NU {nus}")
+            continue
+
+        solve_fast(Ra = 0, Ram = ram, mesh_name = new_mesh_name, result_name = result_name)
+
+        table = NuseltTable.LoadFromCSV()
+        nus = table.GetNuselt(result_name, True)
+
+        print(f"Ram = {ram} nu = {nus}")
+
+    return
+
     # table = NuseltTable.LoadFromCSV()
     # table.RedoTable()
 

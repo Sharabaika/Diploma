@@ -11,6 +11,23 @@ def GenerateCurvyMesh(N, n, R, dr):
     res[-1] = res[0]
     return res
 
+def RotateMeshByAngle(mesh, angle):
+    nodes, triangles, segment_indices, trig_neighbors, node_neighbours, triangle_indeces = mesh
+
+    theta = np.deg2rad(angle)
+    rot = np.array([[np.cos(theta), -np.sin(theta)], [np.sin(theta), np.cos(theta)]])
+
+    for (n_node, node) in enumerate(nodes):
+        x,y = node
+        
+        new_node = np.dot(rot, node)
+        nodes[n_node] = new_node
+
+        if n_node % 5000 == 0:
+            print(f"rotated {n_node} nodes")
+
+    return nodes, triangles, segment_indices, trig_neighbors, node_neighbours, triangle_indeces
+
 
 def main():
     import matplotlib.pyplot as plt
