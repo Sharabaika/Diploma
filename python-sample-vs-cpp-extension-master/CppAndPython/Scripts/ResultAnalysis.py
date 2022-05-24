@@ -121,6 +121,8 @@ class DynamycsAnalysis(ResultAnalysis):
     def GetT(self):
         return self.GetSavedResults()["T"]
 
+    def GetError(self, variable):
+        return self.GetLogs()[variable]
 
     def CalculateLocalNulselt(self):
         nodes, triangles, segment_indices, trig_neighbors, node_neighbours, trianlge_indices = self.GetMesh()

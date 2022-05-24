@@ -1,3 +1,4 @@
+from asyncio.windows_events import NULL
 import numpy as np
 from pytools import delta
 from Scripts.MeshReader import ReadRaw, ReadSaved
@@ -546,7 +547,7 @@ def solve_fast(*args, **kwargs):
     T_outer = 0
 
     # Cycles
-    N_CYCLIES_MAX = kwargs.get("N_CYCLIES_MAX", 150000)
+    N_CYCLIES_MAX = kwargs.get("N_CYCLIES_MAX", 250000)
     MAX_DELTA_ERROR = kwargs.get("MAX_DELTA_ERROR", 1e-5)
 
     PRINT_LOG_EVERY_N_CYCLES = 20
@@ -574,6 +575,7 @@ def solve_fast(*args, **kwargs):
 
     # Init
     initial_conditions_result_name = kwargs.get("initials", "")
+    prev_results = NULL
     if initial_conditions_result_name:
         prev_results = DynamycsAnalysis("SavedResults", initial_conditions_result_name)
         Psi = np.array(prev_results.GetPsi())
@@ -685,6 +687,12 @@ def solve_fast(*args, **kwargs):
     Psi, W, T, Delta_Psi, Delta_W, Delta_T = res
 
     result_name = f"SavedResults/{result_name}"
+
+    if prev_results:
+        Saver.logger.LogErrorsList(Psi = prev_results.GetLogs()["Psi"],
+         W = prev_results.GetLogs()["W"],
+         T = prev_results.GetLogs()["T"])
+
     Saver.logger.LogErrorsList(Psi = Delta_Psi, W = Delta_W, T = Delta_T)
     Saver.SaveResults(result_name)
     Saver.SaveResult(result_name, "nodes", W = W, Psi = Psi, T = T)
