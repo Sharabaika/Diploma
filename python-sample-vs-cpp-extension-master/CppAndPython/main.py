@@ -322,37 +322,37 @@ def main():
 
     # PlotPsiT_Table(*results)
 
-    # starting = 0
-    # angle = 0
-    # new_mesh_name = MeshNames.n2_rotated_format.format(angle=angle)
+    starting = 0
+    angle = 0
+    new_mesh_name = MeshNames.n2_rotated_format.format(angle=angle)
 
-    # print(f"STARTING MESH {new_mesh_name}")
+    print(f"STARTING MESH {new_mesh_name}")
 
-    # RotateMeshAndSave(MeshNames.n2_rotated_format.format(angle=starting), angle, new_mesh_name)
+    RotateMeshAndSave(MeshNames.n2_rotated_format.format(angle=starting), angle, new_mesh_name)
 
-    # print(f"MESH IS ROTATED")
+    print(f"MESH IS ROTATED")
 
-    # # SolveMagnetics(mesh_name = new_mesh_name)
+    # SolveMagnetics(mesh_name = new_mesh_name)
 
-    # print("MAGNETICS ARE SOLVED")
+    print("MAGNETICS ARE SOLVED")
 
-    # for ram in [100000]:
-    #     result_name = ResultName.MakeName(new_mesh_name, ram)
+    for ram in [100000]:
+        result_name = ResultName.MakeName(new_mesh_name, ram)
 
-    #     table = NuseltTable.LoadFromCSV()
-    #     # nus = table.GetNuselt(result_name, True)
-    #     # if not math.isnan(nus):
-    #     #     print(f"{ram} ALREADY HAS NU {nus}")
-    #     #     continue
+        table = NuseltTable.LoadFromCSV()
+        # nus = table.GetNuselt(result_name, True)
+        # if not math.isnan(nus):
+        #     print(f"{ram} ALREADY HAS NU {nus}")
+        #     continue
 
-    #     solve_fast(Ra = 0, Ram = ram, mesh_name = new_mesh_name, result_name = result_name)
+        solve_fast(Ra = 0, Ram = ram, mesh_name = new_mesh_name, result_name = result_name, QW = 0.015)
 
-    #     table = NuseltTable.LoadFromCSV()
-    #     nus = table.GetNuselt(result_name, True)
+        table = NuseltTable.LoadFromCSV()
+        nus = table.GetNuselt(result_name, True)
 
-    #     print(f"Ram = {ram} nu = {nus}")
+        print(f"Ram = {ram} nu = {nus}")
 
-    # return
+    return
 
     # table = NuseltTable.LoadFromCSV()
     # table.RedoTable()
