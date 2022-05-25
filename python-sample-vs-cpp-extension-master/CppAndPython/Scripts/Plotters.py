@@ -1,7 +1,7 @@
 from matplotlib import pyplot as plt
 import matplotlib
 from Scripts.ResultAnalysis import DynamycsAnalysis, MagneticsAnalysis
-
+import numpy as np
 
 def PlotMesh(points, triangles, segment_idex, index_nodes = False, scatted_nodes = False, index_regions = False):
     x, y = points[:, 0], points[:, 1]
@@ -117,8 +117,8 @@ def PlotLevel(x, y, F, **kwargs):
         maxF = max(F[indecies])
         minF = min(F[indecies])
 
-        step = (maxF-minF)/nlevels
-        levels = np.arange(minF, maxF + step/2, step)
+        step = (maxF-minF)/(nlevels+2)
+        levels = np.arange(minF + step/2, maxF - step/2, step)
         
 
     fig, ax = plt.subplots()
@@ -168,9 +168,9 @@ class MagneticsPlot:
         self.triangulation = triangulation
 
         mask = [index != 2 for index in trianlge_indices]
-        tri = self.triangulation
-        tri.set_mask(mask)
-        self.inner_triangulation = tri
+        self.inner_triangulation = matplotlib.tri.Triangulation(self.x,self.y,triangles)
+        self.inner_triangulation.set_mask(mask)
+
 
     def PlotFi(self, b_inner_only = True, **kwargs):
         if b_inner_only:
@@ -178,11 +178,35 @@ class MagneticsPlot:
         else:
             PlotNodes(self.triangulation, self.analysis.GetFi(), **kwargs)
 
-    def PlotH(self, b_inner_only = True, **kwargs):
-        if b_inner_only:
-            PlotElements(self.inner_triangulation, self.analysis.GetH(), **kwargs, xlim = (-2,2), ylim=(-2,2))
-        else:
-            PlotElements(self.triangulation, self.analysis.GetH(), **kwargs)
+    def FillAx(ax, fun, tri, color):
+        from mpl_toolkits.axes_grid1 import make_axes_locatable
+
+        cmap = plt.cm.get_cmap(color)
+        level = ax.tricontourf(tri, fun, cmap = cmap)
+        contours = ax.tricontour(tri, fun, linewidths = 1, colors = "black")
+
+        driver = make_axes_locatable(ax)
+        cax = driver.append_axes("right", size="5%", pad=0.05)
+        plt.colorbar(level, cax=cax)
+
+        return contours
+
+    def PlotH(self, **kwargs):            
+        w, h = matplotlib.rcParams["figure.figsize"] 
+        fig, ax = plt.subplots(sharey = True, figsize=(w*1.5, h*1.5))
+
+        plt.xlabel('X')
+        plt.ylabel('Y')
+
+        inner = MagneticsPlot.FillAx(ax,self.analysis.GetH_Nodes(), self.inner_triangulation, "viridis")
+
+        ax.set_xlim((-2,2))
+        ax.set_ylim((-2,2))
+        ax.set_aspect('equal')
+
+        plt.clabel(inner, inline=1, fontsize=10, manual = True)
+
+        plt.show()
 
     def PlotH_Nodes(self, b_inner_only = True, **kwargs):
         if b_inner_only:
@@ -209,9 +233,45 @@ class DynamycsPlot:
         triangulation.set_mask(mask)
         self.triangulation = triangulation
 
+    def FillAx(ax, fun, color, tri):
+        from mpl_toolkits.axes_grid1 import make_axes_locatable
+
+        cmap = plt.cm.get_cmap(color)
+        level = ax.tricontourf(tri, fun, cmap = cmap)
+        contours = ax.tricontour(tri.x, tri.y, fun, linewidths = 1, colors = "black")
+
+        driver = make_axes_locatable(ax)
+        cax = driver.append_axes("right", size="5%", pad=0.05)
+        plt.colorbar(level, cax=cax)
+
+        return contours
+
+    def PlotPsiT(self):
+
+        fig, axs = plt.subplots(1,2)
+
+        plt.xlabel('X')
+        plt.ylabel('Y')
+
+        # Psi
+        psi_contours = DynamycsPlot.FillAx(axs[0], self.analysis.GetPsi(), "viridis", self.triangulation)
+        axs[0].set_title("Psi")
+
+        T_contours = DynamycsPlot.FillAx(axs[1], self.analysis.GetT(), "turbo", self.triangulation)
+        axs[1].set_title("T")
+
+        for ax in axs:
+            ax.set_xlim((-2,2))
+            ax.set_ylim((-2,2))
+            ax.set_aspect('equal')
+
+        plt.clabel(psi_contours, inline=1, fontsize=10, manual = False)
+        plt.clabel(T_contours, inline=1, fontsize=10, manual = True)
+
+        plt.show()
 
     def PlotPsiLevel(self):        
-        PlotLevel(self.x, self.y, self.analysis.GetPsi(), nlevels = 30, xrange = (-2,2), yrange = (-2,2), manual = True)
+        PlotLevel(self.x, self.y, self.analysis.GetPsi(), nlevels = 10, xrange = (-2,2), yrange = (-2,2), manual = True)
 
 
     def PlotPsi(self, **kwargs):
@@ -224,3 +284,49 @@ class DynamycsPlot:
 
     def PlotT(self, **kwargs):
         PlotNodes(self.triangulation, self.analysis.GetT(), **kwargs, xlim=(-2, 2), ylim=(-2,2))
+
+def PlotPsiT_Table(*results):
+    n = len(results)
+
+    fig, axs = plt.subplots(n, 2)
+    plt.xlabel('X')
+    plt.ylabel('Y')
+
+    for i, result in enumerate(results):
+        plotter = DynamycsPlot(result)
+
+        psi_contours = DynamycsPlot.FillAx(axs[i, 0], result.GetPsi(), "viridis", plotter.triangulation)
+        axs[i, 0].set_ylabel(f"Ram = { result.GetParam('Ram') }")
+
+        T_contours = DynamycsPlot.FillAx(axs[i, 1], result.GetT(), "turbo", plotter.triangulation)
+
+    for ax in axs.flatten():
+        ax.set_xlim((-2,2))
+        ax.set_ylim((-2,2))
+        ax.set_aspect('equal')
+
+    axs[0, 0].set_title("Psi")
+    axs[0, 1].set_title("T")        
+
+    plt.show()
+
+def ComapairH(*results):
+    n = len(results)
+
+    fig, axs = plt.subplots(1,n)
+    plt.xlabel('X')
+    plt.ylabel('Y')
+
+    for i, result in enumerate(results):
+        plotter = MagneticsPlot(result)
+
+        mag = MagneticsPlot.FillAx(axs[i],result.GetH_Nodes(), plotter.inner_triangulation, "viridis")
+
+    for ax in axs.flatten():
+        ax.set_xlim((-2,2))
+        ax.set_ylim((-2,2))
+        ax.set_aspect('equal')
+
+    axs[0].set_ylabel("H")    
+
+    plt.show()
