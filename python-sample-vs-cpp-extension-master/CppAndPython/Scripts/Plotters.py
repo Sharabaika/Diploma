@@ -310,23 +310,85 @@ def PlotPsiT_Table(*results):
 
     plt.show()
 
-def ComapairH(*results):
+def PlotPsiTable(*results):
     n = len(results)
 
-    fig, axs = plt.subplots(1,n)
+    fig, axs = plt.subplots(n, len(results[0]))
     plt.xlabel('X')
     plt.ylabel('Y')
 
-    for i, result in enumerate(results):
-        plotter = MagneticsPlot(result)
+    for i, row_result in enumerate(results):
+        angle = row_result[0].path.split("/")[-2].split("_")[-1]
+        axs[i, 0].set_ylabel(f"alpha = {angle}")
 
-        mag = MagneticsPlot.FillAx(axs[i],result.GetH_Nodes(), plotter.inner_triangulation, "viridis")
+        for j, result in enumerate(row_result):
+            plotter = DynamycsPlot(result)
+
+            psi_contours = DynamycsPlot.FillAx(axs[i, j], result.GetPsi(), "viridis", plotter.triangulation)
+
+
+            if i == 0:
+                axs[0, j].set_title(f"Ram = { result.GetParam('Ram') }")
+            
 
     for ax in axs.flatten():
         ax.set_xlim((-2,2))
         ax.set_ylim((-2,2))
         ax.set_aspect('equal')
 
-    axs[0].set_ylabel("H")    
+    plt.show()
+
+def ComapairH(*results):
+    n = len(results)
+
+    n_col = 3
+
+    import math
+    rows = math.ceil(n / n_col)
+
+    fig, axs = plt.subplots(rows,n_col)
+    plt.xlabel('X')
+    plt.ylabel('Y')
+
+    for i, result in enumerate(results):   
+        print(i)
+        plotter = MagneticsPlot(result)
+
+        ax = axs.flatten()[i]
+
+        angle = result.path.split("/")[-2].split("_")[-1]
+
+        mag = MagneticsPlot.FillAx(ax,result.GetH_Nodes(), plotter.inner_triangulation, "viridis")
+        ax.set_title(f"alpha = {angle}")
+
+    for ax in axs.flatten():
+        ax.set_xlim((-2,2))
+        ax.set_ylim((-2,2))
+        ax.set_aspect('equal')
+
+    axs[0,0].set_ylabel("H")    
+
+    plt.show()
+
+def PlotMaxH(results):
+    alphas = []
+    max_H = []
+
+    fig, axs = plt.subplots()
+    plt.xlabel('alpha')
+    plt.ylabel('H max')
+
+    for i, result in enumerate(results):   
+        print(i)
+        plotter = MagneticsPlot(result)
+
+        angle = result.path.split("/")[-2].split("_")[-1]
+        alphas.append(angle)
+        H = result.GetH_Nodes()
+        max_H.append(max(H))
+
+    axs.plot(alphas, max_H)
+    axs.scatter(alphas, max_H)
+
 
     plt.show()
