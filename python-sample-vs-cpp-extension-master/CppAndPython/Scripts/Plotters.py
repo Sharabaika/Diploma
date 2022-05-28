@@ -310,6 +310,46 @@ def PlotPsiT_Table(*results):
 
     plt.show()
 
+def PLot_Psi_T_Nuselt_Table(results):
+    n = len(results)
+
+    fig = plt.figure()
+    plt.xlabel('X')
+    plt.ylabel('Y')
+
+    def foram_ax(ax):
+        ax.set_xlim((-2,2))
+        ax.set_ylim((-2,2))
+        ax.set_aspect('equal')
+
+    for i, result in enumerate(results):
+        plotter = DynamycsPlot(result)
+
+        psi_ax = plt.subplot(n, 3, 3*i+1)    
+        foram_ax(psi_ax)
+        psi_contours = DynamycsPlot.FillAx(psi_ax, result.GetPsi(), "viridis", plotter.triangulation)
+        psi_ax.set_ylabel(f"Ram = { result.GetParam('Ram') }")
+
+        t_ax = plt.subplot(n, 3, 3*i+2)    
+        foram_ax(t_ax)
+        T_contours = DynamycsPlot.FillAx(t_ax, result.GetT(), "turbo", plotter.triangulation)
+
+        fis, nus = result.CalculateLocalNulselt()
+        nus_ax = plt.subplot(n, 3, 3*i+3,  projection='polar')
+        nus_ax.plot(np.deg2rad(fis),nus/max(nus))   
+        nus_ax.set_rticks([1])
+
+        if (i == 0):
+            psi_ax.set_title("Psi")
+            t_ax.set_title("T")
+            nus_ax.set_title("Nu")
+
+
+    # axs[0, 0].set_title("Psi")
+    # axs[0, 1].set_title("T")        
+
+    plt.show()
+
 def PlotPsiTable(*results):
     n = len(results)
 

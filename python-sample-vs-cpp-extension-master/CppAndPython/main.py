@@ -11,7 +11,7 @@ from Scripts.MeshWriter import SaveMesh
 import pandas as pd
 import matplotlib.tri as tri
 import sys
-from Scripts.Plotters import ComapairH, CompairLocalNuselts, CompairMeshes, DynamycsPlot, MagneticsPlot, PlotMaxH, PlotMesh, PlotPsiT_Table, PlotPsiTable, SavePlot, ShowPlot
+from Scripts.Plotters import ComapairH, CompairLocalNuselts, CompairMeshes, DynamycsPlot, MagneticsPlot, PLot_Psi_T_Nuselt_Table, PlotMaxH, PlotMesh, PlotPsiT_Table, PlotPsiTable, SavePlot, ShowPlot
 from Scripts.ResultAnalysis import DynamycsAnalysis, MagneticsAnalysis, NuseltTable
 from math import atan2, exp, sqrt
 import matplotlib.pyplot as plt
@@ -162,20 +162,25 @@ def PlotNuselt():
     w, h = matplotlib.rcParams["figure.figsize"] 
     fig, ax = plt.subplots(figsize=(w*2.5, h))
 
-    ram_min = 275
+    ram_min = 875
 
     x_fit = np.arange(ram_min, 100001, 25)
 
     table = NuseltTable.LoadFromCSV()
     df = table.table.sort_values(by='Ram', ascending=False)
+    df = df[df[NuseltTable.ram_literal] >= 0]
 
     # fits
     meshes = MeshNames.mesh_list
     meshes = [MeshNames.n0_600, MeshNames.n2_600_dr_03_rot, MeshNames.n2_600_dr_03]
     meshes = { 
-        MeshNames.n0_600 : ["o", "Circle"]
-        # , MeshNames.n2_600_dr_03_rot : ["_", "Horizontal"]
-        # , MeshNames.n2_600_dr_03 : ["|", "Vertical"]
+        MeshNames.n0_600 : ["o", "Круглый цилиндр"]
+        , MeshNames.n2_600_dr_03_rot : ["_", "2 вершины, горизонтальный"]
+        , MeshNames.n2_600_dr_03 : ["|", "2 вершины, вертикально"]
+        # , MeshNames.n3_600_dr_03 : ["2", "3 вершины"]
+        # , MeshNames.n4_600_dr_03 : ["+", "4 вершины"]
+        # , MeshNames.n4_600_dr_03_rot : ["x", "4 вершины, повернутый"]
+        # , MeshNames.n5_600_dr_03 : ["*", "5 вершин"]
     }
     for (mesh, (marker, label)) in meshes.items():
         results = df.loc[df[NuseltTable.mesh_name_literal] == mesh]
@@ -185,7 +190,7 @@ def PlotNuselt():
         rams = results[[NuseltTable.ram_literal]].to_numpy().flatten()
         nus = results[[NuseltTable.nuselt_result_literal]].to_numpy().flatten()
 
-        ax.scatter(rams, nus, marker = marker, label = label)
+        ax.scatter(rams, nus, marker = marker, label = label, s = 100)
 
         # fit
 
@@ -200,18 +205,100 @@ def PlotNuselt():
         # ax.plot(x_fit, fit_funct(x_fit, *popt),
         #     label=f"{label} fit: mult=%5.4f, pow=%5.4f" % tuple(popt))
 
-    nus = nus[::-1]
-    rams = rams[::-1]
-    dir = (nus[1:]-nus[:-1])/(rams[1:] - rams[:-1])
-    dir2 = (dir[1:]-dir[:-1])/(rams[1:-1]-rams[:-2])
-    for i, v in enumerate(dir2):
-        print(rams[i],v)
+    # nus = nus[::-1]
+    # rams = rams[::-1]
+    # dir = (nus[1:]-nus[:-1])/(rams[1:] - rams[:-1])
+    # dir2 = (dir[1:]-dir[:-1])/(rams[1:-1]-rams[:-2])
+    # for i, v in enumerate(dir2):
+    #     print(rams[i],v)
 
 
-    ax.legend()
+    ax.legend(prop={'size': 12})
     ax.set_xlabel("Ram")
     ax.set_ylabel("Nu")
-    # ax.set_xscale('log')
+    ax.set_xscale('log')
+    # ax.set_yscale('log')
+    # fig.savefig("SavedPlots/n0_nus_plot.png")
+    plt.show()
+
+def PlotRelativeNuselt():
+    def fit_funct(x, mult_coef, exp_coef):
+        return mult_coef*x**exp_coef
+        
+    w, h = matplotlib.rcParams["figure.figsize"] 
+    fig, ax = plt.subplots(figsize=(w*2.5, h))
+
+    ram_min = 275
+
+    x_fit = np.arange(ram_min, 100001, 25)
+
+    table = NuseltTable.LoadFromCSV()
+    df = table.table.sort_values(by='Ram', ascending=False)
+    df = df[df[NuseltTable.ram_literal] >= 100]
+
+    meshes0  =  MeshNames.n0_600
+
+
+    nus_0 = {}
+    for index, row in df[df[NuseltTable.mesh_name_literal] == MeshNames.n0_600].iterrows():
+        nus = float(row[NuseltTable.nuselt_result_literal])
+        ram = float(row[NuseltTable.ram_literal])
+
+        nus_0[ram] = nus
+
+    fraction = []
+    for index, row in df.iterrows():
+        nus = float(row[NuseltTable.nuselt_result_literal])
+        ram = float(row[NuseltTable.ram_literal])
+
+        nu_0 = nus_0[ram] if ram in nus_0.keys() else nus
+        fraction.append(nus / nu_0)
+    
+    df['fraction'] = fraction
+
+    meshes = { 
+          MeshNames.n2_600_dr_03_rot : ["_", "2 вершины, горизонтальный"]
+        , MeshNames.n2_600_dr_03 : ["|", "2 вершины, вертикально"]
+        , MeshNames.n3_600_dr_03 : ["2", "3 вершины"]
+        , MeshNames.n4_600_dr_03 : ["+", "4 вершины"]
+        , MeshNames.n4_600_dr_03_rot : ["x", "4 вершины, повернутый"]
+        , MeshNames.n5_600_dr_03 : ["*", "5 вершин"]
+    }
+    for (mesh, (marker, label)) in meshes.items():
+        results = df.loc[df[NuseltTable.mesh_name_literal] == mesh]
+        
+        # all
+
+        rams = results[[NuseltTable.ram_literal]].to_numpy().flatten()
+        nus_fraction = results[['fraction']].to_numpy().flatten()
+
+        ax.scatter(rams, nus_fraction, marker = marker, label = label, s = 100)
+
+        # fit
+
+        results =  results[results[NuseltTable.ram_literal] >=  ram_min]
+
+        rams = results[[NuseltTable.ram_literal]].to_numpy().flatten()
+        nus = results[[NuseltTable.nuselt_result_literal]].to_numpy().flatten()
+
+        from scipy.optimize import curve_fit
+        popt, pcov = curve_fit(fit_funct, rams, nus)
+        
+        # ax.plot(x_fit, fit_funct(x_fit, *popt),
+        #     label=f"{label} fit: mult=%5.4f, pow=%5.4f" % tuple(popt))
+
+    # nus = nus[::-1]
+    # rams = rams[::-1]
+    # dir = (nus[1:]-nus[:-1])/(rams[1:] - rams[:-1])
+    # dir2 = (dir[1:]-dir[:-1])/(rams[1:-1]-rams[:-2])
+    # for i, v in enumerate(dir2):
+    #     print(rams[i],v)
+
+    plt.axhline(y = 1)
+    ax.legend(prop={'size': 12})
+    ax.set_xlabel("Ram")
+    ax.set_ylabel("Nu")
+    ax.set_xscale('log')
     # fig.savefig("SavedPlots/n0_nus_plot.png")
     plt.show()
 
@@ -348,7 +435,7 @@ def PlotNusVsAngle():
     
 
     fig = px.scatter(df, x="Angle", y="nu", group="Ram")
-    fig.write_html("SavedPlots/n2_angles_Nus.html")
+    # fig.write_html("SavedPlots/n2_angles_Nus.html")
     fig.show()
 
 def PlotNusVsAngleV2():
@@ -393,6 +480,9 @@ def PlotNusVsAngleV2():
                 if (i > len(nus)-5):
                     ax.annotate(f"{nus[i] :.2f}", (angles[i], nus[i]*1.005))
 
+        plt.xticks(angles)
+
+
     ax.legend()
     ax.set_ylabel('Nu/Nu0')
     ax.set_xlabel("alpha")
@@ -401,13 +491,17 @@ def PlotNusVsAngleV2():
 
 
 def main():
-    walk()
-    PlotNusVsAngleV2()
-    return
+    # PlotRelativeNuselt()
+    # PlotNusVsAngleV2()
+    # return
+    # walk()
+    # PlotNusVsAngleV2()
+    # return
     # PlotNuselt()
     # return
     # PlotNusVsAngleV2()
     # return
+
     # mesh_name = MeshNames.n2_600_dr_03_rot
     # ram = 100000
     # name = ResultName.MakeName(mesh_name, ram)
@@ -428,6 +522,7 @@ def main():
 
     # results = []
     # mesh_names = [MeshNames.n2_rotated_format.format(angle=angle) for angle in range(0, 91, 9)]
+    # mesh_names.extend([MeshNames.n2_rotated_format.format(angle=angle) for angle in [2.5, 5, 7, 13]])
 
     # for ram in [1000, 50000, 100000]:
     #     res = []
@@ -441,73 +536,89 @@ def main():
     # CompairLocalNuselts(results)
     # return
 
-    starting = 0
-    angle = 13
+    # mesh = MeshNames.n4_600_dr_03_rot
+    # results = []
+    # for ram in [100, 1000, 2000, 6000, 12000, 20000, 80000]:
+    #     name = ResultName.MakeName(mesh, ram)
+    #     result = DynamycsAnalysis("SavedResults", name)
+    #     results.append(result)
 
-    new_mesh_name = MeshNames.n2_rotated_format.format(angle=angle)
+    # PLot_Psi_T_Nuselt_Table(results)
+    # return
 
-    print(f"STARTING MESH {new_mesh_name}")
+    # mesh = MeshNames.n5_600_dr_03
+    # name = MagneticsResultName.MakeName(mesh)
+    # result = MagneticsAnalysis("SavedMagnetics", name)
+    # plotter = MagneticsPlot(result)
+    # plotter.PlotH()
+    # return
 
-    RotateMeshAndSave(MeshNames.n2_rotated_format.format(angle=starting), angle, new_mesh_name)
+    # starting = 0
+    # angle = 13
 
-    print(f"MESH IS ROTATED")
+    # new_mesh_name = MeshNames.n2_rotated_format.format(angle=angle)
 
-    # SolveMagnetics(mesh_name = new_mesh_name)
+    # print(f"STARTING MESH {new_mesh_name}")
 
-    print("MAGNETICS ARE SOLVED")
+    # RotateMeshAndSave(MeshNames.n2_rotated_format.format(angle=starting), angle, new_mesh_name)
 
-    for ram in [100000]:
-        result_name = ResultName.MakeName(new_mesh_name, ram)
+    # print(f"MESH IS ROTATED")
 
-        table = NuseltTable.LoadFromCSV()
-        # nus = table.GetNuselt(result_name, True)
-        # if not math.isnan(nus):
-        #     print(f"{ram} ALREADY HAS NU {nus}")
-        #     continue
+    # # SolveMagnetics(mesh_name = new_mesh_name)
 
-        initials = ""
-        solve_fast(Ra = 0, Ram = ram, mesh_name = new_mesh_name,initials = initials, result_name = result_name, QW = 0.045)
+    # print("MAGNETICS ARE SOLVED")
 
-        table = NuseltTable.LoadFromCSV()
-        nus = table.GetNuselt(result_name, True)
+    # for ram in [100000]:
+    #     result_name = ResultName.MakeName(new_mesh_name, ram)
 
-        print(f"Ram = {ram} nu = {nus}")
+    #     table = NuseltTable.LoadFromCSV()
+    #     # nus = table.GetNuselt(result_name, True)
+    #     # if not math.isnan(nus):
+    #     #     print(f"{ram} ALREADY HAS NU {nus}")
+    #     #     continue
+
+    #     initials = ""
+    #     solve_fast(Ra = 0, Ram = ram, mesh_name = new_mesh_name,initials = initials, result_name = result_name, QW = 0.045)
+
+    #     table = NuseltTable.LoadFromCSV()
+    #     nus = table.GetNuselt(result_name, True)
+
+    #     print(f"Ram = {ram} nu = {nus}")
 
 
     ## table = NuseltTable.LoadFromCSV()
     ## table.RedoTable()
 
-    # mesh_name_full = MeshNames.n0_600
+    mesh_name_full = MeshNames.n4_600_dr_03
 
-    # ## SaveRawMesh("n5/N100-600-600-100", mesh_name_full)
-    # ## PlotSavedMesh(mesh_name_full)
-    # ## SolveMagnetics(mesh_name = mesh_name_full)
+    # # ## SaveRawMesh("n5/N100-600-600-100", mesh_name_full)
+    # # ## PlotSavedMesh(mesh_name_full)
+    # # ## SolveMagnetics(mesh_name = mesh_name_full)
 
-    # ram_range = [375, 380, 385, 390, 395]
-    # # ram_range = [405, 410, 415, 420]
+    ram_range = np.arange(2000, 20001, 2000)
 
-    # print(F"STARTING MESH {mesh_name_full}")
+    print(F"STARTING MESH {mesh_name_full}")
 
-    # last_result = ""
-    # for ram in ram_range:    
-    #    result_name = ResultName.MakeName(mesh_name_full, ram)
+    last_result = ""
+    for ram in ram_range:    
+       result_name = ResultName.MakeName(mesh_name_full, ram)
 
-    #    table = NuseltTable.LoadFromCSV()
-    #    nus = table.GetNuselt(result_name, False)
-    #    if not math.isnan(nus):
-    #        print(f"{ram} ALREADY HAS NU {nus}")
-    #        continue
+       table = NuseltTable.LoadFromCSV()
+       nus = table.GetNuselt(result_name, False)
+       if not math.isnan(nus):
+           print(f"{ram} ALREADY HAS NU {nus}")
+           continue
 
-    #    initials =  ""
-    #    print(F"SOLVING {ram}")
-    #    solve_fast(Ra = 0, Ram = ram, mesh_name = mesh_name_full, result_name = result_name, initials = initials)
-    #    last_result = result_name
+       initials =  ""
+       print(F"SOLVING {ram}")
+       solve_fast(Ra = 0, Ram = ram, mesh_name = mesh_name_full, result_name = result_name, initials = initials)
+       last_result = result_name
 
-    #    table = NuseltTable.LoadFromCSV()
-    #    nus = table.GetNuselt(result_name, True)
-    #    print(f"Ram = {ram} nu = {nus}")
+       table = NuseltTable.LoadFromCSV()
+       nus = table.GetNuselt(result_name, True)
+       print(f"Ram = {ram} nu = {nus}")
 
-    # return
+    return
 
     # mesh_name_full = MeshNames.n2_600_dr_03
     # ram_range = [14000, 16000, 18000]
