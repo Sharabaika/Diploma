@@ -128,9 +128,11 @@ class DynamycsAnalysis(ResultAnalysis):
         nodes, triangles, segment_indices, trig_neighbors, node_neighbours, trianlge_indices = self.GetMesh()
         T = self.GetT()
         
-        OUTER_BORDER_INDEX = 11   # 2
+        MEDIUM_REGION_INDEX = 2        
+        OUTER_BORDER_INDEX = 3
         def is_wall(n):
-            return OUTER_BORDER_INDEX in segment_indices[n]
+            return OUTER_BORDER_INDEX == segment_indices[n]
+
 
         fis = []
         nuls = []
@@ -152,6 +154,9 @@ class DynamycsAnalysis(ResultAnalysis):
                     a,b,c = b,c,a
                 elif is_wall(c) and is_wall(a):
                     a,b,c = c,a,b
+
+                if segment_indices[c] != MEDIUM_REGION_INDEX:
+                    continue
                 
                 ax,ay = nodes[a]
                 bx,by = nodes[b]

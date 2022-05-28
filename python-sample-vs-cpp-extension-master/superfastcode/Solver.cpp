@@ -706,7 +706,7 @@ void SolveFast_Implementation(const Arr& x, const Arr& y, const JaggedArr& trian
         const double Delta_W_Error = sqrt(W_errors / W_sum) / QW;
         const double Delta_T_Error = sqrt(T_errors / T_sum) / QT;
 
-        if (n_cycle % 250 == 0)
+        if (n_cycle % 5000 == 0)
         {
             printf("n cycle = %06i, dw = %.5e, dpsi = %.5e, dt = %.5e\n", n_cycle, Delta_W_Error, Delta_Psi_Error, Delta_T_Error);
         }

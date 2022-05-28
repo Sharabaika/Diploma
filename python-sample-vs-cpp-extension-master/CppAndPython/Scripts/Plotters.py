@@ -341,7 +341,7 @@ def PlotPsiTable(*results):
 def ComapairH(*results):
     n = len(results)
 
-    n_col = 3
+    n_col = 2
 
     import math
     rows = math.ceil(n / n_col)
@@ -359,14 +359,14 @@ def ComapairH(*results):
         angle = result.path.split("/")[-2].split("_")[-1]
 
         mag = MagneticsPlot.FillAx(ax,result.GetH_Nodes(), plotter.inner_triangulation, "viridis")
-        ax.set_title(f"alpha = {angle}")
+        # ax.set_title(f"alpha = {angle}")
 
     for ax in axs.flatten():
         ax.set_xlim((-2,2))
         ax.set_ylim((-2,2))
         ax.set_aspect('equal')
 
-    axs[0,0].set_ylabel("H")    
+    axs.flatten()[0].set_ylabel("H")    
 
     plt.show()
 
@@ -390,5 +390,24 @@ def PlotMaxH(results):
     axs.plot(alphas, max_H)
     axs.scatter(alphas, max_H)
 
+
+    plt.show()
+
+def CompairLocalNuselts(results):
+    n = len(results)
+
+    fig, axs = plt.subplots(len(results))
+    plt.xlabel('X')
+    plt.ylabel('Y')
+
+    for i, result_row in enumerate(results):
+        ram = result_row[0].GetParam("Ram")
+        axs[i].set_ylabel(f"Ram = {ram}")
+
+        for j, result in enumerate(result_row):
+            fis, nus = result.CalculateLocalNulselt()
+
+
+            axs[i].plot(fis, nus, linestyle = 'dashed' if j == 0 else 'solid')
 
     plt.show()

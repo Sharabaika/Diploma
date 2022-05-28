@@ -315,6 +315,7 @@ def SolveMagnetics(**kwargs):
 
     plotter.PlotFi()
     plt.SavePlot(f"{result_name}/Fi.png")
+    return 
 
     plotter.PlotH()
     plt.SavePlot(f"{result_name}/H_triangles.png")
